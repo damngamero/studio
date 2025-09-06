@@ -61,67 +61,50 @@ const getWeatherTool = ai.defineTool(
       }),
     },
     async ({ location }) => {
-        try {
-            // 1. Geocode location string to get latitude and longitude
-            const geocodeResponse = await fetch(`https://geocode.maps.co/search?q=${encodeURIComponent(location)}`);
-            if (!geocodeResponse.ok) {
-                throw new Error(`Geocoding failed for location: ${location}`);
-            }
-            const geocodeData = await geocodeResponse.json();
-            if (!geocodeData || geocodeData.length === 0) {
-                throw new Error(`No coordinates found for location: ${location}`);
-            }
-            const { lat, lon } = geocodeData[0];
-
-            // 2. Fetch weather using the retrieved coordinates
-            const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max&timezone=auto&forecast_days=3`);
-            if (!weatherResponse.ok) {
-                throw new Error(`Failed to fetch weather data: ${weatherResponse.statusText}`);
-            }
-            const data = await weatherResponse.json();
-
-            // Simple mapping from WMO weather codes to our condition strings
-            const codeToCondition = (code: number) => {
-                if (code <= 1) return 'Sunny';
-                if (code <= 3) return 'Partly cloudy';
-                if (code >= 51 && code <= 67) return 'Rain';
-                if (code >= 95) return 'Thunderstorms';
-                return 'Cloudy';
-            };
-
-            const currentWeather: Weather = {
-                temperature: Math.round(data.current.temperature_2m),
-                condition: codeToCondition(data.current.weather_code),
-                humidity: data.current.relative_humidity_2m,
-                windSpeed: Math.round(data.current.wind_speed_10m),
-            };
-            
-            const forecast: ForecastDay[] = data.daily.time.map((dateStr: string, index: number) => {
-                const date = new Date(dateStr);
-                return {
-                    day: date.toLocaleDateString('en-US', { weekday: 'long' }),
-                    temperature: Math.round(data.daily.temperature_2m_max[index]),
-                    condition: codeToCondition(data.daily.weather_code[index]),
-                };
-            });
-            
-            return { currentWeather, forecast };
-
-        } catch (error) {
-            console.error("Error in getWeatherTool:", error);
-            // A more stable and plausible fallback in case of API failure.
-            const today = new Date();
-            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-            return {
-                currentWeather: { temperature: 22, condition: 'Sunny', humidity: 55, windSpeed: 15 },
-                forecast: [
-                    { day: days[today.getDay() % 7], temperature: 24, condition: 'Sunny' },
-                    { day: days[(today.getDay() + 1) % 7], temperature: 21, condition: 'Partly cloudy' },
-                    { day: days[(today.getDay() + 2) % 7], temperature: 19, condition: 'Rain' },
-                ]
-            };
+        // 1. Geocode location string to get latitude and longitude
+        const geocodeResponse = await fetch(`https://geocode.maps.co/search?q=${encodeURIComponent(location)}`);
+        if (!geocodeResponse.ok) {
+            throw new Error(`Geocoding failed for location: ${location}`);
         }
+        const geocodeData = await geocodeResponse.json();
+        if (!geocodeData || geocodeData.length === 0) {
+            throw new Error(`No coordinates found for location: ${location}`);
+        }
+        const { lat, lon } = geocodeData[0];
+
+        // 2. Fetch weather using the retrieved coordinates
+        const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max&timezone=auto&forecast_days=3`);
+        if (!weatherResponse.ok) {
+            throw new Error(`Failed to fetch weather data: ${weatherResponse.statusText}`);
+        }
+        const data = await weatherResponse.json();
+
+        // Simple mapping from WMO weather codes to our condition strings
+        const codeToCondition = (code: number) => {
+            if (code <= 1) return 'Sunny';
+            if (code <= 3) return 'Partly cloudy';
+            if (code >= 51 && code <= 67) return 'Rain';
+            if (code >= 95) return 'Thunderstorms';
+            return 'Cloudy';
+        };
+
+        const currentWeather: Weather = {
+            temperature: Math.round(data.current.temperature_2m),
+            condition: codeToCondition(data.current.weather_code),
+            humidity: data.current.relative_humidity_2m,
+            windSpeed: Math.round(data.current.wind_speed_10m),
+        };
+        
+        const forecast: ForecastDay[] = data.daily.time.map((dateStr: string, index: number) => {
+            const date = new Date(dateStr);
+            return {
+                day: date.toLocaleDateString('en-US', { weekday: 'long' }),
+                temperature: Math.round(data.daily.temperature_2m_max[index]),
+                condition: codeToCondition(data.daily.weather_code[index]),
+            };
+        });
+        
+        return { currentWeather, forecast };
     }
   );
 
