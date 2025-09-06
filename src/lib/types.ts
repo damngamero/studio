@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 export const RegionOfInterestSchema = z.object({
@@ -17,6 +18,13 @@ export interface PlantHealthState {
   diagnosis: string;
 }
 
+export interface JournalEntry {
+  id: string;
+  date: string; // ISO date string
+  notes: string;
+  photoUrl?: string; // data URI
+}
+
 export interface Plant {
   id: string;
   customName: string;
@@ -32,4 +40,5 @@ export interface Plant {
   wateringTime?: string; // e.g. "morning"
   lastWatered: string; // ISO date string
   annotatedRegions?: RegionOfInterest[];
+  journal?: JournalEntry[];
 }

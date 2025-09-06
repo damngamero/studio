@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X, MapPin, AlertTriangle, Info, CloudSun } from "lucide-react";
+import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X, MapPin, AlertTriangle, Info, CloudSun, BookOpen } from "lucide-react";
 
 import { usePlantStore } from "@/hooks/use-plant-store";
 import { useSettingsStore } from "@/hooks/use-settings-store";
@@ -26,6 +26,7 @@ import { Separator } from "@/components/ui/separator";
 import { WateringSchedule } from "@/components/WateringSchedule";
 import { InteractivePhoto } from "@/components/InteractivePhoto";
 import { DialogDescription } from "@/components/ui/dialog";
+import { PlantJournal } from "@/components/PlantJournal";
 
 function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -437,6 +438,7 @@ export default function PlantProfilePage() {
                   </Dialog>
               </CardContent>
             </Card>
+            <PlantJournal plant={plant} />
             <Card className="overflow-hidden">
               <CardHeader>
                 <CardTitle className="text-xl">Quick View</CardTitle>
