@@ -37,6 +37,11 @@ export default function EditPlantPage() {
 
   const form = useForm<z.infer<typeof editFormSchema>>({
     resolver: zodResolver(editFormSchema),
+    defaultValues: {
+      customName: "",
+      notes: "",
+      wateringFrequency: 7,
+    },
   });
 
   useEffect(() => {
@@ -59,6 +64,7 @@ export default function EditPlantPage() {
     updatePlant({
       ...plant,
       ...values,
+      wateringFrequency: values.wateringFrequency || plant.wateringFrequency,
     });
     
     toast({
