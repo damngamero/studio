@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -40,10 +41,8 @@ export default function SettingsPage() {
   
   return (
     <AppLayout>
-      <div className="mx-auto grid w-full max-w-6xl gap-2">
-        <h1 className="text-3xl font-semibold">Settings</h1>
-      </div>
-      <div className="mx-auto grid w-full max-w-6xl items-start gap-6">
+      <div className="mx-auto w-full max-w-6xl">
+        <h1 className="text-3xl font-semibold mb-6">Settings</h1>
         <div className="grid gap-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
