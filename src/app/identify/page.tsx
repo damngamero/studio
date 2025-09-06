@@ -217,6 +217,7 @@ export default function IdentifyPlantPage() {
         plantSpecies: identification.commonName,
         estimatedAge: identification.estimatedAge,
         location: settings.location,
+        metricUnits: settings.metricUnits,
       });
 
       const newPlant = addPlant({

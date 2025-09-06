@@ -10,7 +10,6 @@
  */
 
 import {ai} from '@/ai/genkit';
-import { getSettings } from '@/hooks/use-settings-store';
 import {z} from 'genkit';
 
 const GetPlantCareTipsInputSchema = z.object({
@@ -30,6 +29,7 @@ const GetPlantCareTipsInputSchema = z.object({
     .optional()
     .describe('User-provided notes about the plant\'s environment (e.g., "near a sunny window", "in a cool, dry room").'),
   lastWatered: z.string().optional().describe('The ISO date string of when the plant was last watered.'),
+  metricUnits: z.boolean().optional().describe('Whether the user prefers metric units for measurements.'),
 });
 export type GetPlantCareTipsInput = z.infer<typeof GetPlantCareTipsInputSchema>;
 
@@ -54,8 +54,7 @@ const getPlantCareTipsFlow = ai.defineFlow(
     outputSchema: GetPlantCareTipsOutputSchema,
   },
   async input => {
-    const { metricUnits } = getSettings();
-    const unitSystem = metricUnits ? "metric (ml)" : "imperial (cups)";
+    const unitSystem = input.metricUnits ? "metric (ml)" : "imperial (cups)";
 
     const prompt = ai.definePrompt({
       name: 'getPlantCareTipsPrompt',
