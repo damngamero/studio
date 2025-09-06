@@ -27,7 +27,7 @@ const IdentifyPlantFromPhotoOutputSchema = z.object({
   latinName: z.string().describe('The Latin name of the identified plant.'),
   confidence: z
     .number()
-    .describe('The confidence level of the plant identification.'),
+    .describe('The confidence level of the plant identification (0-1).'),
 });
 export type IdentifyPlantFromPhotoOutput = z.infer<
   typeof IdentifyPlantFromPhotoOutputSchema

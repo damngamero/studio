@@ -1,3 +1,8 @@
+export interface PlantHealthState {
+  isHealthy: boolean;
+  diagnosis: string;
+}
+
 export interface Plant {
   id: string;
   customName: string;
@@ -6,4 +11,5 @@ export interface Plant {
   latinName: string;
   notes?: string;
   careTips?: string;
+  health?: PlantHealthState;
 }

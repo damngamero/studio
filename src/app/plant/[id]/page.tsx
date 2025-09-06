@@ -1,14 +1,16 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun } from "lucide-react";
+import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope } from "lucide-react";
 
 import { usePlantStore } from "@/hooks/use-plant-store";
 import { getPlantCareTips } from "@/ai/flows/get-plant-care-tips";
-import type { Plant } from "@/lib/types";
+import { checkPlantHealth } from "@/ai/flows/check-plant-health";
+import type { Plant, PlantHealthState } from "@/lib/types";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,6 +20,26 @@ import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Chat } from "@/components/Chat";
+import { Badge } from "@/components/ui/badge";
+
+function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m15 18-6-6 6-6" />
+    </svg>
+  )
+}
 
 export default function PlantProfilePage() {
   const router = useRouter();
@@ -27,6 +49,7 @@ export default function PlantProfilePage() {
   
   const [plant, setPlant] = useState<Plant | null | undefined>(undefined);
   const [isFetchingTips, setIsFetchingTips] = useState(false);
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
 
   const plantId = Array.isArray(params.id) ? params.id[0] : params.id;
 
@@ -60,6 +83,34 @@ export default function PlantProfilePage() {
       setIsFetchingTips(false);
     }
   };
+
+  const handleCheckHealth = async () => {
+    if (!plant) return;
+    setIsCheckingHealth(true);
+    try {
+      const healthResult = await checkPlantHealth({ 
+        photoDataUri: plant.photoUrl,
+        notes: plant.notes 
+      });
+      const updatedPlant = { ...plant, health: healthResult };
+      updatePlant(updatedPlant);
+      setPlant(updatedPlant);
+      toast({
+        title: "Health Check Complete!",
+        description: "We've assessed your plant's health.",
+      });
+    } catch (error) {
+      console.error("Failed to check health:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not complete health check. Please try again.",
+      });
+    } finally {
+      setIsCheckingHealth(false);
+    }
+  };
+
 
   const handleDelete = () => {
     if (plant) {
@@ -154,7 +205,7 @@ export default function PlantProfilePage() {
               </CardContent>
             </Card>
             <Card>
-               <CardHeader>
+              <CardHeader>
                 <CardTitle>AI-Powered Care Tips</CardTitle>
                 <CardDescription>Get personalized advice for your plant.</CardDescription>
               </CardHeader>
@@ -176,6 +227,35 @@ export default function PlantProfilePage() {
                     <Bot className="mr-2 h-4 w-4" />
                   )}
                   {plant.careTips ? 'Regenerate Tips' : 'Generate Tips'}
+                </Button>
+              </CardContent>
+            </Card>
+             <Card>
+               <CardHeader>
+                <CardTitle>AI Health Check</CardTitle>
+                <CardDescription>Assess your plant's health from its photo.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {plant.health ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold">Status:</span> 
+                      <Badge variant={plant.health.isHealthy ? 'default' : 'destructive'}>
+                        {plant.health.isHealthy ? 'Healthy' : 'Needs Attention'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm whitespace-pre-wrap"><span className="font-semibold">Diagnosis:</span> {plant.health.diagnosis}</p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground mb-4">No health check performed yet.</p>
+                )}
+                 <Button onClick={handleCheckHealth} disabled={isCheckingHealth} className="mt-4">
+                  {isCheckingHealth ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Stethoscope className="mr-2 h-4 w-4" />
+                  )}
+                  {plant.health ? 'Re-check Health' : 'Check Health'}
                 </Button>
               </CardContent>
             </Card>
@@ -229,22 +309,3 @@ export default function PlantProfilePage() {
     </AppLayout>
   );
 }
-
-function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
-    return (
-      <svg
-        {...props}
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="m15 18-6-6 6-6" />
-      </svg>
-    )
-  }
