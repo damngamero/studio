@@ -23,10 +23,10 @@ const allAchievements: Omit<Achievement, 'unlocked'>[] = [
     { id: 'plant_collector', name: 'Green Thumb', description: 'Grow your collection to 5 plants.', icon: Leaf, goal: 5, check: (plantCount: number) => plantCount >= 5 },
     { id: 'plant_enthusiast', name: 'Plant Enthusiast', description: 'Cultivate a garden of 10 plants.', icon: Award, goal: 10, check: (plantCount: number) => plantCount >= 10 },
     { id: 'first_diagnosis', name: 'Budding Detective', description: 'Perform your first AI health check.', icon: ShieldCheck, goal: 1, check: (checkCount: number) => checkCount >= 1 },
-    { id: 'first_chat', name: 'First Words', description: 'Chat with Sage about a plant for the first time.', icon: MessageSquare, goal: 1, check: () => false },
-    { id: 'first_journal', name: 'Memory Keeper', description: 'Add your first journal entry.', icon: BookOpen, goal: 1, check: () => false },
-    { id: 'healthy_week', name: 'Happy and Healthy', description: 'Keep a plant healthy for 7 consecutive days.', icon: Heart, goal: 7, check: () => false },
-    { id: 'master_gardener', name: 'Master Gardener', description: 'Unlock all other achievements.', icon: Star, goal: 1, check: () => false },
+    { id: 'first_chat', name: 'First Words', description: 'Chat with Sage about a plant for the first time.', icon: MessageSquare, goal: 1, check: (chatCount: number) => chatCount >= 1 },
+    { id: 'first_journal', name: 'Memory Keeper', description: 'Add your first journal entry.', icon: BookOpen, goal: 1, check: (entryCount: number) => entryCount >= 1 },
+    { id: 'healthy_week', name: 'Happy and Healthy', description: 'Keep a plant healthy for 7 consecutive days.', icon: Heart, goal: 7, check: () => false }, // Needs more complex logic
+    { id: 'master_gardener', name: 'Master Gardener', description: 'Unlock all other achievements.', icon: Star, goal: 1, check: () => false }, // Needs special check
 ];
 
 function getInitialAchievements(): Achievement[] {

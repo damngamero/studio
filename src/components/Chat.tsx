@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -5,7 +6,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Bot, Loader2, Send, User } from 'lucide-react';
+import { format } from 'date-fns';
 
+import type { Plant } from '@/lib/types';
 import { chatAboutPlant } from '@/ai/flows/chat-about-plant';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +17,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
+import { useAchievementStore } from '@/hooks/use-achievement-store';
 
 const chatFormSchema = z.object({
   question: z.string().min(1, 'Please enter a question.'),
@@ -25,20 +29,22 @@ interface Message {
 }
 
 interface ChatProps {
-  plantName: string;
+  plant: Plant;
 }
 
 const suggestions = [
     "When should I water it?",
     "How much sunlight does it need?",
-    "How do I make fertilizer for it?",
+    "Based on my journal, is it healthy?",
     "Tell me a fun fact about this plant."
 ];
 
-export function Chat({ plantName }: ChatProps) {
+export function Chat({ plant }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const { checkAndUnlock } = useAchievementStore();
+  const [chatCount, setChatCount] = useState(0);
 
   const form = useForm<z.infer<typeof chatFormSchema>>({
     resolver: zodResolver(chatFormSchema),
@@ -59,13 +65,24 @@ export function Chat({ plantName }: ChatProps) {
     setMessages((prev) => [...prev, userMessage]);
     form.reset();
 
+    const journalEntries = plant.journal?.map(entry => ({
+      date: format(new Date(entry.date), 'PPP'),
+      notes: entry.notes,
+    }));
+
     try {
       const result = await chatAboutPlant({
-        plantName,
+        plantName: plant.commonName,
         question: question,
+        journal: journalEntries,
       });
       const assistantMessage: Message = { role: 'assistant', content: result.answer };
       setMessages((prev) => [...prev, assistantMessage]);
+
+      const newChatCount = chatCount + 1;
+      setChatCount(newChatCount);
+      checkAndUnlock(['first_chat'], newChatCount);
+
     } catch (error) {
       console.error('Chat failed:', error);
       const errorMessage: Message = {
@@ -89,7 +106,7 @@ export function Chat({ plantName }: ChatProps) {
           {messages.length === 0 && (
             <div className="text-center text-muted-foreground p-4">
                 <Bot className="mx-auto w-8 h-8 mb-2"/>
-                <p>Ask me anything about your {plantName}.</p>
+                <p>Ask me anything about your {plant.customName}. I can also analyze its journal for you.</p>
             </div>
           )}
           {messages.map((message, index) => (

@@ -7,11 +7,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { BookOpen, Plus, Image as ImageIcon, Send, Loader2 } from "lucide-react";
+import { BookOpen, Plus, Image as ImageIcon, Loader2 } from "lucide-react";
 
 import type { Plant, JournalEntry } from "@/lib/types";
 import { usePlantStore } from "@/hooks/use-plant-store";
 import { useToast } from "@/hooks/use-toast";
+import { useAchievementStore } from "@/hooks/use-achievement-store";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose, DialogTrigger } from "@/components/ui/dialog";
@@ -30,6 +31,7 @@ interface PlantJournalProps {
 export function PlantJournal({ plant }: PlantJournalProps) {
   const { updatePlant } = usePlantStore();
   const { toast } = useToast();
+  const { checkAndUnlock } = useAchievementStore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [entryPhotoDataUri, setEntryPhotoDataUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -52,7 +54,7 @@ export function PlantJournal({ plant }: PlantJournalProps) {
     }
   };
 
-  const onSubmit = (values: z.infer<typeof journalFormSchema>) => {
+  const onSubmit = (values: z.infer<typeof journalFormSchema>>) => {
     setIsLoading(true);
     const newEntry: JournalEntry = {
       id: crypto.randomUUID(),
@@ -61,9 +63,10 @@ export function PlantJournal({ plant }: PlantJournalProps) {
       ...(entryPhotoDataUri && { photoUrl: entryPhotoDataUri }),
     };
 
+    const updatedJournal = [newEntry, ...(plant.journal || [])];
     const updatedPlant: Plant = {
       ...plant,
-      journal: [newEntry, ...(plant.journal || [])],
+      journal: updatedJournal,
     };
 
     updatePlant(updatedPlant);
@@ -71,6 +74,9 @@ export function PlantJournal({ plant }: PlantJournalProps) {
       title: "Journal Entry Added!",
       description: "Your new entry has been saved.",
     });
+
+    checkAndUnlock(['first_journal'], updatedJournal.length);
+
     setIsLoading(false);
     setIsDialogOpen(false);
     form.reset();

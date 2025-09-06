@@ -23,7 +23,7 @@ const GetWeatherAndPlantAdviceInputSchema = z.object({
 });
 export type GetWeatherAndPlantAdviceInput = z.infer<typeof GetWeatherAndPlantAdviceInputSchema>;
 
-const WeatherSchema = z.object({
+export const WeatherSchema = z.object({
   temperature: z.number().describe('The current temperature.'),
   condition: z.string().describe('A brief description of the weather (e.g., Sunny, Cloudy, Rain).'),
   humidity: z.number().describe('The current humidity percentage (0-100).'),
@@ -33,7 +33,7 @@ const WeatherSchema = z.object({
 });
 export type Weather = z.infer<typeof WeatherSchema>;
 
-const ForecastDaySchema = z.object({
+export const ForecastDaySchema = z.object({
   day: z.string().describe("The day of the week (e.g., 'Monday')."),
   temperature: z.number().describe('The forecasted temperature.'),
   condition: z.string().describe('The forecasted weather condition.'),
@@ -53,7 +53,7 @@ const GetWeatherAndPlantAdviceOutputSchema = z.object({
 });
 export type GetWeatherAndPlantAdviceOutput = z.infer<typeof GetWeatherAndPlantAdviceOutputSchema>;
 
-const getWeatherTool = ai.defineTool(
+export const getWeatherTool = ai.defineTool(
     {
       name: 'getWeatherForLocation',
       description: 'Gets the current weather and a 3-day forecast for a specific location.',

@@ -541,7 +541,7 @@ export default function PlantProfilePage() {
                       <DialogHeader>
                         <DialogTitle>Chat about {plant.customName}</DialogTitle>
                       </DialogHeader>
-                      <Chat plantName={plant.commonName} />
+                      <Chat plant={plant} />
                     </DialogContent>
                   </Dialog>
               </CardContent>

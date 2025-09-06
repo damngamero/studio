@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Camera, Loader2, Sparkles, Save, Upload, CircleUserRound, Trophy } from "lucide-react";
+import { Camera, Loader2, Sparkles, Save, Upload, CircleUserRound, Lightbulb } from "lucide-react";
 
 import { identifyPlantFromPhoto } from "@/ai/flows/identify-plant-from-photo";
 import type { IdentifyPlantFromPhotoOutput } from "@/ai/flows/identify-plant-from-photo";
 import { getPlantCareTips } from "@/ai/flows/get-plant-care-tips";
+import { getPlantNicknames } from "@/ai/flows/get-plant-nicknames";
 import { usePlantStore } from "@/hooks/use-plant-store";
 import { useAchievementStore } from "@/hooks/use-achievement-store";
 import { useSettingsStore } from "@/hooks/use-settings-store";
@@ -25,6 +26,7 @@ import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 const profileFormSchema = z.object({
   customName: z.string().min(1, "Please give your plant a name."),
@@ -41,8 +43,10 @@ export default function IdentifyPlantPage() {
   const { toast } = useToast();
   const [photoDataUri, setPhotoDataUri] = useState<string | null>(null);
   const [identification, setIdentification] = useState<IdentifyPlantFromPhotoOutput | null>(null);
+  const [suggestedNames, setSuggestedNames] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingNames, setIsLoadingNames] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [inputMode, setInputMode] = useState<InputMode>("upload");
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -125,6 +129,7 @@ export default function IdentifyPlantPage() {
     if (!photoDataUri) return;
     setIsLoading(true);
     setError(null);
+    setSuggestedNames([]);
     try {
       const result = await identifyPlantFromPhoto({ photoDataUri });
       if (!result.isPlant) {
@@ -133,6 +138,13 @@ export default function IdentifyPlantPage() {
       } else {
         setIdentification(result);
         form.setValue("customName", result.commonName);
+        
+        // Fetch suggested names in parallel
+        setIsLoadingNames(true);
+        getPlantNicknames({ commonName: result.commonName, latinName: result.latinName })
+            .then(nameResult => setSuggestedNames(nameResult.nicknames))
+            .catch(e => console.error("Could not fetch nicknames", e))
+            .finally(() => setIsLoadingNames(false));
       }
     } catch (e) {
       console.error(e);
@@ -368,6 +380,36 @@ export default function IdentifyPlantPage() {
                       </FormItem>
                     )}
                   />
+
+                  {isLoadingNames && (
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <span>Asking Sage for name ideas...</span>
+                    </div>
+                  )}
+
+                  {suggestedNames.length > 0 && (
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Lightbulb className="h-4 w-4" />
+                            <span>Name ideas from Sage:</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                        {suggestedNames.map((name) => (
+                            <Badge
+                            key={name}
+                            variant="outline"
+                            className="cursor-pointer hover:bg-muted"
+                            onClick={() => form.setValue("customName", name)}
+                            >
+                            {name}
+                            </Badge>
+                        ))}
+                        </div>
+                    </div>
+                  )}
+
+
                   <FormField
                     control={form.control}
                     name="notes"

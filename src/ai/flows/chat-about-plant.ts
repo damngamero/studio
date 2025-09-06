@@ -10,10 +10,17 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import type { JournalEntry } from '@/lib/types';
+
+const JournalEntrySchema = z.object({
+  date: z.string(),
+  notes: z.string(),
+});
 
 const ChatAboutPlantInputSchema = z.object({
   plantName: z.string().describe('The name of the plant.'),
   question: z.string().describe('The user\'s question about the plant.'),
+  journal: z.array(JournalEntrySchema).optional().describe('A list of journal entries for the plant, including date and notes.'),
 });
 export type ChatAboutPlantInput = z.infer<typeof ChatAboutPlantInputSchema>;
 
@@ -30,12 +37,21 @@ const prompt = ai.definePrompt({
   name: 'chatAboutPlantPrompt',
   input: { schema: ChatAboutPlantInputSchema },
   output: { schema: ChatAboutPlantOutputSchema },
-  prompt: `You are a helpful gardening assistant. A user wants to ask a question about their plant.
+  prompt: `You are Sage, a helpful and friendly gardening assistant AI. A user wants to ask a question about their plant.
 
 Plant Name: {{{plantName}}}
 Question: {{{question}}}
 
-Please provide a helpful and concise answer to the user's question.`,
+{{#if journal}}
+To help answer the question, here are the user's journal entries for this plant. You can analyze them for trends, past events, or health notes.
+
+## Plant Journal
+{{#each journal}}
+- **{{date}}**: {{{notes}}}
+{{/each}}
+{{/if}}
+
+Please provide a helpful and concise answer to the user's question. If you use information from the journal, be sure to mention it.`,
 });
 
 const chatAboutPlantFlow = ai.defineFlow(

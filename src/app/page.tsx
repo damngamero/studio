@@ -3,13 +3,127 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Bot, Info, Loader2 } from "lucide-react";
+import { addDays, isAfter } from "date-fns";
 import { usePlantStore } from "@/hooks/use-plant-store";
+import { useSettingsStore } from "@/hooks/use-settings-store";
+import { getGardenOverview } from "@/ai/flows/get-garden-overview";
 import { AppLayout } from "@/components/AppLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import ReactMarkdown from "react-markdown";
+
+function LeafIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M11 20A7 7 0 0 1 4 13V8a5 5 0 0 1 10 0v5a7 7 0 0 1-7 7Z" />
+      <path d="M20.34 10.66A5 5 0 0 0 14 5V2" />
+    </svg>
+  )
+}
+
+function GardenOverview() {
+  const { plants } = usePlantStore();
+  const { settings } = useSettingsStore();
+  const [overview, setOverview] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchOverview = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const plantStatus = plants.map(p => {
+        const nextWateringDate = addDays(new Date(p.lastWatered), p.wateringFrequency || 7);
+        return {
+          customName: p.customName,
+          commonName: p.commonName,
+          isWateringOverdue: isAfter(new Date(), nextWateringDate),
+        };
+      });
+
+      const result = await getGardenOverview({
+        location: settings.location || "",
+        plants: plantStatus,
+      });
+      setOverview(result.overview);
+    } catch (error) {
+      console.error("Failed to get garden overview:", error);
+      setOverview("Could not load Sage's daily digest at this time.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [plants, settings.location]);
+
+  useEffect(() => {
+    if (plants.length > 0 && settings.location) {
+      fetchOverview();
+    } else {
+        setIsLoading(false);
+        setOverview(null);
+    }
+  }, [plants, settings.location, fetchOverview]);
+
+  if (plants.length === 0) {
+      return null;
+  }
+  
+  if (!settings.location) {
+     return (
+        <Card className="mb-6 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800">
+          <CardHeader>
+            <div className="flex items-start gap-4">
+                 <Info className="h-6 w-6 text-blue-600 dark:text-blue-400 mt-1" />
+                 <div>
+                    <CardTitle className="text-lg text-blue-900 dark:text-blue-200">Get Your Daily Digest</CardTitle>
+                    <CardDescription className="text-blue-700 dark:text-blue-300">Set your location in settings to get a personalized daily overview of your garden from Sage.</CardDescription>
+                    <Button asChild size="sm" className="mt-2">
+                        <Link href="/settings">Go to Settings</Link>
+                    </Button>
+                 </div>
+            </div>
+          </CardHeader>
+        </Card>
+      );
+  }
+
+  return (
+     <Card className="mb-6 bg-primary/5 dark:bg-primary/10 border-primary/20">
+      <CardHeader>
+        <div className="flex items-start gap-4">
+            <Bot className="h-6 w-6 text-primary mt-1" />
+            <div>
+                 <CardTitle className="text-lg">Sage's Daily Digest</CardTitle>
+                <CardDescription>Your AI-powered garden overview for today.</CardDescription>
+                <div className="mt-3 text-sm text-foreground">
+                {isLoading ? (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Asking Sage for your daily digest...</span>
+                    </div>
+                ) : (
+                    <div className="prose prose-sm max-w-none prose-p:my-1 prose-strong:text-foreground">
+                        <ReactMarkdown>{overview || ""}</ReactMarkdown>
+                    </div>
+                )}
+                </div>
+            </div>
+        </div>
+      </CardHeader>
+    </Card>
+  )
+}
 
 export default function MyPlantsPage() {
   const { plants, isInitialized } = usePlantStore();
@@ -87,27 +201,8 @@ export default function MyPlantsPage() {
           </Link>
         </Button>
       </div>
+       <GardenOverview />
       {renderContent()}
     </AppLayout>
   );
-}
-
-function LeafIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M11 20A7 7 0 0 1 4 13V8a5 5 0 0 1 10 0v5a7 7 0 0 1-7 7Z" />
-      <path d="M20.34 10.66A5 5 0 0 0 14 5V2" />
-    </svg>
-  )
 }
