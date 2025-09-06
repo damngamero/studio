@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Camera, Loader2, Sparkles, Save, Upload, CircleUserRound, Lightbulb, AlertTriangle, KeyRound } from "lucide-react";
+import { Camera, Loader2, Sparkles, Save, Upload, CircleUserRound, Lightbulb, AlertTriangle, KeyRound, Pencil } from "lucide-react";
 import Link from "next/link";
 
 import { identifyPlantFromPhoto } from "@/ai/flows/identify-plant-from-photo";
@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,7 +30,9 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
 const profileFormSchema = z.object({
-  customName: z.string().min(1, "Please give your plant a name."),
+  customName: z.string().min(1, "Please give your plant a nickname."),
+  commonName: z.string().min(1, "Please provide the plant's common name."),
+  latinName: z.string().min(1, "Please provide the plant's latin name."),
   notes: z.string().optional(),
 });
 
@@ -54,6 +56,16 @@ export default function IdentifyPlantPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
+
+  const form = useForm<z.infer<typeof profileFormSchema>>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      customName: "",
+      commonName: "",
+      latinName: "",
+      notes: "",
+    },
+  });
 
   useEffect(() => {
     setIsApiKeyMissing(!settings.geminiApiKey);
@@ -143,7 +155,12 @@ export default function IdentifyPlantPage() {
         setIdentification(null);
       } else {
         setIdentification(result);
-        form.setValue("customName", result.commonName);
+        form.reset({
+          customName: result.commonName,
+          commonName: result.commonName,
+          latinName: result.latinName,
+          notes: "",
+        });
         
         // Fetch suggested names in parallel
         setIsLoadingNames(true);
@@ -216,23 +233,14 @@ export default function IdentifyPlantPage() {
   }, [handlePaste]);
 
 
-  const form = useForm<z.infer<typeof profileFormSchema>>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      customName: "",
-      notes: "",
-    },
-  });
-
-
-  const onSubmit = async (values: z.infer<typeof profileFormSchema>) => {
+  const onSubmit = async (values: z.infer<typeof profileFormSchema>>) => {
     if (!identification || !photoDataUri) return;
     setIsSaving(true);
     
     try {
-      // Get initial care tips and watering frequency
+      // Get initial care tips and watering frequency using the final (potentially user-edited) common name
       const careTipsResult = await getPlantCareTips({ 
-        plantSpecies: identification.commonName,
+        plantSpecies: values.commonName,
         estimatedAge: identification.estimatedAge,
         location: settings.location,
         metricUnits: settings.metricUnits,
@@ -241,8 +249,6 @@ export default function IdentifyPlantPage() {
       const newPlant = addPlant({
         ...values,
         photoUrl: photoDataUri,
-        commonName: identification.commonName,
-        latinName: identification.latinName,
         estimatedAge: identification.estimatedAge,
         lastWatered: new Date().toISOString(),
         wateringFrequency: careTipsResult.wateringFrequency,
@@ -374,18 +380,46 @@ export default function IdentifyPlantPage() {
           <Card className="mt-8 animate-in fade-in duration-500">
             <CardHeader>
               <CardTitle>Plant Identified!</CardTitle>
-              <CardDescription>We've identified your plant as a {identification.commonName}. Now give it a personal touch.</CardDescription>
+              <CardDescription>Sage has identified your plant. You can edit the details below before saving.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="mb-4 p-4 bg-secondary rounded-lg border">
-                <p className="font-semibold text-lg">{identification.commonName}</p>
-                <p className="text-sm text-muted-foreground">{identification.latinName}</p>
-                 <p className="text-sm text-muted-foreground">Est. Age: {identification.estimatedAge}</p>
-                <p className="text-xs text-muted-foreground mt-1">Confidence: {Math.round(identification.confidence * 100)}%</p>
+               <div className="mb-4 p-3 bg-secondary rounded-lg border text-sm">
+                <p>Est. Age: <span className="font-medium">{identification.estimatedAge}</span></p>
+                <p>Confidence: <span className="font-medium">{Math.round(identification.confidence * 100)}%</span></p>
               </div>
 
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="commonName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Common Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                         <FormDescription>This is the plant's official species name, used to get care tips.</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="latinName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Latin Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <hr className="my-4"/>
+
                   <FormField
                     control={form.control}
                     name="customName"
@@ -399,8 +433,8 @@ export default function IdentifyPlantPage() {
                       </FormItem>
                     )}
                   />
-
-                  {isLoadingNames && (
+                  
+                   {isLoadingNames && (
                     <div className="flex items-center text-sm text-muted-foreground">
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       <span>Asking Sage for name ideas...</span>
@@ -428,13 +462,12 @@ export default function IdentifyPlantPage() {
                     </div>
                   )}
 
-
                   <FormField
                     control={form.control}
                     name="notes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Notes</FormLabel>
+                        <FormLabel>Notes (Optional)</FormLabel>
                         <FormControl>
                           <Textarea placeholder="e.g., Repotted on Jan 1st. Likes morning sun." {...field} />
                         </FormControl>
@@ -459,3 +492,5 @@ export default function IdentifyPlantPage() {
     </AppLayout>
   );
 }
+
+    
