@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Camera, Loader2, Sparkles, Save, Upload, CircleUserRound, Lightbulb } from "lucide-react";
+import { Camera, Loader2, Sparkles, Save, Upload, CircleUserRound, Lightbulb, AlertTriangle, KeyRound } from "lucide-react";
+import Link from "next/link";
 
 import { identifyPlantFromPhoto } from "@/ai/flows/identify-plant-from-photo";
 import type { IdentifyPlantFromPhotoOutput } from "@/ai/flows/identify-plant-from-photo";
@@ -52,6 +53,11 @@ export default function IdentifyPlantPage() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
+
+  useEffect(() => {
+    setIsApiKeyMissing(!settings.geminiApiKey);
+  }, [settings.geminiApiKey]);
 
   useEffect(() => {
     if (inputMode === "camera") {
@@ -288,6 +294,19 @@ export default function IdentifyPlantPage() {
         <h1 className="text-3xl font-bold font-headline mb-2">Identify a New Plant</h1>
         <p className="text-muted-foreground mb-8">Upload a photo to get started.</p>
         
+        {isApiKeyMissing && (
+            <Alert variant="destructive" className="mb-6">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Gemini API Key Required</AlertTitle>
+                <AlertDescription>
+                Please set your Gemini API Key in the settings to use the AI-powered features.
+                <Button asChild variant="link" className="p-0 h-auto ml-1 font-semibold">
+                    <Link href="/settings">Go to Settings</Link>
+                </Button>
+                </AlertDescription>
+            </Alert>
+        )}
+        
         <Card>
           <CardContent className="p-6">
             <div className="grid md:grid-cols-2 gap-8">
@@ -337,7 +356,7 @@ export default function IdentifyPlantPage() {
               
               <div className="flex flex-col items-center gap-4">
                   <PhotoDisplay />
-                  <Button onClick={handleIdentify} disabled={!photoDataUri || isLoading} size="lg">
+                  <Button onClick={handleIdentify} disabled={!photoDataUri || isLoading || isApiKeyMissing} size="lg">
                     {isLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (

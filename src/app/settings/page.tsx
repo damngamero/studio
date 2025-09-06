@@ -134,7 +134,7 @@ export default function SettingsPage() {
                         <FormControl>
                            <div className="relative">
                             <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Enter your Google AI Studio API Key" {...field} className="pl-10" />
+                            <Input type="password" placeholder="Enter your Google AI Studio API Key" {...field} className="pl-10" />
                            </div>
                         </FormControl>
                          <FormDescription>

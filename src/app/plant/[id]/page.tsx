@@ -36,6 +36,7 @@ import { DialogDescription } from "@/components/ui/dialog";
 import { PlantJournal } from "@/components/PlantJournal";
 import ReactMarkdown from "react-markdown";
 import { QuickViewWateringStatus } from "@/components/QuickViewWateringStatus";
+import { Alert } from "@/components/ui/alert";
 
 function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -77,8 +78,13 @@ export default function PlantProfilePage() {
 
   const [isLoadingWateringAdvice, setIsLoadingWateringAdvice] = useState(false);
   const [wateringAdvice, setWateringAdvice] = useState<GetWateringAdviceOutput | null>(null);
+  const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
 
   const plantId = Array.isArray(params.id) ? params.id[0] : params.id;
+  
+  useEffect(() => {
+    setIsApiKeyMissing(!settings.geminiApiKey);
+  }, [settings.geminiApiKey]);
 
   useEffect(() => {
     if (plantId) {
@@ -88,7 +94,7 @@ export default function PlantProfilePage() {
   }, [plantId, getPlantById]);
   
   const fetchWeatherAdvice = useCallback(async (currentPlant: Plant) => {
-    if (!settings.location) {
+    if (!settings.location || isApiKeyMissing) {
       setIsFetchingWeather(false);
       return;
     }
@@ -109,7 +115,7 @@ export default function PlantProfilePage() {
     } finally {
       setIsFetchingWeather(false);
     }
-  }, [settings.location]);
+  }, [settings.location, isApiKeyMissing]);
 
   const handleRegenerateTips = async () => {
     if (!plant) return;
@@ -158,7 +164,7 @@ export default function PlantProfilePage() {
 
   useEffect(() => {
     async function fetchWateringAdvice() {
-        if (!plant || !plant.wateringFrequency) return;
+        if (!plant || !plant.wateringFrequency || isApiKeyMissing) return;
 
         const nextWateringDate = addDays(new Date(plant.lastWatered), plant.wateringFrequency);
         const isOverdue = isAfter(new Date(), nextWateringDate);
@@ -188,7 +194,7 @@ export default function PlantProfilePage() {
     }
 
     fetchWateringAdvice();
-}, [plant, settings.location]);
+}, [plant, settings.location, isApiKeyMissing]);
 
   const stopCameraStream = useCallback(() => {
       if (videoRef.current && videoRef.current.srcObject) {
@@ -374,7 +380,7 @@ export default function PlantProfilePage() {
                   />
                    <Dialog>
                       <DialogTrigger asChild>
-                        <Button size="sm" className="absolute bottom-2 right-2">
+                        <Button size="sm" className="absolute bottom-2 right-2" disabled={isApiKeyMissing}>
                            <Search className="mr-2" /> Pest & Disease Detective
                         </Button>
                       </DialogTrigger>
@@ -401,6 +407,18 @@ export default function PlantProfilePage() {
                 <CardDescription>Get care tips, check health, and chat about your plant.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {isApiKeyMissing && (
+                   <Alert variant="destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertTitle>API Key Required</AlertTitle>
+                      <AlertDescription>
+                        Set your Gemini API Key in settings to enable Sage's AI features.
+                         <Button asChild variant="link" className="p-0 h-auto ml-1 font-semibold">
+                           <Link href="/settings">Go to Settings</Link>
+                         </Button>
+                      </AlertDescription>
+                   </Alert>
+                )}
                 <div>
                   <h4 className="font-medium text-sm mb-2">AI Health Check</h4>
                    {plant.health ? (
@@ -418,7 +436,7 @@ export default function PlantProfilePage() {
                   )}
                    <Dialog open={isHealthCheckModalOpen} onOpenChange={setIsHealthCheckModalOpen}>
                       <DialogTrigger asChild>
-                         <Button variant="outline" size="sm" className="mt-3">
+                         <Button variant="outline" size="sm" className="mt-3" disabled={isApiKeyMissing}>
                             <Stethoscope className="mr-2 h-4 w-4" /> {plant.health ? 'Re-check Health' : 'Check Health'}
                          </Button>
                       </DialogTrigger>
@@ -472,7 +490,7 @@ export default function PlantProfilePage() {
                          <h4 className="font-medium text-sm">Sage's Dynamic Care Tips</h4>
                          {plant.wateringAmount && <p className="text-xs text-muted-foreground">Recommended water: {plant.wateringAmount}</p>}
                         </div>
-                         <Button variant="outline" size="xs" onClick={handleRegenerateTips} disabled={isGeneratingTips}>
+                         <Button variant="outline" size="xs" onClick={handleRegenerateTips} disabled={isGeneratingTips || isApiKeyMissing}>
                             {isGeneratingTips ? <Loader2 className="mr-2 h-3 w-3 animate-spin"/> : <RefreshCw className="mr-2 h-3 w-3" />}
                             Regenerate
                         </Button>
@@ -541,7 +559,7 @@ export default function PlantProfilePage() {
               <CardContent>
                  <Dialog>
                     <DialogTrigger asChild>
-                      <Button className="w-full">
+                      <Button className="w-full" disabled={isApiKeyMissing}>
                         <MessageSquare className="mr-2" /> Chat Now
                       </Button>
                     </DialogTrigger>
