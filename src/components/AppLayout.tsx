@@ -19,7 +19,7 @@ import {
 
 function Logo() {
   return (
-    <Link href="/" className="flex items-center gap-2 font-semibold font-headline text-lg text-foreground">
+    <Link href="/" className="flex items-center gap-2 font-bold font-headline text-lg text-foreground">
       <Leaf className="h-6 w-6 text-accent" />
       <span>VerdantWise</span>
     </Link>
