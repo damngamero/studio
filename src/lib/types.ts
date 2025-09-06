@@ -24,6 +24,7 @@ export interface Plant {
   commonName: string;
   latinName: string;
   notes?: string;
+  environmentNotes?: string;
   careTips?: string;
   health?: PlantHealthState;
   wateringFrequency?: number; // in days

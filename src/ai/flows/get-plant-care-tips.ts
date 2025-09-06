@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview A Genkit flow for providing plant care tips based on plant species.
+ * @fileOverview A Genkit flow for providing plant care tips based on plant species and environment.
  *
  * - getPlantCareTips - A function that retrieves plant care tips.
  * - GetPlantCareTipsInput - The input type for the getPlantCareTips function.
@@ -15,6 +15,10 @@ const GetPlantCareTipsInputSchema = z.object({
   plantSpecies: z
     .string()
     .describe('The identified species of the plant for which to provide care tips.'),
+  environmentNotes: z
+    .string()
+    .optional()
+    .describe('User-provided notes about the plant\'s environment (e.g., "near a sunny window", "in a cool, dry room").'),
 });
 export type GetPlantCareTipsInput = z.infer<typeof GetPlantCareTipsInputSchema>;
 
@@ -37,10 +41,15 @@ const prompt = ai.definePrompt({
   output: {schema: GetPlantCareTipsOutputSchema},
   prompt: `You are an expert horticulturalist. Provide care tips for the following plant species. 
   
+Take the user's environment notes into account to provide a tailored watering schedule.
 Include details on watering, sunlight, and pruning. 
 Also provide a recommended watering frequency in days and the best time of day to water.
 
-Plant Species: {{{plantSpecies}}}`,
+Plant Species: {{{plantSpecies}}}
+{{#if environmentNotes}}
+Environment Notes: {{{environmentNotes}}}
+{{/if}}
+`,
 });
 
 const getPlantCareTipsFlow = ai.defineFlow(

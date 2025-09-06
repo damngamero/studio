@@ -23,6 +23,7 @@ import type { Plant } from "@/lib/types";
 const editFormSchema = z.object({
   customName: z.string().min(1, "Please give your plant a name."),
   notes: z.string().optional(),
+  environmentNotes: z.string().optional(),
   wateringFrequency: z.coerce.number().min(1, "Watering frequency must be at least 1 day.").optional(),
 });
 
@@ -40,6 +41,7 @@ export default function EditPlantPage() {
     defaultValues: {
       customName: "",
       notes: "",
+      environmentNotes: "",
       wateringFrequency: 7,
     },
   });
@@ -52,6 +54,7 @@ export default function EditPlantPage() {
         form.reset({
           customName: foundPlant.customName,
           notes: foundPlant.notes || "",
+          environmentNotes: foundPlant.environmentNotes || "",
           wateringFrequency: foundPlant.wateringFrequency || 7,
         });
       }
@@ -142,9 +145,22 @@ export default function EditPlantPage() {
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <FormLabel>General Notes</FormLabel>
                   <FormControl>
-                    <Textarea className="min-h-[120px]" placeholder="e.g., Watered on Feb 5th. Showing new growth!" {...field} />
+                    <Textarea className="min-h-[120px]" placeholder="e.g., Repotted on Feb 5th. Showing new growth!" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="environmentNotes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Environment Notes</FormLabel>
+                  <FormControl>
+                    <Textarea className="min-h-[120px]" placeholder="e.g., In the living room, next to a north-facing window. Average temp is 70°F." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

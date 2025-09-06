@@ -119,7 +119,10 @@ export default function PlantProfilePage() {
     if (!plant) return;
     setIsFetchingTips(true);
     try {
-      const tipsResult = await getPlantCareTips({ plantSpecies: plant.commonName });
+      const tipsResult = await getPlantCareTips({ 
+        plantSpecies: plant.commonName,
+        environmentNotes: plant.environmentNotes,
+      });
       const updatedPlant = { 
         ...plant, 
         careTips: tipsResult.careTips,
