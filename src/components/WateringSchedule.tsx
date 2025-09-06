@@ -4,19 +4,20 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from './ui/card';
 import { Button } from './ui/button';
-import { Calendar, Droplets } from 'lucide-react';
+import { Calendar, Droplets, Loader2, Info } from 'lucide-react';
 import { addDays, differenceInDays, differenceInHours, format, formatDistanceToNowStrict, isAfter } from 'date-fns';
 import { useSettingsStore } from '@/hooks/use-settings-store';
 import { cn } from '@/lib/utils';
+import type { Plant } from '@/lib/types';
+import { getWateringAdvice } from '@/ai/flows/get-watering-advice';
+import type { GetWateringAdviceOutput } from '@/ai/flows/get-watering-advice';
 
 interface WateringScheduleProps {
-  lastWatered?: string;
-  wateringFrequency?: number;
-  wateringTime?: string;
+  plant: Plant;
   onWaterPlant: () => void;
 }
 
-const Countdown = ({ targetDate, timezone }: { targetDate: Date, timezone: string }) => {
+const Countdown = ({ targetDate }: { targetDate: Date }) => {
     const [now, setNow] = useState(new Date());
 
     useEffect(() => {
@@ -26,14 +27,10 @@ const Countdown = ({ targetDate, timezone }: { targetDate: Date, timezone: strin
         return () => clearInterval(timer);
     }, []);
     
-    // This is a naive implementation, a proper library should be used for timezone-aware calculations
-    // However, for display purposes this is sufficient to show changes based on timezone settings.
-    const nowInTimezone = new Date(now.toLocaleString('en-US', { timeZone: timezone || 'UTC' }));
+    const days = differenceInDays(targetDate, now);
+    const hours = differenceInHours(targetDate, now) % 24;
     
-    const days = differenceInDays(targetDate, nowInTimezone);
-    const hours = differenceInHours(targetDate, nowInTimezone) % 24;
-    
-    if (isAfter(nowInTimezone, targetDate)) {
+    if (isAfter(now, targetDate)) {
         return <span className="text-destructive-foreground font-bold">Overdue!</span>;
     }
 
@@ -47,12 +44,56 @@ const Countdown = ({ targetDate, timezone }: { targetDate: Date, timezone: strin
     );
 };
 
-export function WateringSchedule({ lastWatered, wateringFrequency, wateringTime, onWaterPlant }: WateringScheduleProps) {
+export function WateringSchedule({ plant, onWaterPlant }: WateringScheduleProps) {
   const { settings } = useSettingsStore();
-  const audioRef = useRef<HTMLAudioElement>(null);
   const [isWateredToday, setIsWateredToday] = useState(false);
+  const [isLoadingAdvice, setIsLoadingAdvice] = useState(false);
+  const [advice, setAdvice] = useState<GetWateringAdviceOutput | null>(null);
+
+  const { lastWatered, wateringFrequency, wateringTime, customName, commonName } = plant;
   
-  if (!wateringFrequency || !lastWatered) {
+  const lastWateredDate = new Date(lastWatered);
+  const nextWateringDate = wateringFrequency ? addDays(lastWateredDate, wateringFrequency) : new Date();
+  const isOverdue = wateringFrequency ? isAfter(new Date(), nextWateringDate) : false;
+
+  useEffect(() => {
+    async function fetchWateringAdvice() {
+      if (!isOverdue || !settings.location) return;
+
+      setIsLoadingAdvice(true);
+      setAdvice(null);
+      try {
+        const result = await getWateringAdvice({
+          plantName: customName,
+          plantCommonName: commonName,
+          location: settings.location,
+          isWateringOverdue: isOverdue,
+        });
+        setAdvice(result);
+      } catch (error) {
+        console.error("Failed to get watering advice:", error);
+        // Fallback to a default "Yes" if AI fails, so user is not blocked
+        setAdvice({ shouldWater: 'Yes', reason: 'Could not get AI advice, but schedule says it\'s time.' });
+      } finally {
+        setIsLoadingAdvice(false);
+      }
+    }
+
+    fetchWateringAdvice();
+  }, [isOverdue, customName, commonName, settings.location]);
+
+
+  const handleWaterPlantClick = () => {
+    onWaterPlant();
+    setIsWateredToday(true);
+  };
+  
+  useEffect(() => {
+      setIsWateredToday(false);
+      setAdvice(null);
+  }, [lastWatered]);
+
+  if (!wateringFrequency) {
     return (
         <Card>
             <CardHeader>
@@ -65,62 +106,83 @@ export function WateringSchedule({ lastWatered, wateringFrequency, wateringTime,
     );
   }
 
-  const lastWateredDate = new Date(lastWatered);
-  const nextWateringDate = addDays(lastWateredDate, wateringFrequency);
-  const isOverdue = isAfter(new Date(), nextWateringDate);
-  
-  const isButtonDisabled = isWateredToday;
-
-  useEffect(() => {
-    if (isOverdue && !isWateredToday) {
-      audioRef.current?.play().catch(e => console.error("Audio play failed:", e));
-    } else {
-      audioRef.current?.pause();
-    }
-  }, [isOverdue, isWateredToday]);
-
-  const handleWaterPlantClick = () => {
-    onWaterPlant();
-    setIsWateredToday(true);
-    if(audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-    }
-  };
-  
-  // Reset isWatered state when the next watering cycle begins (i.e. lastWatered date changes)
-  useEffect(() => {
-      setIsWateredToday(false);
-  }, [lastWatered])
-
-  return (
-    <Card className={cn("transition-colors duration-500", isOverdue && !isWateredToday ? 'bg-destructive/80 text-destructive-foreground animate-pulse' : '')}>
-      <CardHeader>
-        <CardTitle className="text-xl flex items-center gap-2">
-            <Calendar /> Watering Schedule
-        </CardTitle>
-        <CardDescription className={cn(isOverdue && !isWateredToday ? 'text-destructive-foreground/80' : '')}>
-            Next watering due on {format(nextWateringDate, "MMMM do")}
-            {wateringTime && ` in the ${wateringTime}`}.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4 text-center">
-        <div className="text-4xl font-bold">
-            <Countdown targetDate={nextWateringDate} timezone={settings.timezone} />
+  const renderContent = () => {
+    if (isLoadingAdvice) {
+      return (
+        <div className="flex flex-col items-center justify-center space-y-2 p-4 text-sm text-muted-foreground">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Asking Sage for weather-based advice...</span>
         </div>
-        <p className={`text-xs ${isOverdue && !isWateredToday ? 'text-destructive-foreground/80' : 'text-muted-foreground'}`}>
+      );
+    }
+
+    if (advice && advice.shouldWater === 'Wait') {
+       return (
+        <div className="p-4 text-center">
+          <div className="text-2xl font-bold mb-2 text-blue-800 dark:text-blue-300">Wait!</div>
+          <p className="text-sm text-blue-700 dark:text-blue-200">{advice.reason}</p>
+        </div>
+      );
+    }
+    
+    if (advice && advice.shouldWater === 'Yes') {
+       return (
+         <CardContent className="space-y-4 text-center">
+            <div className="text-sm p-2 bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 rounded-md flex items-center gap-2 justify-center">
+              <Info className="h-4 w-4"/>
+              <p>{advice.reason}</p>
+            </div>
+            <Button 
+                onClick={handleWaterPlantClick} 
+                className="w-full"
+                disabled={isWateredToday}
+            >
+              <Droplets className="mr-2" /> 
+              {isWateredToday ? 'Watered!' : 'Mark as Watered'}
+            </Button>
+         </CardContent>
+       )
+    }
+
+    // Default view: countdown
+    return (
+       <CardContent className="space-y-4 text-center">
+        <div className="text-4xl font-bold">
+            <Countdown targetDate={nextWateringDate} />
+        </div>
+        <p className="text-xs text-muted-foreground">
             Last watered {formatDistanceToNowStrict(lastWateredDate)} ago
         </p>
         <Button 
             onClick={handleWaterPlantClick} 
             className="w-full"
-            disabled={isButtonDisabled}
-            variant={isOverdue && !isWateredToday ? 'secondary' : 'default'}>
+            disabled={true}
+        >
           <Droplets className="mr-2" /> 
-          {isWateredToday ? 'Watered!' : 'Mark as Watered'}
+          It's not time yet
         </Button>
       </CardContent>
-      <audio ref={audioRef} loop src="https://assets.mixkit.co/sfx/preview/mixkit-facility-alarm-904.mp3" />
+    );
+  };
+  
+  const getCardClass = () => {
+    if (advice?.shouldWater === 'Yes' && !isWateredToday) return 'bg-green-100/50 dark:bg-green-900/50 border-green-500/50';
+    if (advice?.shouldWater === 'Wait') return 'bg-blue-100/50 dark:bg-blue-900/50 border-blue-500/50';
+    return '';
+  }
+
+  return (
+    <Card className={cn("transition-colors duration-500", getCardClass())}>
+      <CardHeader>
+        <CardTitle className="text-xl flex items-center gap-2">
+            <Calendar /> Watering Schedule
+        </CardTitle>
+        <CardDescription>
+            Next watering due on {format(nextWateringDate, "MMMM do")}
+            {wateringTime && ` in the ${wateringTime}`}.
+        </CardDescription>
+      </CardHeader>
+      {renderContent()}
     </Card>
   );
 }

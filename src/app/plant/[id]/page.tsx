@@ -468,9 +468,7 @@ export default function PlantProfilePage() {
           </div>
           <div className="grid auto-rows-max items-start gap-6">
              <WateringSchedule 
-                lastWatered={plant.lastWatered}
-                wateringFrequency={plant.wateringFrequency}
-                wateringTime={plant.wateringTime}
+                plant={plant}
                 onWaterPlant={handleWaterPlant}
               />
             <Card>
