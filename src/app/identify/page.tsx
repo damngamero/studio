@@ -226,8 +226,9 @@ export default function IdentifyPlantPage() {
         latinName: identification.latinName,
         estimatedAge: identification.estimatedAge,
         lastWatered: new Date().toISOString(),
-        wateringFrequency: careTipsResult.wateringFrequency, // Use AI-generated frequency
+        wateringFrequency: careTipsResult.wateringFrequency,
         wateringTime: careTipsResult.wateringTime,
+        wateringAmount: careTipsResult.wateringAmount,
         careTips: careTipsResult.careTips,
       });
       

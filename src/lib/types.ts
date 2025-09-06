@@ -38,6 +38,7 @@ export interface Plant {
   health?: PlantHealthState;
   wateringFrequency?: number; // in days
   wateringTime?: string; // e.g. "morning"
+  wateringAmount?: string; // e.g. "1-2 cups" or "250-500ml"
   lastWatered: string; // ISO date string
   annotatedRegions?: RegionOfInterest[];
   journal?: JournalEntry[];

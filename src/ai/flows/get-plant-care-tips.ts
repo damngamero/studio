@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -9,6 +10,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import { getSettings } from '@/hooks/use-settings-store';
 import {z} from 'genkit';
 
 const GetPlantCareTipsInputSchema = z.object({
@@ -37,6 +39,7 @@ const GetPlantCareTipsOutputSchema = z.object({
     .describe('A summary of care tips tailored to the plant species, including watering, sunlight, and pruning.'),
   wateringFrequency: z.number().describe('The recommended watering frequency in days (e.g., 7).'),
   wateringTime: z.string().describe('The recommended time of day to water (e.g., morning, evening).'),
+  wateringAmount: z.string().describe("The recommended amount of water to use for each watering session (e.g., '1-2 cups' or '250-500ml')."),
 });
 export type GetPlantCareTipsOutput = z.infer<typeof GetPlantCareTipsOutputSchema>;
 
@@ -44,15 +47,27 @@ export async function getPlantCareTips(input: GetPlantCareTipsInput): Promise<Ge
   return getPlantCareTipsFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'getPlantCareTipsPrompt',
-  input: {schema: GetPlantCareTipsInputSchema},
-  output: {schema: GetPlantCareTipsOutputSchema},
-  prompt: `You are an expert horticulturalist. Provide care tips for the following plant. 
-  
+const getPlantCareTipsFlow = ai.defineFlow(
+  {
+    name: 'getPlantCareTipsFlow',
+    inputSchema: GetPlantCareTipsInputSchema,
+    outputSchema: GetPlantCareTipsOutputSchema,
+  },
+  async input => {
+    const { metricUnits } = getSettings();
+    const unitSystem = metricUnits ? "metric (ml)" : "imperial (cups)";
+
+    const prompt = ai.definePrompt({
+      name: 'getPlantCareTipsPrompt',
+      input: {schema: GetPlantCareTipsInputSchema},
+      output: {schema: GetPlantCareTipsOutputSchema},
+      prompt: `You are an expert horticulturalist. Provide care tips for the following plant. 
+      
 Take the user's environment notes, location, and the plant's age into account to provide a tailored watering schedule. If a location is provided, infer the general climate.
 Include details on watering, sunlight, and pruning. 
-Also provide a recommended watering frequency in days and the best time of day to water.
+Also provide a recommended watering frequency in days, the best time of day to water, and the recommended amount of water to give.
+
+The user prefers the ${unitSystem} system for measurements.
 
 Plant Species: {{{plantSpecies}}}
 {{#if estimatedAge}}
@@ -68,15 +83,8 @@ Environment Notes: {{{environmentNotes}}}
 Last Watered: {{{lastWatered}}}
 {{/if}}
 `,
-});
+    });
 
-const getPlantCareTipsFlow = ai.defineFlow(
-  {
-    name: 'getPlantCareTipsFlow',
-    inputSchema: GetPlantCareTipsInputSchema,
-    outputSchema: GetPlantCareTipsOutputSchema,
-  },
-  async input => {
     const {output} = await prompt(input);
     return output!;
   }

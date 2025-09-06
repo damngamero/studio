@@ -127,6 +127,7 @@ export default function PlantProfilePage() {
         careTips: tipsResult.careTips,
         wateringFrequency: tipsResult.wateringFrequency,
         wateringTime: tipsResult.wateringTime,
+        wateringAmount: tipsResult.wateringAmount,
       };
       updatePlant(updatedPlant);
       setPlant(updatedPlant);
@@ -458,7 +459,10 @@ export default function PlantProfilePage() {
                 <Separator />
                  <div>
                     <div className="flex items-center justify-between mb-2">
+                        <div>
                          <h4 className="font-medium text-sm">Sage's Dynamic Care Tips</h4>
+                         {plant.wateringAmount && <p className="text-xs text-muted-foreground">Recommended water: {plant.wateringAmount}</p>}
+                        </div>
                          <Button variant="outline" size="xs" onClick={handleRegenerateTips} disabled={isGeneratingTips}>
                             {isGeneratingTips ? <Loader2 className="mr-2 h-3 w-3 animate-spin"/> : <RefreshCw className="mr-2 h-3 w-3" />}
                             Regenerate
