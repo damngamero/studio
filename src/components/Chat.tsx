@@ -155,7 +155,7 @@ export function Chat({ plantName }: ChatProps) {
               render={({ field }) => (
                 <FormItem className="flex-1">
                   <FormControl>
-                    <Input placeholder="Ask Farmer a question..." {...field} disabled={isLoading} />
+                    <Input placeholder="Ask Sage a question..." {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

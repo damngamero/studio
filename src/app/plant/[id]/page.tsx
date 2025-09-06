@@ -130,7 +130,7 @@ export default function PlantProfilePage() {
       setPlant(updatedPlant);
       toast({
         title: "Care Tips Generated!",
-        description: "Farmer has added new care tips for your plant.",
+        description: "Sage has added new care tips for your plant.",
       });
     } catch (error) {
       console.error("Failed to get care tips:", error);
@@ -164,7 +164,7 @@ export default function PlantProfilePage() {
       setPlant(updatedPlant);
       toast({
         title: "Health Check Complete!",
-        description: "Farmer has assessed your plant's health.",
+        description: "Sage has assessed your plant's health.",
       });
     } catch (error) {
       console.error("Failed to check health:", error);
@@ -292,7 +292,7 @@ export default function PlantProfilePage() {
             </Card>
              <Card>
                <CardHeader>
-                <CardTitle className="text-xl">Farmer's Assistant</CardTitle>
+                <CardTitle className="text-xl">Sage's Assistant</CardTitle>
                 <CardDescription>Get care tips, check health, and chat about your plant.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -362,7 +362,7 @@ export default function PlantProfilePage() {
                 </div>
                 <Separator />
                  <div>
-                    <h4 className="font-medium text-sm mb-2">Farmer's Care Tips</h4>
+                    <h4 className="font-medium text-sm mb-2">Sage's Care Tips</h4>
                     {plant.careTips ? (
                       <Accordion type="single" collapsible defaultValue="item-1">
                         <AccordionItem value="item-1">
@@ -394,7 +394,7 @@ export default function PlantProfilePage() {
               />
             <Card>
               <CardHeader>
-                <CardTitle className="text-xl">Chat with Farmer</CardTitle>
+                <CardTitle className="text-xl">Chat with Sage</CardTitle>
                  <CardDescription>Ask a question about your <span className="italic">{plant.commonName}</span>.</CardDescription>
               </CardHeader>
               <CardContent>

@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Calendar, Droplets } from 'lucide-react';
-import { addDays, differenceInDays, differenceInHours, differenceInMinutes, format, formatDistanceToNowStrict } from 'date-fns';
+import { addDays, differenceInDays, differenceInHours, format, formatDistanceToNowStrict } from 'date-fns';
 import { useSettingsStore } from '@/hooks/use-settings-store';
 
 interface WateringScheduleProps {
@@ -53,7 +54,7 @@ export function WateringSchedule({ lastWatered, wateringFrequency, wateringTime,
                 <CardTitle className="text-xl flex items-center gap-2"><Calendar /> Watering Schedule</CardTitle>
             </CardHeader>
             <CardContent>
-                <p className="text-sm text-muted-foreground">Generate care tips to get an AI-powered watering schedule.</p>
+                <p className="text-sm text-muted-foreground">Set a watering frequency to track your plant's needs.</p>
             </CardContent>
         </Card>
     );
