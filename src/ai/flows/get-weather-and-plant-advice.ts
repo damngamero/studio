@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A Genkit flow that fetches weather and provides plant-specific advice.
@@ -49,7 +50,6 @@ const GetWeatherAndPlantAdviceOutputSchema = z.object({
 });
 export type GetWeatherAndPlantAdviceOutput = z.infer<typeof GetWeatherAndPlantAdviceOutputSchema>;
 
-// This tool uses a free, public API. In a real application, you would use a more robust, authenticated API.
 const getWeatherTool = ai.defineTool(
     {
       name: 'getWeatherForLocation',
@@ -62,12 +62,23 @@ const getWeatherTool = ai.defineTool(
     },
     async ({ location }) => {
         try {
-            // Using a more reliable public API for demonstration.
-            const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max&timezone=auto&forecast_days=3`);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch weather data: ${response.statusText}`);
+            // 1. Geocode location string to get latitude and longitude
+            const geocodeResponse = await fetch(`https://geocode.maps.co/search?q=${encodeURIComponent(location)}`);
+            if (!geocodeResponse.ok) {
+                throw new Error(`Geocoding failed for location: ${location}`);
             }
-            const data = await response.json();
+            const geocodeData = await geocodeResponse.json();
+            if (!geocodeData || geocodeData.length === 0) {
+                throw new Error(`No coordinates found for location: ${location}`);
+            }
+            const { lat, lon } = geocodeData[0];
+
+            // 2. Fetch weather using the retrieved coordinates
+            const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max&timezone=auto&forecast_days=3`);
+            if (!weatherResponse.ok) {
+                throw new Error(`Failed to fetch weather data: ${weatherResponse.statusText}`);
+            }
+            const data = await weatherResponse.json();
 
             // Simple mapping from WMO weather codes to our condition strings
             const codeToCondition = (code: number) => {
