@@ -1,11 +1,11 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope } from "lucide-react";
+import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, Upload, X } from "lucide-react";
 
 import { usePlantStore } from "@/hooks/use-plant-store";
 import { getPlantCareTips } from "@/ai/flows/get-plant-care-tips";
@@ -18,10 +18,12 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose, DialogFooter } from "@/components/ui/dialog";
 import { Chat } from "@/components/Chat";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
 
 function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -51,6 +53,11 @@ export default function PlantProfilePage() {
   const [plant, setPlant] = useState<Plant | null | undefined>(undefined);
   const [isFetchingTips, setIsFetchingTips] = useState(false);
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
+  const [isHealthCheckModalOpen, setIsHealthCheckModalOpen] = useState(false);
+  const [healthCheckPhoto, setHealthCheckPhoto] = useState<string | null>(null);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
 
   const plantId = Array.isArray(params.id) ? params.id[0] : params.id;
 
@@ -60,6 +67,47 @@ export default function PlantProfilePage() {
       setPlant(foundPlant);
     }
   }, [plantId, getPlantById]);
+  
+  useEffect(() => {
+    if (isHealthCheckModalOpen) {
+      const getCameraPermission = async () => {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          setHasCameraPermission(true);
+
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
+        } catch (error) {
+          console.error('Error accessing camera:', error);
+          setHasCameraPermission(false);
+        }
+      };
+
+      getCameraPermission();
+      
+      return () => {
+        if (videoRef.current && videoRef.current.srcObject) {
+          const stream = videoRef.current.srcObject as MediaStream;
+          stream.getTracks().forEach(track => track.stop());
+        }
+      }
+    }
+  }, [isHealthCheckModalOpen]);
+
+  const handleCaptureHealthPhoto = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement("canvas");
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        const dataUri = canvas.toDataURL("image/jpeg");
+        setHealthCheckPhoto(dataUri);
+      }
+    }
+  };
 
   const handleGenerateTips = async () => {
     if (!plant) return;
@@ -86,11 +134,18 @@ export default function PlantProfilePage() {
   };
 
   const handleCheckHealth = async () => {
-    if (!plant) return;
+    if (!plant || !healthCheckPhoto) {
+       toast({
+        variant: "destructive",
+        title: "No Photo",
+        description: "Please take a photo for the health check.",
+      });
+      return;
+    }
     setIsCheckingHealth(true);
     try {
       const healthResult = await checkPlantHealth({ 
-        photoDataUri: plant.photoUrl,
+        photoDataUri: healthCheckPhoto,
         notes: plant.notes 
       });
       const updatedPlant = { ...plant, health: healthResult };
@@ -109,6 +164,8 @@ export default function PlantProfilePage() {
       });
     } finally {
       setIsCheckingHealth(false);
+      setIsHealthCheckModalOpen(false);
+      setHealthCheckPhoto(null);
     }
   };
 
@@ -144,7 +201,7 @@ export default function PlantProfilePage() {
 
   return (
     <AppLayout>
-      <div className="mx-auto grid max-w-6xl flex-1 auto-rows-max gap-4">
+      <div className="mx-auto grid max-w-5xl flex-1 auto-rows-max gap-4">
         <div className="flex items-center gap-4">
            <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => router.back()}>
             <ChevronLeftIcon className="h-4 w-4" />
@@ -159,13 +216,13 @@ export default function PlantProfilePage() {
           <div className="hidden items-center gap-2 md:ml-auto md:flex">
             <Button variant="outline" size="sm" asChild>
                 <Link href={`/plant/${plant.id}/edit`}>
-                  <Pencil className="mr-2 h-4 w-4" /> Edit
+                  <Pencil className="mr-2 h-3 w-3" /> Edit
                 </Link>
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm">
-                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                  <Trash2 className="mr-2 h-3 w-3" /> Delete
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
@@ -183,22 +240,36 @@ export default function PlantProfilePage() {
             </AlertDialog>
           </div>
         </div>
-        <div className="grid gap-8 md:grid-cols-[1fr_300px]">
-          <div className="grid auto-rows-max items-start gap-8">
+        <div className="grid gap-6 md:grid-cols-[1fr_280px]">
+          <div className="grid auto-rows-max items-start gap-6">
             <Card>
               <CardContent className="p-4">
-                <div className="relative aspect-video w-full rounded-lg overflow-hidden shadow-lg mb-6">
-                  <Image 
-                    src={plant.photoUrl} 
-                    alt={plant.customName} 
-                    fill
-                    className="object-cover w-full h-full" 
-                    data-ai-hint="plant" 
-                  />
-                </div>
+                 <Dialog>
+                    <DialogTrigger asChild>
+                      <div className="relative aspect-video w-full rounded-md overflow-hidden shadow-md mb-6 cursor-pointer">
+                        <Image 
+                          src={plant.photoUrl} 
+                          alt={plant.customName} 
+                          fill
+                          className="object-cover w-full h-full" 
+                          data-ai-hint="plant" 
+                        />
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-3xl p-0">
+                        <Image 
+                          src={plant.photoUrl} 
+                          alt={plant.customName} 
+                          width={1920}
+                          height={1080}
+                          className="object-contain rounded-lg"
+                          data-ai-hint="plant" 
+                        />
+                    </DialogContent>
+                  </Dialog>
                  {plant.notes && (
                     <div>
-                      <h3 className="font-semibold text-lg mb-2">My Notes</h3>
+                      <h3 className="font-semibold text-base mb-2">My Notes</h3>
                       <p className="text-sm whitespace-pre-wrap text-muted-foreground">{plant.notes}</p>
                     </div>
                   )}
@@ -206,69 +277,109 @@ export default function PlantProfilePage() {
             </Card>
              <Card>
                <CardHeader>
-                <CardTitle>AI Assistant</CardTitle>
+                <CardTitle className="text-xl">AI Assistant</CardTitle>
                 <CardDescription>Get care tips, check health, and chat about your plant.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4">
                 <div>
-                  <h4 className="font-medium mb-2">AI Health Check</h4>
+                  <h4 className="font-medium text-sm mb-2">AI Health Check</h4>
                    {plant.health ? (
-                    <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
+                    <div className="space-y-2 p-3 bg-muted/50 rounded-lg text-sm">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold">Status:</span> 
                         <Badge variant={plant.health.isHealthy ? 'default' : 'destructive'}>
                           {plant.health.isHealthy ? 'Healthy' : 'Needs Attention'}
                         </Badge>
                       </div>
-                      <p className="text-sm whitespace-pre-wrap"><span className="font-semibold">Diagnosis:</span> {plant.health.diagnosis}</p>
+                      <p className="whitespace-pre-wrap"><span className="font-semibold">Diagnosis:</span> {plant.health.diagnosis}</p>
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground">No health check performed yet.</p>
                   )}
-                   <Button onClick={handleCheckHealth} disabled={isCheckingHealth} className="mt-3">
-                    {isCheckingHealth ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Stethoscope className="mr-2 h-4 w-4" />
-                    )}
-                    {plant.health ? 'Re-check Health' : 'Check Health'}
-                  </Button>
+                   <Dialog open={isHealthCheckModalOpen} onOpenChange={setIsHealthCheckModalOpen}>
+                      <DialogTrigger asChild>
+                         <Button variant="outline" size="sm" className="mt-3">
+                            <Stethoscope className="mr-2 h-4 w-4" /> {plant.health ? 'Re-check Health' : 'Check Health'}
+                         </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Daily Health Check</DialogTitle>
+                          <DialogDescription>Take a new photo of your plant for today's health assessment.</DialogDescription>
+                        </DialogHeader>
+                        <div className="grid grid-cols-2 gap-4 my-4">
+                           <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center overflow-hidden">
+                            {healthCheckPhoto ? (
+                                <Image src={healthCheckPhoto} alt="Health check photo" layout="fill" objectFit="cover" />
+                            ) : (
+                              <>
+                                <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
+                                {hasCameraPermission === false && (
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                                    <p className="text-white text-center text-xs p-2">Camera access denied.</p>
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                          <div className="flex flex-col gap-2 justify-center">
+                              <Button onClick={handleCaptureHealthPhoto} disabled={!hasCameraPermission}>
+                                <Camera className="mr-2" /> Capture
+                              </Button>
+                              <Button variant="outline" onClick={() => setHealthCheckPhoto(null)} disabled={!healthCheckPhoto}>
+                                <X className="mr-2" /> Retake
+                              </Button>
+                          </div>
+                        </div>
+                        <DialogFooter>
+                            <DialogClose asChild><Button variant="ghost">Cancel</Button></DialogClose>
+                            <Button onClick={handleCheckHealth} disabled={isCheckingHealth || !healthCheckPhoto}>
+                              {isCheckingHealth ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : (
+                                <Stethoscope className="mr-2 h-4 w-4" />
+                              )}
+                              Run Health Check
+                            </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                 </div>
                 <Separator />
                  <div>
-                    <h4 className="font-medium mb-2">AI-Powered Care Tips</h4>
+                    <h4 className="font-medium text-sm mb-2">AI-Powered Care Tips</h4>
                     {plant.careTips ? (
                       <Accordion type="single" collapsible defaultValue="item-1">
                         <AccordionItem value="item-1">
-                          <AccordionTrigger>View Care Tips</AccordionTrigger>
+                          <AccordionTrigger className="text-sm">View Care Tips</AccordionTrigger>
                           <AccordionContent className="whitespace-pre-wrap text-sm">{plant.careTips}</AccordionContent>
                         </AccordionItem>
                       </Accordion>
                     ) : (
                       <p className="text-sm text-muted-foreground">No care tips generated yet.</p>
                     )}
-                    <Button onClick={handleGenerateTips} disabled={isFetchingTips} className="mt-3">
+                    <Button onClick={handleGenerateTips} disabled={isFetchingTips} className="mt-3" size="sm" variant="outline">
                       {isFetchingTips ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
                         <Bot className="mr-2 h-4 w-4" />
                       )}
-                      {plant.careTips ? 'Regenerate Tips' : 'Generate Tips'}
+                      {plant.careTips ? 'Regenerate' : 'Generate'}
                     </Button>
                  </div>
               </CardContent>
             </Card>
           </div>
-          <div className="grid auto-rows-max items-start gap-8">
+          <div className="grid auto-rows-max items-start gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Chat with AI</CardTitle>
+                <CardTitle className="text-xl">Chat with AI</CardTitle>
                  <CardDescription>Ask a question about your <span className="italic">{plant.commonName}</span>.</CardDescription>
               </CardHeader>
               <CardContent>
                  <Dialog>
                     <DialogTrigger asChild>
-                      <Button variant="outline" className="w-full">
+                      <Button className="w-full">
                         <MessageSquare className="mr-2" /> Chat Now
                       </Button>
                     </DialogTrigger>
@@ -283,12 +394,12 @@ export default function PlantProfilePage() {
             </Card>
             <Card className="overflow-hidden">
               <CardHeader>
-                <CardTitle>Quick View</CardTitle>
+                <CardTitle className="text-xl">Quick View</CardTitle>
               </CardHeader>
               <CardContent>
-                 <div className="grid gap-3">
+                 <div className="grid gap-2 text-sm">
                     <div className="font-semibold">General Care</div>
-                    <ul className="grid gap-3">
+                    <ul className="grid gap-2">
                       <li className="flex items-center justify-between">
                         <span className="text-muted-foreground flex items-center gap-2"><Droplets className="h-4 w-4" /> Watering</span>
                         <span>Twice a week</span>
