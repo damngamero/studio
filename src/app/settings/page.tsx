@@ -16,25 +16,47 @@ const settingsFormSchema = z.object({
   apiKey: z.string().optional(),
 });
 
+// A new schema for the preferences form
+const preferencesFormSchema = z.object({
+  wateringReminders: z.boolean().default(true),
+  metricUnits: z.boolean().default(false),
+});
+
 export default function SettingsPage() {
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof settingsFormSchema>>({
+  const apiKeyForm = useForm<z.infer<typeof settingsFormSchema>>({
     resolver: zodResolver(settingsFormSchema),
     defaultValues: {
       apiKey: "", // In a real app, this would be loaded from a secure store
     },
   });
   
-  const onSubmit = (values: z.infer<typeof settingsFormSchema>) => {
+  const preferencesForm = useForm<z.infer<typeof preferencesFormSchema>>({
+    resolver: zodResolver(preferencesFormSchema),
+    defaultValues: {
+      wateringReminders: true,
+      metricUnits: false,
+    },
+  });
+
+  const onApiKeySubmit = (values: z.infer<typeof settingsFormSchema>) => {
     // In a real app, you would securely save the API key.
     // For this demo, we'll just show a toast.
     console.log("Saving API Key:", values.apiKey);
     toast({
       title: "Settings Saved",
-      description: "Your new settings have been applied.",
+      description: "Your new API key setting has been applied.",
     });
   };
+
+  const onPreferencesSubmit = (values: z.infer<typeof preferencesFormSchema>) => {
+    console.log("Saving preferences:", values);
+    toast({
+      title: "Preferences Saved",
+      description: "Your new preferences have been applied.",
+    });
+  }
 
   return (
     <AppLayout>
@@ -48,10 +70,10 @@ export default function SettingsPage() {
               <CardDescription>Manage your external API keys here. This is for demonstration purposes.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <Form {...apiKeyForm}>
+                <form onSubmit={apiKeyForm.handleSubmit(onApiKeySubmit)} className="space-y-4">
                   <FormField
-                    control={form.control}
+                    control={apiKeyForm.control}
                     name="apiKey"
                     render={({ field }) => (
                       <FormItem>
@@ -73,29 +95,55 @@ export default function SettingsPage() {
           </Card>
           
           <Card>
-            <CardHeader>
-              <CardTitle>Preferences</CardTitle>
-              <CardDescription>Customize your app experience.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <FormLabel>Watering Reminders</FormLabel>
-                  <FormDescription>Receive notifications when it's time to water your plants.</FormDescription>
-                </div>
-                <Switch id="watering-reminders" defaultChecked />
-              </div>
+            <Form {...preferencesForm}>
+              <form onSubmit={preferencesForm.handleSubmit(onPreferencesSubmit)}>
+                <CardHeader>
+                  <CardTitle>Preferences</CardTitle>
+                  <CardDescription>Customize your app experience.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <FormField
+                      control={preferencesForm.control}
+                      name="wateringReminders"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between">
+                           <div>
+                            <FormLabel>Watering Reminders</FormLabel>
+                            <FormDescription>Receive notifications when it's time to water your plants.</FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
 
-              <Separator />
+                  <Separator />
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <FormLabel>Use Metric Units</FormLabel>
-                  <FormDescription>Display measurements in cm/ml instead of inches/oz.</FormDescription>
-                </div>
-                <Switch id="metric-units" />
-              </div>
-            </CardContent>
+                  <FormField
+                      control={preferencesForm.control}
+                      name="metricUnits"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between">
+                           <div>
+                            <FormLabel>Use Metric Units</FormLabel>
+                            <FormDescription>Display measurements in cm/ml instead of inches/oz.</FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                </CardContent>
+              </form>
+            </Form>
           </Card>
         </div>
       </div>
