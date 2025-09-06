@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X, MapPin, AlertTriangle, Info } from "lucide-react";
+import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X, MapPin, AlertTriangle, Info, CloudSun } from "lucide-react";
 
 import { usePlantStore } from "@/hooks/use-plant-store";
 import { useSettingsStore } from "@/hooks/use-settings-store";
@@ -19,12 +19,13 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose, DialogFooter } from "@/components/ui/dialog";
 import { Chat } from "@/components/Chat";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { WateringSchedule } from "@/components/WateringSchedule";
 import { InteractivePhoto } from "@/components/InteractivePhoto";
+import { DialogDescription } from "@/components/ui/dialog";
 
 function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -395,12 +396,15 @@ export default function PlantProfilePage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="text-xl">Proactive Tips</CardTitle>
-                    <CardDescription>Sage will provide timely advice based on local weather.</CardDescription>
+                    <CardDescription>Sage provides timely advice based on local weather.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg flex items-center gap-3">
-                        <Info className="h-5 w-5"/>
-                        <span>Proactive tips will appear here once you set your location in settings.</span>
+                    <div className="text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg flex flex-col items-center justify-center text-center gap-3">
+                        <CloudSun className="h-8 w-8"/>
+                        <span>Proactive weather tips for all your plants are available on the new Weather page.</span>
+                        <Button asChild size="sm" className="mt-2">
+                           <Link href="/weather">Go to Weather Center</Link>
+                        </Button>
                     </div>
                 </CardContent>
             </Card>
