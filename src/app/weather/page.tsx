@@ -62,6 +62,48 @@ export default function WeatherPage() {
   }, [settings.location, plants]);
 
   const renderContent = () => {
+    if (isLoading) {
+        return (
+          <div className="grid gap-8">
+              <div>
+                  <Card>
+                      <CardHeader>
+                          <CardTitle><Skeleton className="h-8 w-64" /></CardTitle>
+                          <CardDescription><Skeleton className="h-4 w-48" /></CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                            <Skeleton className="h-20 w-full" />
+                      </CardContent>
+                  </Card>
+              </div>
+              <div>
+                  <h2 className="text-2xl font-bold font-heading mb-4"><Skeleton className="h-8 w-48" /></h2>
+                  <div className="grid md:grid-cols-3 gap-4">
+                      {Array.from({length: 3}).map((_, i) => (
+                          <Card key={i}><CardContent className="p-4"><Skeleton className="h-16 w-full" /></CardContent></Card>
+                        ))}
+                  </div>
+              </div>
+                <div>
+                  <h2 className="text-2xl font-bold font-heading mb-4"><Skeleton className="h-8 w-56" /></h2>
+                    <div className="space-y-4">
+                        {Array.from({length: 2}).map((_, i) => (
+                            <Card key={i}>
+                              <CardHeader>
+                                  <CardTitle className="text-lg"><Skeleton className="h-6 w-32" /></CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                  <Skeleton className="h-4 w-full" />
+                                  <Skeleton className="h-4 w-2/3 mt-2" />
+                              </CardContent>
+                          </Card>
+                        ))}
+                  </div>
+              </div>
+          </div>
+        )
+    }
+
     if (!settings.location) {
       return (
         <Alert>
@@ -94,6 +136,10 @@ export default function WeatherPage() {
        return <Alert variant="destructive"><AlertTitle>Error</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>
     }
     
+    if (!weatherData) {
+        return <p className="text-muted-foreground">No weather data available.</p>
+    }
+
     return (
         <div className="grid gap-8">
             <div>
@@ -103,78 +149,54 @@ export default function WeatherPage() {
                         <CardDescription>Here's what it looks like outside right now.</CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-col md:flex-row items-center justify-between gap-6">
-                        {isLoading || !weatherData ? <Skeleton className="w-48 h-20" /> : (
-                            <div className="flex items-center gap-4">
-                                <WeatherIcon condition={weatherData.currentWeather.condition} className="w-20 h-20 text-primary" />
-                                <div>
-                                    <p className="text-5xl font-bold">{weatherData.currentWeather.temperature}°{weatherData.currentWeather.temperatureUnit === 'celsius' ? 'C' : 'F'}</p>
-                                    <p className="text-muted-foreground">{weatherData.currentWeather.condition}</p>
-                                </div>
+                        <div className="flex items-center gap-4">
+                            <WeatherIcon condition={weatherData.currentWeather.condition} className="w-20 h-20 text-primary" />
+                            <div>
+                                <p className="text-5xl font-bold">{weatherData.currentWeather.temperature}°{weatherData.currentWeather.temperatureUnit === 'celsius' ? 'C' : 'F'}</p>
+                                <p className="text-muted-foreground">{weatherData.currentWeather.condition}</p>
                             </div>
-                        )}
-                         {isLoading || !weatherData ? <Skeleton className="w-64 h-10" /> : (
-                            <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                                <div className="flex items-center gap-2"><Thermometer className="w-4 h-4 text-muted-foreground" /> Humidity: {weatherData.currentWeather.humidity}%</div>
-                                <div className="flex items-center gap-2"><Wind className="w-4 h-4 text-muted-foreground" /> Wind: {weatherData.currentWeather.windSpeed} {weatherData.currentWeather.windSpeedUnit}</div>
-                            </div>
-                        )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                            <div className="flex items-center gap-2"><Thermometer className="w-4 h-4 text-muted-foreground" /> Humidity: {weatherData.currentWeather.humidity}%</div>
+                            <div className="flex items-center gap-2"><Wind className="w-4 h-4 text-muted-foreground" /> Wind: {weatherData.currentWeather.windSpeed} {weatherData.currentWeather.windSpeedUnit}</div>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
             <div>
                 <h2 className="text-2xl font-bold font-heading mb-4">3-Day Forecast</h2>
                 <div className="grid md:grid-cols-3 gap-4">
-                    {isLoading || !weatherData ? (
-                        Array.from({length: 3}).map((_, i) => (
-                           <Card key={i}><CardContent className="p-4"><Skeleton className="h-16 w-full" /></CardContent></Card>
-                        ))
-                    ) : (
-                        weatherData.forecast.map(day => (
-                            <Card key={day.day}>
-                                <CardContent className="p-4 flex items-center justify-between">
-                                     <div>
-                                        <p className="font-semibold">{day.day}</p>
-                                        <p className="text-sm text-muted-foreground">{day.condition}</p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                         <p className="text-2xl font-bold">{day.temperature}°{weatherData.currentWeather.temperatureUnit === 'celsius' ? 'C' : 'F'}</p>
-                                        <WeatherIcon condition={day.condition} className="w-8 h-8 text-muted-foreground" />
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))
-                    )}
+                    {weatherData.forecast.map(day => (
+                        <Card key={day.day}>
+                            <CardContent className="p-4 flex items-center justify-between">
+                                 <div>
+                                    <p className="font-semibold">{day.day}</p>
+                                    <p className="text-sm text-muted-foreground">{day.condition}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                     <p className="text-2xl font-bold">{day.temperature}°{weatherData.currentWeather.temperatureUnit === 'celsius' ? 'C' : 'F'}</p>
+                                    <WeatherIcon condition={day.condition} className="w-8 h-8 text-muted-foreground" />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
                 </div>
             </div>
              <div>
                 <h2 className="text-2xl font-bold font-heading mb-4">Sage's Proactive Advice</h2>
                  <div className="space-y-4">
-                    {isLoading || !weatherData ? (
-                         plants.map(p => (
-                             <Card key={p.id}>
-                               <CardHeader>
-                                   <CardTitle className="text-lg"><Skeleton className="h-6 w-32" /></CardTitle>
-                               </Header>
-                               <CardContent>
-                                   <Skeleton className="h-4 w-full" />
-                                   <Skeleton className="h-4 w-2/3 mt-2" />
-                               </CardContent>
-                            </Card>
-                         ))
-                    ) : (
-                         weatherData.plantAdvice.map(advice => (
-                            <Card key={advice.customName}>
-                               <CardHeader>
-                                   <CardTitle className="text-lg">{advice.customName}</CardTitle>
-                               </Header>
-                               <CardContent>
-                                   <div className="text-sm prose prose-sm max-w-none prose-p:my-1 prose-strong:text-foreground">
-                                    <ReactMarkdown>{advice.advice}</ReactMarkdown>
-                                   </div>
-                               </CardContent>
-                            </Card>
-                         ))
-                    )}
+                     {weatherData.plantAdvice.map(advice => (
+                        <Card key={advice.customName}>
+                           <CardHeader>
+                               <CardTitle className="text-lg">{advice.customName}</CardTitle>
+                           </CardHeader>
+                           <CardContent>
+                               <div className="text-sm prose prose-sm max-w-none prose-p:my-1 prose-strong:text-foreground">
+                                <ReactMarkdown>{advice.advice}</ReactMarkdown>
+                               </div>
+                           </CardContent>
+                        </Card>
+                     ))}
                 </div>
             </div>
         </div>
