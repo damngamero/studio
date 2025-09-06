@@ -4,7 +4,7 @@
 import React, { type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Leaf, ScanLine, Settings, Menu, CloudSun } from "lucide-react";
+import { Leaf, ScanLine, Settings, Menu, CloudSun, Trophy } from "lucide-react";
 
 import {
   Sheet,
@@ -28,6 +28,7 @@ const navItems = [
   { href: "/", label: "My Plants", icon: Leaf },
   { href: "/identify", label: "Identify Plant", icon: ScanLine },
   { href: "/weather", label: "Weather", icon: CloudSun },
+  { href: "/achievements", label: "Achievements", icon: Trophy },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

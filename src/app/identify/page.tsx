@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Camera, Loader2, Sparkles, Save, Upload, CircleUserRound } from "lucide-react";
+import { Camera, Loader2, Sparkles, Save, Upload, CircleUserRound, Trophy } from "lucide-react";
 
 import { identifyPlantFromPhoto } from "@/ai/flows/identify-plant-from-photo";
 import type { IdentifyPlantFromPhotoOutput } from "@/ai/flows/identify-plant-from-photo";
 import { usePlantStore } from "@/hooks/use-plant-store";
+import { useAchievementStore } from "@/hooks/use-achievement-store";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -32,7 +33,8 @@ type InputMode = "upload" | "camera";
 
 export default function IdentifyPlantPage() {
   const router = useRouter();
-  const { addPlant } = usePlantStore();
+  const { addPlant, plants } = usePlantStore();
+  const { checkAndUnlock } = useAchievementStore();
   const { toast } = useToast();
   const [photoDataUri, setPhotoDataUri] = useState<string | null>(null);
   const [identification, setIdentification] = useState<IdentifyPlantFromPhotoOutput | null>(null);
@@ -218,6 +220,11 @@ export default function IdentifyPlantPage() {
       title: "Plant Added!",
       description: `${values.customName} has been added to your garden.`,
     });
+
+    // Check for achievements
+    const plantCount = plants.length + 1;
+    checkAndUnlock(['first_plant', 'plant_collector', 'plant_enthusiast'], plantCount);
+
 
     router.push(`/plant/${newPlant.id}`);
   };
