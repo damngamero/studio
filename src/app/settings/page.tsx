@@ -13,9 +13,12 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useSettingsStore, type Theme } from "@/hooks/use-settings-store";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, MapPin } from "lucide-react";
+import { Check, MapPin, ChevronsUpDown } from "lucide-react";
 import { timezones } from "@/lib/timezones";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 const preferencesFormSchema = z.object({
   theme: z.custom<Theme>(),
@@ -116,25 +119,60 @@ export default function SettingsPage() {
                     control={form.control}
                     name="timezone"
                     render={({ field }) => (
-                      <FormItem>
+                       <FormItem className="flex flex-col">
                         <FormLabel>Timezone</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a timezone" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="max-h-60">
-                            {timezones.map((tz) => (
-                              <SelectItem key={tz} value={tz}>{tz}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  "w-[240px] justify-between",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value
+                                  ? timezones.find(
+                                      (tz) => tz === field.value
+                                    )
+                                  : "Select timezone"}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[240px] p-0">
+                            <Command>
+                              <CommandInput placeholder="Search timezone..." />
+                              <CommandList>
+                                <CommandEmpty>No timezone found.</CommandEmpty>
+                                <CommandGroup>
+                                  {timezones.map((tz) => (
+                                    <CommandItem
+                                      value={tz}
+                                      key={tz}
+                                      onSelect={() => {
+                                        form.setValue("timezone", tz)
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          tz === field.value
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                      />
+                                      {tz}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                         <FormDescription>
-                          This is used to provide accurate watering schedules.
+                           This is used to provide accurate watering schedules.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
