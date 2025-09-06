@@ -8,24 +8,31 @@ import { usePlantStore } from "@/hooks/use-plant-store";
 import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function MyPlantsPage() {
-  const { plants } = usePlantStore();
-
-  return (
-    <AppLayout>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold font-heading">My Plants</h1>
-          <p className="text-muted-foreground">Your digital garden.</p>
+  const { plants, isInitialized } = usePlantStore();
+  
+  const renderContent = () => {
+    if (!isInitialized) {
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i}>
+              <Skeleton className="aspect-[4/3] w-full" />
+              <CardContent className="p-4">
+                <Skeleton className="h-5 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardContent>
+            </Card>
+          ))}
         </div>
-        <Button asChild>
-          <Link href="/identify">
-            <PlusCircle className="mr-2 h-4 w-4" /> Add New Plant
-          </Link>
-        </Button>
-      </div>
-      {plants.length > 0 ? (
+      );
+    }
+    
+    if (plants.length > 0) {
+      return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {plants.map((plant) => (
             <Link href={`/plant/${plant.id}`} key={plant.id} className="group">
@@ -50,7 +57,10 @@ export default function MyPlantsPage() {
             </Link>
           ))}
         </div>
-      ) : (
+      )
+    }
+
+    return (
         <div className="text-center py-20 border-2 border-dashed rounded-lg bg-card">
           <LeafIcon className="mx-auto h-12 w-12 text-muted-foreground" />
           <h2 className="mt-4 text-xl font-semibold">Your garden is empty!</h2>
@@ -61,7 +71,23 @@ export default function MyPlantsPage() {
             </Link>
           </Button>
         </div>
-      )}
+      )
+  };
+
+  return (
+    <AppLayout>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold font-heading">My Plants</h1>
+          <p className="text-muted-foreground">Your digital garden.</p>
+        </div>
+        <Button asChild>
+          <Link href="/identify">
+            <PlusCircle className="mr-2 h-4 w-4" /> Add New Plant
+          </Link>
+        </Button>
+      </div>
+      {renderContent()}
     </AppLayout>
   );
 }

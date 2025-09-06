@@ -6,20 +6,30 @@ import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, Lock } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AchievementsPage() {
-  const { achievements } = useAchievementStore();
+  const { achievements, isInitialized } = useAchievementStore();
 
-  return (
-    <AppLayout>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold font-heading">Achievements</h1>
-          <p className="text-muted-foreground">Celebrate your plant care milestones!</p>
-        </div>
-      </div>
+  const renderContent = () => {
+    if (!isInitialized) {
+      return (
+         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+           {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i}>
+                <CardContent className="p-6 text-center flex flex-col items-center justify-center h-full">
+                    <Skeleton className="w-20 h-20 rounded-full mb-4" />
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-full" />
+                </CardContent>
+            </Card>
+          ))}
+         </div>
+      );
+    }
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    return (
+       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {achievements.map((achievement) => (
           <Card 
             key={achievement.id}
@@ -55,6 +65,18 @@ export default function AchievementsPage() {
           </Card>
         ))}
       </div>
+    );
+  }
+
+  return (
+    <AppLayout>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold font-heading">Achievements</h1>
+          <p className="text-muted-foreground">Celebrate your plant care milestones!</p>
+        </div>
+      </div>
+      {renderContent()}
     </AppLayout>
   );
 }
