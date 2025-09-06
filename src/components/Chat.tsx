@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -11,8 +11,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { Badge } from './ui/badge';
 
 const chatFormSchema = z.object({
   question: z.string().min(1, 'Please enter a question.'),
@@ -27,9 +28,17 @@ interface ChatProps {
   plantName: string;
 }
 
+const suggestions = [
+    "When should I water it?",
+    "How much sunlight does it need?",
+    "How do I make fertilizer for it?",
+    "Tell me a fun fact about this plant."
+];
+
 export function Chat({ plantName }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<z.infer<typeof chatFormSchema>>({
     resolver: zodResolver(chatFormSchema),
@@ -38,16 +47,22 @@ export function Chat({ plantName }: ChatProps) {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof chatFormSchema>) => {
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+        scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
+    }
+  }, [messages]);
+
+  const handleSendMessage = async (question: string) => {
     setIsLoading(true);
-    const userMessage: Message = { role: 'user', content: values.question };
+    const userMessage: Message = { role: 'user', content: question };
     setMessages((prev) => [...prev, userMessage]);
     form.reset();
 
     try {
       const result = await chatAboutPlant({
         plantName,
-        question: values.question,
+        question: question,
       });
       const assistantMessage: Message = { role: 'assistant', content: result.answer };
       setMessages((prev) => [...prev, assistantMessage]);
@@ -63,10 +78,20 @@ export function Chat({ plantName }: ChatProps) {
     }
   };
 
+  const onSubmit = (values: z.infer<typeof chatFormSchema>) => {
+    handleSendMessage(values.question);
+  };
+
   return (
     <div className="flex flex-col h-[60vh]">
       <ScrollArea className="flex-1 p-4 pr-6">
-        <div className="space-y-4">
+        <div className="space-y-4" ref={scrollAreaRef}>
+          {messages.length === 0 && (
+            <div className="text-center text-muted-foreground p-4">
+                <Bot className="mx-auto w-8 h-8 mb-2"/>
+                <p>Ask me anything about your {plantName}.</p>
+            </div>
+          )}
           {messages.map((message, index) => (
             <div
               key={index}
@@ -82,7 +107,7 @@ export function Chat({ plantName }: ChatProps) {
               )}
               <div
                 className={cn(
-                  'p-3 rounded-lg max-w-sm',
+                  'p-3 rounded-lg max-w-sm whitespace-pre-wrap',
                   message.role === 'user'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted'
@@ -97,7 +122,7 @@ export function Chat({ plantName }: ChatProps) {
               )}
             </div>
           ))}
-           {isLoading && messages[messages.length -1].role === 'user' && (
+           {isLoading && messages.length > 0 && messages[messages.length -1].role === 'user' && (
              <div className="flex items-start gap-3 justify-start">
                 <Avatar className="w-8 h-8">
                   <AvatarFallback><Bot className="w-5 h-5" /></AvatarFallback>
@@ -109,7 +134,19 @@ export function Chat({ plantName }: ChatProps) {
            )}
         </div>
       </ScrollArea>
-      <div className="p-4 border-t">
+      <div className="p-4 border-t space-y-4">
+        <div className="flex flex-wrap gap-2">
+            {suggestions.map((suggestion) => (
+                <Badge 
+                    key={suggestion}
+                    variant="outline"
+                    className="cursor-pointer hover:bg-muted"
+                    onClick={() => handleSendMessage(suggestion)}
+                >
+                    {suggestion}
+                </Badge>
+            ))}
+        </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-center gap-2">
             <FormField

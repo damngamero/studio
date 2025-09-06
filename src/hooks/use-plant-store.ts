@@ -28,7 +28,7 @@ export function usePlantStore() {
   const syncToLocalStorage = useCallback((updatedPlants: Plant[]) => {
     try {
       window.localStorage.setItem(STORE_KEY, JSON.stringify(updatedPlants));
-    } catch (error) {
+    } catch (error)
       console.error('Error writing to localStorage', error);
     }
   }, []);

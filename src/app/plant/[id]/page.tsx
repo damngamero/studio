@@ -5,12 +5,12 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, Upload, X } from "lucide-react";
+import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X } from "lucide-react";
 
 import { usePlantStore } from "@/hooks/use-plant-store";
 import { getPlantCareTips } from "@/ai/flows/get-plant-care-tips";
 import { checkPlantHealth } from "@/ai/flows/check-plant-health";
-import type { Plant, PlantHealthState } from "@/lib/types";
+import type { Plant } from "@/lib/types";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -22,8 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Chat } from "@/components/Chat";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
+import { WateringSchedule } from "@/components/WateringSchedule";
 
 function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -181,6 +180,17 @@ export default function PlantProfilePage() {
     }
   };
 
+  const handleWaterPlant = () => {
+    if (!plant) return;
+    const updatedPlant = { ...plant, lastWatered: new Date().toISOString() };
+    updatePlant(updatedPlant);
+    setPlant(updatedPlant);
+    toast({
+      title: "Plant Watered!",
+      description: `Nice work! ${plant.customName} has been watered.`,
+    });
+  };
+
   if (plant === undefined) {
     return <AppLayout><div className="max-w-4xl mx-auto"><Skeleton className="w-full h-96" /></div></AppLayout>;
   }
@@ -308,7 +318,7 @@ export default function PlantProfilePage() {
                           <DialogDescription>Take a new photo of your plant for today's health assessment.</DialogDescription>
                         </DialogHeader>
                         <div className="grid grid-cols-2 gap-4 my-4">
-                           <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center overflow-hidden">
+                           <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center overflow-hidden relative">
                             {healthCheckPhoto ? (
                                 <Image src={healthCheckPhoto} alt="Health check photo" layout="fill" objectFit="cover" />
                             ) : (
@@ -371,6 +381,11 @@ export default function PlantProfilePage() {
             </Card>
           </div>
           <div className="grid auto-rows-max items-start gap-6">
+             <WateringSchedule 
+                lastWatered={plant.lastWatered}
+                wateringFrequency={plant.wateringFrequency}
+                onWaterPlant={handleWaterPlant}
+              />
             <Card>
               <CardHeader>
                 <CardTitle className="text-xl">Chat with AI</CardTitle>
@@ -448,5 +463,3 @@ export default function PlantProfilePage() {
     </AppLayout>
   );
 }
-
-    

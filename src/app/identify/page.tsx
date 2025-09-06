@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Camera, Loader2, Sparkles, Save, Upload, SwitchCamera, CircleUserRound } from "lucide-react";
+import { Camera, Loader2, Sparkles, Save, Upload, CircleUserRound } from "lucide-react";
 
 import { identifyPlantFromPhoto } from "@/ai/flows/identify-plant-from-photo";
 import type { IdentifyPlantFromPhotoOutput } from "@/ai/flows/identify-plant-from-photo";
@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 const profileFormSchema = z.object({
   customName: z.string().min(1, "Please give your plant a name."),
   notes: z.string().optional(),
+  wateringFrequency: z.coerce.number().min(1, "Watering frequency must be at least 1 day.").default(7),
 });
 
 type InputMode = "upload" | "camera";
@@ -172,7 +173,6 @@ export default function IdentifyPlantPage() {
         const file = items[i].getAsFile();
         if(file) {
             handleFile(file);
-            // Switch to upload tab if not already there
             setInputMode("upload");
             toast({
                 title: "Image Pasted!",
@@ -197,6 +197,7 @@ export default function IdentifyPlantPage() {
     defaultValues: {
       customName: "",
       notes: "",
+      wateringFrequency: 7,
     },
   });
 
@@ -209,6 +210,7 @@ export default function IdentifyPlantPage() {
       photoUrl: photoDataUri,
       commonName: identification.commonName,
       latinName: identification.latinName,
+      lastWatered: new Date().toISOString(),
     });
     
     toast({
@@ -329,6 +331,19 @@ export default function IdentifyPlantPage() {
                       </FormItem>
                     )}
                   />
+                  <FormField
+                      control={form.control}
+                      name="wateringFrequency"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Watering Frequency (days)</FormLabel>
+                          <FormControl>
+                            <Input type="number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   <FormField
                     control={form.control}
                     name="notes"

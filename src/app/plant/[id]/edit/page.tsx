@@ -22,6 +22,7 @@ import type { Plant } from "@/lib/types";
 const editFormSchema = z.object({
   customName: z.string().min(1, "Please give your plant a name."),
   notes: z.string().optional(),
+  wateringFrequency: z.coerce.number().min(1, "Watering frequency must be at least 1 day.").optional(),
 });
 
 export default function EditPlantPage() {
@@ -45,6 +46,7 @@ export default function EditPlantPage() {
         form.reset({
           customName: foundPlant.customName,
           notes: foundPlant.notes || "",
+          wateringFrequency: foundPlant.wateringFrequency || 7,
         });
       }
     }
@@ -93,8 +95,8 @@ export default function EditPlantPage() {
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold font-headline mb-8">Edit {plant.customName}</h1>
         
-        <div className="relative aspect-square w-full max-w-sm mx-auto rounded-lg overflow-hidden shadow-lg mb-8">
-            <Image src={plant.photoUrl} alt={plant.customName} fill className="object-cover" data-ai-hint="plant" />
+        <div className="relative aspect-video w-full max-w-sm mx-auto rounded-lg overflow-hidden shadow-lg mb-8">
+            <Image src={plant.photoUrl} alt={plant.customName} width={400} height={300} className="object-cover" data-ai-hint="plant" />
             <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                 <p className="text-white text-center text-sm p-4">Photo editing is not currently supported.</p>
             </div>
@@ -115,12 +117,25 @@ export default function EditPlantPage() {
                 </FormItem>
               )}
             />
+             <FormField
+              control={form.control}
+              name="wateringFrequency"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Watering Frequency (days)</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes (Personalized Feedback)</FormLabel>
+                  <FormLabel>Notes</FormLabel>
                   <FormControl>
                     <Textarea className="min-h-[120px]" placeholder="e.g., Watered on Feb 5th. Showing new growth!" {...field} />
                   </FormControl>

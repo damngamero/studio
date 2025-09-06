@@ -12,4 +12,6 @@ export interface Plant {
   notes?: string;
   careTips?: string;
   health?: PlantHealthState;
+  wateringFrequency?: number; // in days
+  lastWatered?: string; // ISO date string
 }
