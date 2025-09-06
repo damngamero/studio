@@ -42,11 +42,13 @@ function getInitialAchievements(): Achievement[] {
 }
 
 export function useAchievementStore() {
-  const [achievements, setAchievements] = useState<Achievement[]>(getInitialAchievements);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
+   useEffect(() => {
+    // Correctly initialize state on the client
+    setAchievements(getInitialAchievements());
     setIsInitialized(true);
   }, []);
 
@@ -96,4 +98,3 @@ export function useAchievementStore() {
 
   return { achievements, unlockAchievement, checkAndUnlock, isInitialized };
 }
-
