@@ -120,9 +120,9 @@ export default function EditPlantPage() {
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <FormLabel>Notes (Personalized Feedback)</FormLabel>
                   <FormControl>
-                    <Textarea className="min-h-[120px]" {...field} />
+                    <Textarea className="min-h-[120px]" placeholder="e.g., Watered on Feb 5th. Showing new growth!" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -24,8 +24,8 @@ export default function MyPlantsPage() {
       {plants.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {plants.map((plant) => (
-            <Link href={`/plant/${plant.id}`} key={plant.id}>
-              <Card className="h-full overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 duration-300">
+            <Link href={`/plant/${plant.id}`} key={plant.id} className="group">
+              <Card className="h-full overflow-hidden transition-all duration-300 group-hover:shadow-lg group-hover:-translate-y-1">
                 <CardHeader className="p-0">
                   <div className="relative aspect-[4/3] w-full">
                     <Image
@@ -34,7 +34,7 @@ export default function MyPlantsPage() {
                       fill
                       className="object-cover"
                       data-ai-hint="plant"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     />
                   </div>
                 </CardHeader>

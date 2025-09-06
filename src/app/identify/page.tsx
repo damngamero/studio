@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Camera, Loader2, Sparkles, Save } from "lucide-react";
+import { Camera, Loader2, Sparkles, Save, Upload, SwitchCamera, CircleUserRound } from "lucide-react";
 
 import { identifyPlantFromPhoto } from "@/ai/flows/identify-plant-from-photo";
 import type { IdentifyPlantFromPhotoOutput } from "@/ai/flows/identify-plant-from-photo";
@@ -18,11 +18,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const profileFormSchema = z.object({
   customName: z.string().min(1, "Please give your plant a name."),
   notes: z.string().optional(),
 });
+
+type InputMode = "upload" | "camera";
 
 export default function IdentifyPlantPage() {
   const router = useRouter();
@@ -32,6 +36,41 @@ export default function IdentifyPlantPage() {
   const [identification, setIdentification] = useState<IdentifyPlantFromPhotoOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [inputMode, setInputMode] = useState<InputMode>("upload");
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (inputMode === "camera") {
+      const getCameraPermission = async () => {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          setHasCameraPermission(true);
+
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
+        } catch (error) {
+          console.error('Error accessing camera:', error);
+          setHasCameraPermission(false);
+          toast({
+            variant: 'destructive',
+            title: 'Camera Access Denied',
+            description: 'Please enable camera permissions in your browser settings to use this app.',
+          });
+        }
+      };
+
+      getCameraPermission();
+
+      return () => {
+        if (videoRef.current && videoRef.current.srcObject) {
+          const stream = videoRef.current.srcObject as MediaStream;
+          stream.getTracks().forEach(track => track.stop());
+        }
+      }
+    }
+  }, [inputMode, toast]);
 
   const form = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
@@ -52,6 +91,22 @@ export default function IdentifyPlantPage() {
       setError(null);
     };
     reader.readAsDataURL(file);
+  };
+  
+  const handleCapture = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement("canvas");
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        const dataUri = canvas.toDataURL("image/jpeg");
+        setPhotoDataUri(dataUri);
+        setIdentification(null);
+        setError(null);
+      }
+    }
   };
 
   const handleIdentify = async () => {
@@ -98,45 +153,87 @@ export default function IdentifyPlantPage() {
     router.push("/");
   };
 
+  const PhotoDisplay = () => (
+    <div className="w-full aspect-video rounded-lg border-2 border-dashed border-muted-foreground/50 flex flex-col justify-center items-center relative overflow-hidden">
+      {photoDataUri ? (
+        <Image src={photoDataUri} alt="Plant to identify" fill className="object-contain rounded-lg p-2" data-ai-hint="plant" />
+      ) : (
+        <div className="text-center text-muted-foreground">
+          <CircleUserRound className="w-12 h-12 mx-auto" />
+          <span className="mt-2 text-sm">Your photo will appear here</span>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <AppLayout>
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold font-headline mb-8">Identify a New Plant</h1>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>1. Upload a Photo</CardTitle>
-            <CardDescription>Choose a clear, well-lit photo of your plant.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center gap-4">
-            <label htmlFor="plant-photo" className="w-full aspect-video rounded-lg border-2 border-dashed border-muted-foreground/50 flex flex-col justify-center items-center cursor-pointer hover:bg-muted transition-colors relative">
-              {photoDataUri ? (
-                <Image src={photoDataUri} alt="Plant to identify" fill className="object-contain rounded-lg p-2" data-ai-hint="plant" />
-              ) : (
-                <>
-                  <Camera className="w-12 h-12 text-muted-foreground" />
-                  <span className="mt-2 text-sm text-muted-foreground">Click or tap to upload</span>
-                </>
-              )}
-            </label>
-            <Input id="plant-photo" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-            
-            <Button onClick={handleIdentify} disabled={!photoDataUri || isLoading}>
-              {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="mr-2 h-4 w-4" />
-              )}
-              Identify Plant
-            </Button>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-          </CardContent>
-        </Card>
+        <div className="grid md:grid-cols-2 gap-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>1. Provide a Photo</CardTitle>
+              <CardDescription>Upload a photo or use your camera.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs value={inputMode} onValueChange={(value) => setInputMode(value as InputMode)} className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="upload"><Upload className="mr-2" /> Upload</TabsTrigger>
+                  <TabsTrigger value="camera"><Camera className="mr-2"/> Camera</TabsTrigger>
+                </TabsList>
+                <TabsContent value="upload" className="mt-4 space-y-4">
+                  <label htmlFor="plant-photo" className="w-full aspect-video rounded-lg border-2 border-dashed border-muted-foreground/50 flex flex-col justify-center items-center cursor-pointer hover:bg-muted transition-colors relative">
+                    <Upload className="w-12 h-12 text-muted-foreground" />
+                    <span className="mt-2 text-sm text-muted-foreground">Click or tap to upload a file</span>
+                  </label>
+                  <Input id="plant-photo" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                </TabsContent>
+                <TabsContent value="camera" className="mt-4 space-y-4">
+                  <div className="w-full aspect-video rounded-lg bg-muted flex items-center justify-center overflow-hidden">
+                    <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted playsInline />
+                  </div>
+                  {hasCameraPermission === false && (
+                    <Alert variant="destructive">
+                      <AlertTitle>Camera Access Required</AlertTitle>
+                      <AlertDescription>
+                        Please allow camera access to use this feature.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  <Button onClick={handleCapture} disabled={!hasCameraPermission}>
+                    <Camera className="mr-2" /> Capture Photo
+                  </Button>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+                <CardTitle>2. Identify</CardTitle>
+                <CardDescription>Your captured or uploaded photo will be shown here.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center gap-4">
+              <PhotoDisplay />
+              <Button onClick={handleIdentify} disabled={!photoDataUri || isLoading}>
+                {isLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-2 h-4 w-4" />
+                )}
+                Identify Plant
+              </Button>
+              {error && <p className="text-sm text-destructive">{error}</p>}
+            </CardContent>
+          </Card>
+        </div>
 
         {identification && (
-          <Card className="mt-6 animate-in fade-in duration-500">
+          <Card className="mt-8 animate-in fade-in duration-500">
             <CardHeader>
-              <CardTitle>2. Create Profile</CardTitle>
+              <CardTitle>3. Create Profile</CardTitle>
               <CardDescription>We've identified your plant! Now give it a personal touch.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -166,7 +263,7 @@ export default function IdentifyPlantPage() {
                     name="notes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Notes</FormLabel>
+                        <FormLabel>Notes (Personalized Feedback)</FormLabel>
                         <FormControl>
                           <Textarea placeholder="e.g., Repotted on Jan 1st. Likes morning sun." {...field} />
                         </FormControl>
