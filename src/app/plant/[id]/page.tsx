@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -67,6 +67,14 @@ export default function PlantProfilePage() {
     }
   }, [plantId, getPlantById]);
   
+  const stopCameraStream = useCallback(() => {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+      }
+    }, []);
+
   useEffect(() => {
     if (isHealthCheckModalOpen) {
       const getCameraPermission = async () => {
@@ -86,13 +94,10 @@ export default function PlantProfilePage() {
       getCameraPermission();
       
       return () => {
-        if (videoRef.current && videoRef.current.srcObject) {
-          const stream = videoRef.current.srcObject as MediaStream;
-          stream.getTracks().forEach(track => track.stop());
-        }
+        stopCameraStream();
       }
     }
-  }, [isHealthCheckModalOpen]);
+  }, [isHealthCheckModalOpen, stopCameraStream]);
 
   const handleCaptureHealthPhoto = () => {
     if (videoRef.current) {
@@ -104,6 +109,7 @@ export default function PlantProfilePage() {
         ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
         const dataUri = canvas.toDataURL("image/jpeg");
         setHealthCheckPhoto(dataUri);
+        stopCameraStream();
       }
     }
   };
@@ -147,7 +153,7 @@ export default function PlantProfilePage() {
         photoDataUri: healthCheckPhoto,
         notes: plant.notes 
       });
-      const updatedPlant = { ...plant, health: healthResult };
+      const updatedPlant = { ...plant, health: healthResult, photoUrl: healthCheckPhoto };
       updatePlant(updatedPlant);
       setPlant(updatedPlant);
       toast({
@@ -261,7 +267,7 @@ export default function PlantProfilePage() {
                           src={plant.photoUrl} 
                           alt={plant.customName} 
                           fill
-                          className="object-cover w-full h-full" 
+                          className="object-contain w-full h-full" 
                           data-ai-hint="plant" 
                         />
                       </div>
@@ -320,7 +326,7 @@ export default function PlantProfilePage() {
                         <div className="grid grid-cols-2 gap-4 my-4">
                            <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center overflow-hidden relative">
                             {healthCheckPhoto ? (
-                                <Image src={healthCheckPhoto} alt="Health check photo" layout="fill" objectFit="cover" />
+                                <Image src={healthCheckPhoto} alt="Health check photo" layout="fill" objectFit="contain" />
                             ) : (
                               <>
                                 <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
@@ -333,7 +339,7 @@ export default function PlantProfilePage() {
                             )}
                           </div>
                           <div className="flex flex-col gap-2 justify-center">
-                              <Button onClick={handleCaptureHealthPhoto} disabled={!hasCameraPermission}>
+                              <Button onClick={handleCaptureHealthPhoto} disabled={!hasCameraPermission || !!healthCheckPhoto}>
                                 <Camera className="mr-2" /> Capture
                               </Button>
                               <Button variant="outline" onClick={() => setHealthCheckPhoto(null)} disabled={!healthCheckPhoto}>
@@ -463,3 +469,5 @@ export default function PlantProfilePage() {
     </AppLayout>
   );
 }
+
+    
