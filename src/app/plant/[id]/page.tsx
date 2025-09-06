@@ -334,7 +334,7 @@ export default function PlantProfilePage() {
                         <div className="grid grid-cols-2 gap-4 my-4">
                            <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center overflow-hidden relative">
                             {healthCheckPhoto ? (
-                                <Image src={healthCheckPhoto} alt="Health check photo" fill objectFit="contain" />
+                                <Image src={healthCheckPhoto} alt="Health check photo" fill className="object-contain" />
                             ) : (
                               <>
                                 <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
