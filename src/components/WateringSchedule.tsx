@@ -54,7 +54,7 @@ export function WateringSchedule({ lastWatered, wateringFrequency, wateringTime,
                 <CardTitle className="text-xl flex items-center gap-2"><Calendar /> Watering Schedule</CardTitle>
             </CardHeader>
             <CardContent>
-                <p className="text-sm text-muted-foreground">Set a watering frequency on the edit page to track your plant's needs.</p>
+                <p className="text-sm text-muted-foreground">Generate care tips to get a personalized watering schedule from Sage.</p>
             </CardContent>
         </Card>
     );

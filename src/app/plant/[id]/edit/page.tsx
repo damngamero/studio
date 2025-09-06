@@ -24,7 +24,6 @@ const editFormSchema = z.object({
   customName: z.string().min(1, "Please give your plant a name."),
   notes: z.string().optional(),
   environmentNotes: z.string().optional(),
-  wateringFrequency: z.coerce.number().min(1, "Watering frequency must be at least 1 day.").optional(),
 });
 
 export default function EditPlantPage() {
@@ -42,7 +41,6 @@ export default function EditPlantPage() {
       customName: "",
       notes: "",
       environmentNotes: "",
-      wateringFrequency: 7,
     },
   });
 
@@ -55,7 +53,6 @@ export default function EditPlantPage() {
           customName: foundPlant.customName,
           notes: foundPlant.notes || "",
           environmentNotes: foundPlant.environmentNotes || "",
-          wateringFrequency: foundPlant.wateringFrequency || 7,
         });
       }
     }
@@ -67,7 +64,6 @@ export default function EditPlantPage() {
     updatePlant({
       ...plant,
       ...values,
-      wateringFrequency: values.wateringFrequency || plant.wateringFrequency,
     });
     
     toast({
@@ -122,19 +118,6 @@ export default function EditPlantPage() {
                   <FormLabel>Plant's Nickname</FormLabel>
                   <FormControl>
                     <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="wateringFrequency"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Watering Frequency (days)</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

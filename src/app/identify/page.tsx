@@ -26,7 +26,6 @@ import { cn } from "@/lib/utils";
 const profileFormSchema = z.object({
   customName: z.string().min(1, "Please give your plant a name."),
   notes: z.string().optional(),
-  wateringFrequency: z.coerce.number().min(1, "Watering frequency must be at least 1 day.").default(7),
 });
 
 type InputMode = "upload" | "camera";
@@ -198,7 +197,6 @@ export default function IdentifyPlantPage() {
     defaultValues: {
       customName: "",
       notes: "",
-      wateringFrequency: 7,
     },
   });
 
@@ -212,6 +210,7 @@ export default function IdentifyPlantPage() {
       commonName: identification.commonName,
       latinName: identification.latinName,
       lastWatered: new Date().toISOString(),
+      wateringFrequency: 7, // Default value, will be updated by AI
     });
     
     toast({
@@ -332,19 +331,6 @@ export default function IdentifyPlantPage() {
                       </FormItem>
                     )}
                   />
-                  <FormField
-                      control={form.control}
-                      name="wateringFrequency"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Watering Frequency (days)</FormLabel>
-                          <FormControl>
-                            <Input type="number" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                   <FormField
                     control={form.control}
                     name="notes"
