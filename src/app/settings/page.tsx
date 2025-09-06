@@ -40,82 +40,69 @@ export default function SettingsPage() {
   
   return (
     <AppLayout>
-      <div className="max-w-2xl mx-auto space-y-8">
-        <header>
-          <h1 className="text-3xl font-bold font-headline">Settings</h1>
-          <p className="text-muted-foreground mt-1">Customize your app experience.</p>
-        </header>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <Card>
-              <CardHeader>
-                <CardTitle>Preferences</CardTitle>
-                <CardDescription>Changes are saved automatically to this device.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="theme"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Theme</FormLabel>
-                      <Select 
-                        onValueChange={(value: Theme) => {
-                          field.onChange(value);
-                          setSettings({ theme: value });
-                        }} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a theme" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="light">Light</SelectItem>
-                          <SelectItem value="dark">Dark</SelectItem>
-                          <SelectItem value="theme-forest">Forest</SelectItem>
-                          <SelectItem value="theme-sunny-meadow">Sunny Meadow</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Choose a theme for the application.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Separator />
-
-                <FormField
-                  control={form.control}
-                  name="wateringReminders"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                        <FormLabel>Watering Reminders</FormLabel>
-                        <FormDescription>Receive notifications when it's time to water your plants.</FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
+      <div className="mx-auto grid w-full max-w-6xl gap-2">
+        <h1 className="text-3xl font-semibold">Settings</h1>
+      </div>
+      <div className="mx-auto grid w-full max-w-6xl items-start gap-6 md:grid-cols-[180px_1fr] lg:grid-cols-[250px_1fr]">
+        <nav className="grid gap-4 text-sm text-muted-foreground">
+          <a href="#" className="font-semibold text-primary">
+            General
+          </a>
+          <a href="#">Appearance</a>
+          <a href="#">Notifications</a>
+        </nav>
+        <div className="grid gap-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Preferences</CardTitle>
+                  <CardDescription>Changes are saved automatically to this device.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField
                     control={form.control}
-                    name="metricUnits"
+                    name="theme"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Theme</FormLabel>
+                        <Select 
+                          onValueChange={(value: Theme) => {
+                            field.onChange(value);
+                            setSettings({ theme: value });
+                          }} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a theme" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="light">Light</SelectItem>
+                            <SelectItem value="dark">Dark</SelectItem>
+                            <SelectItem value="theme-forest">Forest</SelectItem>
+                            <SelectItem value="theme-sunny-meadow">Sunny Meadow</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Choose a theme for the application.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Separator />
+
+                  <FormField
+                    control={form.control}
+                    name="wateringReminders"
                     render={({ field }) => (
                       <FormItem className="flex items-center justify-between rounded-lg border p-4">
                           <div className="space-y-0.5">
-                          <FormLabel>Use Metric Units</FormLabel>
-                          <FormDescription>Display measurements in cm/ml instead of inches/oz.</FormDescription>
+                          <FormLabel>Watering Reminders</FormLabel>
+                          <FormDescription>Receive notifications when it's time to water your plants.</FormDescription>
                         </div>
                         <FormControl>
                           <Switch
@@ -126,14 +113,34 @@ export default function SettingsPage() {
                       </FormItem>
                     )}
                   />
-              </CardContent>
-            </Card>
 
-            <Button type="submit" className="mt-6">
-              Save Preferences
-            </Button>
-          </form>
-        </Form>
+                  <FormField
+                      control={form.control}
+                      name="metricUnits"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                            <FormLabel>Use Metric Units</FormLabel>
+                            <FormDescription>Display measurements in cm/ml instead of inches/oz.</FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                </CardContent>
+              </Card>
+
+              <Button type="submit" className="mt-6">
+                Save Preferences
+              </Button>
+            </form>
+          </Form>
+        </div>
       </div>
     </AppLayout>
   );

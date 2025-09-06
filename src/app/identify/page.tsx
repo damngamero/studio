@@ -220,7 +220,7 @@ export default function IdentifyPlantPage() {
   };
 
   const PhotoDisplay = () => (
-    <div className="w-full aspect-video rounded-lg border-2 border-dashed border-muted-foreground/50 flex flex-col justify-center items-center relative overflow-hidden">
+    <div className="w-full aspect-video bg-muted/50 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col justify-center items-center relative overflow-hidden">
       {photoDataUri ? (
         <Image src={photoDataUri} alt="Plant to identify" fill className="object-contain rounded-lg p-2" data-ai-hint="plant" />
       ) : (
@@ -235,88 +235,81 @@ export default function IdentifyPlantPage() {
   return (
     <AppLayout>
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold font-headline mb-8">Identify a New Plant</h1>
+        <h1 className="text-3xl font-bold font-headline mb-2">Identify a New Plant</h1>
+        <p className="text-muted-foreground mb-8">Upload a photo to get started.</p>
         
-        <div className="grid md:grid-cols-2 gap-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>1. Provide a Photo</CardTitle>
-              <CardDescription>Upload, drag & drop, paste, or use your camera.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs value={inputMode} onValueChange={(value) => setInputMode(value as InputMode)} className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="upload"><Upload className="mr-2" /> Upload</TabsTrigger>
-                  <TabsTrigger value="camera"><Camera className="mr-2"/> Camera</TabsTrigger>
-                </TabsList>
-                <TabsContent value="upload" className="mt-4 space-y-4">
-                  <label 
-                    htmlFor="plant-photo" 
-                    className={cn(
-                      "w-full aspect-video rounded-lg border-2 border-dashed border-muted-foreground/50 flex flex-col justify-center items-center cursor-pointer hover:bg-muted transition-colors relative",
-                      isDragging && "bg-accent border-primary"
+        <Card>
+          <CardContent className="p-6">
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <Tabs value={inputMode} onValueChange={(value) => setInputMode(value as InputMode)} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="upload"><Upload className="mr-2" /> Upload</TabsTrigger>
+                    <TabsTrigger value="camera"><Camera className="mr-2"/> Camera</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="upload" className="mt-4 space-y-4">
+                    <label 
+                      htmlFor="plant-photo" 
+                      className={cn(
+                        "w-full aspect-video rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col justify-center items-center cursor-pointer bg-muted/50 hover:bg-muted transition-colors relative",
+                        isDragging && "bg-accent border-primary"
+                      )}
+                      onDragEnter={handleDragEnter}
+                      onDragLeave={handleDragLeave}
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                    >
+                      <Upload className="w-12 h-12 text-muted-foreground" />
+                      <span className="mt-2 text-sm text-muted-foreground text-center px-4">
+                        {isDragging ? "Drop the image here!" : "Click, paste, or drag & drop a file"}
+                      </span>
+                    </label>
+                    <Input id="plant-photo" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                  </TabsContent>
+                  <TabsContent value="camera" className="mt-4 space-y-4">
+                    <div className="w-full aspect-video rounded-lg bg-muted flex items-center justify-center overflow-hidden">
+                      <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted playsInline />
+                    </div>
+                    {hasCameraPermission === false && (
+                      <Alert variant="destructive">
+                        <AlertTitle>Camera Access Required</AlertTitle>
+                        <AlertDescription>
+                          Please allow camera access to use this feature.
+                        </AlertDescription>
+                      </Alert>
                     )}
-                    onDragEnter={handleDragEnter}
-                    onDragLeave={handleDragLeave}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                  >
-                    <Upload className="w-12 h-12 text-muted-foreground" />
-                    <span className="mt-2 text-sm text-muted-foreground text-center px-4">
-                      {isDragging ? "Drop the image here!" : "Click, paste, or drag & drop a file"}
-                    </span>
-                  </label>
-                  <Input id="plant-photo" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-                </TabsContent>
-                <TabsContent value="camera" className="mt-4 space-y-4">
-                  <div className="w-full aspect-video rounded-lg bg-muted flex items-center justify-center overflow-hidden">
-                    <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted playsInline />
-                  </div>
-                  {hasCameraPermission === false && (
-                    <Alert variant="destructive">
-                      <AlertTitle>Camera Access Required</AlertTitle>
-                      <AlertDescription>
-                        Please allow camera access to use this feature.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                  <Button onClick={handleCapture} disabled={!hasCameraPermission}>
-                    <Camera className="mr-2" /> Capture Photo
+                    <Button onClick={handleCapture} disabled={!hasCameraPermission}>
+                      <Camera className="mr-2" /> Capture Photo
+                    </Button>
+                  </TabsContent>
+                </Tabs>
+              </div>
+              
+              <div className="flex flex-col items-center gap-4">
+                  <PhotoDisplay />
+                  <Button onClick={handleIdentify} disabled={!photoDataUri || isLoading} size="lg">
+                    {isLoading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-2 h-4 w-4" />
+                    )}
+                    Identify Plant
                   </Button>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-                <CardTitle>2. Identify</CardTitle>
-                <CardDescription>Your captured or uploaded photo will be shown here.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center gap-4">
-              <PhotoDisplay />
-              <Button onClick={handleIdentify} disabled={!photoDataUri || isLoading}>
-                {isLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="mr-2 h-4 w-4" />
-                )}
-                Identify Plant
-              </Button>
-              {error && <p className="text-sm text-destructive">{error}</p>}
-            </CardContent>
-          </Card>
-        </div>
+                  {error && <p className="text-sm text-destructive">{error}</p>}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {identification && (
           <Card className="mt-8 animate-in fade-in duration-500">
             <CardHeader>
-              <CardTitle>3. Create Profile</CardTitle>
-              <CardDescription>We've identified your plant! Now give it a personal touch.</CardDescription>
+              <CardTitle>Plant Identified!</CardTitle>
+              <CardDescription>We've identified your plant as a {identification.commonName}. Now give it a personal touch.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="mb-4 p-4 bg-secondary rounded-lg">
-                <p className="font-semibold">Identified as: <span className="font-normal">{identification.commonName}</span></p>
+              <div className="mb-4 p-4 bg-secondary rounded-lg border">
+                <p className="font-semibold text-lg">{identification.commonName}</p>
                 <p className="text-sm text-muted-foreground">{identification.latinName}</p>
                 <p className="text-xs text-muted-foreground mt-1">Confidence: {Math.round(identification.confidence * 100)}%</p>
               </div>
@@ -341,7 +334,7 @@ export default function IdentifyPlantPage() {
                     name="notes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Notes (Personalized Feedback)</FormLabel>
+                        <FormLabel>Notes</FormLabel>
                         <FormControl>
                           <Textarea placeholder="e.g., Repotted on Jan 1st. Likes morning sun." {...field} />
                         </FormControl>

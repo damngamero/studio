@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Pencil, Trash2, Bot, Loader2, MessageSquare } from "lucide-react";
+import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun } from "lucide-react";
 
 import { usePlantStore } from "@/hooks/use-plant-store";
 import { getPlantCareTips } from "@/ai/flows/get-plant-care-tips";
@@ -92,82 +92,69 @@ export default function PlantProfilePage() {
 
   return (
     <AppLayout>
-      <div className="max-w-4xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-8">
-          <div>
-            <div className="relative aspect-square w-full rounded-lg overflow-hidden shadow-lg mb-4">
-              <Image 
-                src={plant.photoUrl} 
-                alt={plant.customName} 
-                width={600}
-                height={600}
-                className="object-cover w-full h-full" 
-                data-ai-hint="plant" 
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button asChild variant="outline" className="w-full">
+      <div className="mx-auto grid max-w-6xl flex-1 auto-rows-max gap-4">
+        <div className="flex items-center gap-4">
+           <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => router.back()}>
+            <ChevronLeftIcon className="h-4 w-4" />
+            <span className="sr-only">Back</span>
+          </Button>
+          <h1 className="flex-1 shrink-0 whitespace-nowrap text-xl font-semibold tracking-tight sm:grow-0">
+            {plant.customName}
+          </h1>
+          <div className="hidden items-center gap-2 md:ml-auto md:flex">
+            <Button variant="outline" size="sm" asChild>
                 <Link href={`/plant/${plant.id}/edit`}>
                   <Pencil className="mr-2 h-4 w-4" /> Edit
                 </Link>
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" className="w-full">
-                    <Trash2 className="mr-2 h-4 w-4" /> Delete
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will permanently delete "{plant.customName}" from your garden. This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-4xl font-bold font-headline">{plant.customName}</h1>
-              <p className="text-xl text-muted-foreground">{plant.commonName}</p>
-              <p className="text-sm text-muted-foreground italic">{plant.latinName}</p>
-            </div>
-
-            {plant.notes && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Notes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm whitespace-pre-wrap">{plant.notes}</p>
-                </CardContent>
-              </Card>
-            )}
-            
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="w-full">
-                  <MessageSquare className="mr-2" /> Chat with AI
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[625px]">
-                <DialogHeader>
-                  <DialogTitle>Chat about {plant.customName}</DialogTitle>
-                </DialogHeader>
-                <Chat plantName={plant.commonName} />
-              </DialogContent>
-            </Dialog>
-
-
-            <Card className="bg-secondary/50">
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete "{plant.customName}" from your garden. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-8">
+          <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
+            <Card>
               <CardHeader>
+                <CardTitle>{plant.customName}</CardTitle>
+                <CardDescription>{plant.commonName} | <span className="italic">{plant.latinName}</span></CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="relative aspect-video w-full rounded-lg overflow-hidden shadow-lg mb-4">
+                  <Image 
+                    src={plant.photoUrl} 
+                    alt={plant.customName} 
+                    fill
+                    className="object-cover w-full h-full" 
+                    data-ai-hint="plant" 
+                  />
+                </div>
+                 {plant.notes && (
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Notes</h3>
+                      <p className="text-sm whitespace-pre-wrap text-muted-foreground">{plant.notes}</p>
+                    </div>
+                  )}
+              </CardContent>
+            </Card>
+            <Card>
+               <CardHeader>
                 <CardTitle>AI-Powered Care Tips</CardTitle>
                 <CardDescription>Get personalized advice for your plant.</CardDescription>
               </CardHeader>
@@ -193,8 +180,71 @@ export default function PlantProfilePage() {
               </CardContent>
             </Card>
           </div>
+          <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Chat with AI</CardTitle>
+                 <CardDescription>Ask any question about your plant.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                 <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-full">
+                        <MessageSquare className="mr-2" /> Chat Now
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[625px]">
+                      <DialogHeader>
+                        <DialogTitle>Chat about {plant.customName}</DialogTitle>
+                      </DialogHeader>
+                      <Chat plantName={plant.commonName} />
+                    </DialogContent>
+                  </Dialog>
+              </CardContent>
+            </Card>
+            <Card className="overflow-hidden">
+              <CardHeader>
+                <CardTitle>Quick View</CardTitle>
+              </CardHeader>
+              <CardContent>
+                 <div className="grid gap-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Droplets className="h-4 w-4 text-muted-foreground" />
+                      <span>Needs watering twice a week</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Sun className="h-4 w-4 text-muted-foreground" />
+                      <span>Loves bright, indirect light</span>
+                    </div>
+                     <div className="flex items-center gap-2 text-sm">
+                      <Leaf className="h-4 w-4 text-muted-foreground" />
+                      <span>Fertilize monthly</span>
+                    </div>
+                 </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </AppLayout>
   );
 }
+
+function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
+    return (
+      <svg
+        {...props}
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    )
+  }
