@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Chat } from "@/components/Chat";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -152,6 +153,9 @@ export default function PlantProfilePage() {
           <h1 className="flex-1 shrink-0 whitespace-nowrap text-xl font-semibold tracking-tight sm:grow-0">
             {plant.customName}
           </h1>
+           <Badge variant="outline" className="ml-auto sm:ml-0">
+            {plant.commonName}
+          </Badge>
           <div className="hidden items-center gap-2 md:ml-auto md:flex">
             <Button variant="outline" size="sm" asChild>
                 <Link href={`/plant/${plant.id}/edit`}>
@@ -179,15 +183,11 @@ export default function PlantProfilePage() {
             </AlertDialog>
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-8">
-          <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
+        <div className="grid gap-8 md:grid-cols-[1fr_300px]">
+          <div className="grid auto-rows-max items-start gap-8">
             <Card>
-              <CardHeader>
-                <CardTitle>{plant.customName}</CardTitle>
-                <CardDescription>{plant.commonName} | <span className="italic">{plant.latinName}</span></CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="relative aspect-video w-full rounded-lg overflow-hidden shadow-lg mb-4">
+              <CardContent className="p-4">
+                <div className="relative aspect-video w-full rounded-lg overflow-hidden shadow-lg mb-6">
                   <Image 
                     src={plant.photoUrl} 
                     alt={plant.customName} 
@@ -198,73 +198,72 @@ export default function PlantProfilePage() {
                 </div>
                  {plant.notes && (
                     <div>
-                      <h3 className="font-semibold text-lg mb-2">Notes</h3>
+                      <h3 className="font-semibold text-lg mb-2">My Notes</h3>
                       <p className="text-sm whitespace-pre-wrap text-muted-foreground">{plant.notes}</p>
                     </div>
                   )}
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>AI-Powered Care Tips</CardTitle>
-                <CardDescription>Get personalized advice for your plant.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {plant.careTips ? (
-                  <Accordion type="single" collapsible defaultValue="item-1">
-                    <AccordionItem value="item-1">
-                      <AccordionTrigger>View Care Tips</AccordionTrigger>
-                      <AccordionContent className="whitespace-pre-wrap text-sm">{plant.careTips}</AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                ) : (
-                  <p className="text-sm text-muted-foreground mb-4">No care tips generated yet.</p>
-                )}
-                 <Button onClick={handleGenerateTips} disabled={isFetchingTips} className="mt-4">
-                  {isFetchingTips ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Bot className="mr-2 h-4 w-4" />
-                  )}
-                  {plant.careTips ? 'Regenerate Tips' : 'Generate Tips'}
-                </Button>
-              </CardContent>
-            </Card>
              <Card>
                <CardHeader>
-                <CardTitle>AI Health Check</CardTitle>
-                <CardDescription>Assess your plant's health from its photo.</CardDescription>
+                <CardTitle>AI Assistant</CardTitle>
+                <CardDescription>Get care tips, check health, and chat about your plant.</CardDescription>
               </CardHeader>
-              <CardContent>
-                {plant.health ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold">Status:</span> 
-                      <Badge variant={plant.health.isHealthy ? 'default' : 'destructive'}>
-                        {plant.health.isHealthy ? 'Healthy' : 'Needs Attention'}
-                      </Badge>
+              <CardContent className="space-y-6">
+                <div>
+                  <h4 className="font-medium mb-2">AI Health Check</h4>
+                   {plant.health ? (
+                    <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">Status:</span> 
+                        <Badge variant={plant.health.isHealthy ? 'default' : 'destructive'}>
+                          {plant.health.isHealthy ? 'Healthy' : 'Needs Attention'}
+                        </Badge>
+                      </div>
+                      <p className="text-sm whitespace-pre-wrap"><span className="font-semibold">Diagnosis:</span> {plant.health.diagnosis}</p>
                     </div>
-                    <p className="text-sm whitespace-pre-wrap"><span className="font-semibold">Diagnosis:</span> {plant.health.diagnosis}</p>
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground mb-4">No health check performed yet.</p>
-                )}
-                 <Button onClick={handleCheckHealth} disabled={isCheckingHealth} className="mt-4">
-                  {isCheckingHealth ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
-                    <Stethoscope className="mr-2 h-4 w-4" />
+                    <p className="text-sm text-muted-foreground">No health check performed yet.</p>
                   )}
-                  {plant.health ? 'Re-check Health' : 'Check Health'}
-                </Button>
+                   <Button onClick={handleCheckHealth} disabled={isCheckingHealth} className="mt-3">
+                    {isCheckingHealth ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Stethoscope className="mr-2 h-4 w-4" />
+                    )}
+                    {plant.health ? 'Re-check Health' : 'Check Health'}
+                  </Button>
+                </div>
+                <Separator />
+                 <div>
+                    <h4 className="font-medium mb-2">AI-Powered Care Tips</h4>
+                    {plant.careTips ? (
+                      <Accordion type="single" collapsible defaultValue="item-1">
+                        <AccordionItem value="item-1">
+                          <AccordionTrigger>View Care Tips</AccordionTrigger>
+                          <AccordionContent className="whitespace-pre-wrap text-sm">{plant.careTips}</AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No care tips generated yet.</p>
+                    )}
+                    <Button onClick={handleGenerateTips} disabled={isFetchingTips} className="mt-3">
+                      {isFetchingTips ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Bot className="mr-2 h-4 w-4" />
+                      )}
+                      {plant.careTips ? 'Regenerate Tips' : 'Generate Tips'}
+                    </Button>
+                 </div>
               </CardContent>
             </Card>
           </div>
-          <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
+          <div className="grid auto-rows-max items-start gap-8">
             <Card>
               <CardHeader>
                 <CardTitle>Chat with AI</CardTitle>
-                 <CardDescription>Ask any question about your plant.</CardDescription>
+                 <CardDescription>Ask a question about your <span className="italic">{plant.commonName}</span>.</CardDescription>
               </CardHeader>
               <CardContent>
                  <Dialog>
@@ -287,24 +286,53 @@ export default function PlantProfilePage() {
                 <CardTitle>Quick View</CardTitle>
               </CardHeader>
               <CardContent>
-                 <div className="grid gap-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Droplets className="h-4 w-4 text-muted-foreground" />
-                      <span>Needs watering twice a week</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Sun className="h-4 w-4 text-muted-foreground" />
-                      <span>Loves bright, indirect light</span>
-                    </div>
-                     <div className="flex items-center gap-2 text-sm">
-                      <Leaf className="h-4 w-4 text-muted-foreground" />
-                      <span>Fertilize monthly</span>
-                    </div>
+                 <div className="grid gap-3">
+                    <div className="font-semibold">General Care</div>
+                    <ul className="grid gap-3">
+                      <li className="flex items-center justify-between">
+                        <span className="text-muted-foreground flex items-center gap-2"><Droplets className="h-4 w-4" /> Watering</span>
+                        <span>Twice a week</span>
+                      </li>
+                      <li className="flex items-center justify-between">
+                        <span className="text-muted-foreground flex items-center gap-2"><Sun className="h-4 w-4" /> Sunlight</span>
+                        <span>Indirect Light</span>
+                      </li>
+                      <li className="flex items-center justify-between">
+                        <span className="text-muted-foreground flex items-center gap-2"><Leaf className="h-4 w-4" /> Fertilize</span>
+                        <span>Monthly</span>
+                      </li>
+                    </ul>
                  </div>
               </CardContent>
             </Card>
           </div>
         </div>
+         <div className="flex items-center justify-center gap-2 md:hidden">
+            <Button variant="outline" size="sm" asChild>
+                <Link href={`/plant/${plant.id}/edit`}>
+                  <Pencil className="mr-2 h-4 w-4" /> Edit
+                </Link>
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete "{plant.customName}" from your garden. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
       </div>
     </AppLayout>
   );
