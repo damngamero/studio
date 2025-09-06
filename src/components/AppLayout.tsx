@@ -19,9 +19,9 @@ import {
 
 function Logo() {
   return (
-    <Link href="/" className="flex items-center gap-2 font-bold font-headline text-lg text-foreground">
-      <Leaf className="h-6 w-6 text-accent" />
-      <span>VerdantWise</span>
+    <Link href="/" className="flex items-center gap-2 font-bold text-lg text-foreground">
+      <Leaf className="h-6 w-6 text-primary" />
+      <span className="font-heading">VerdantWise</span>
     </Link>
   )
 }
@@ -37,14 +37,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar collapsible="icon">
         <SidebarHeader>
            <div className="flex h-14 items-center justify-center p-2 group-data-[collapsible=icon]:h-14">
               <div className="group-data-[collapsible=icon]:hidden">
                   <Logo />
               </div>
               <div className="hidden group-data-[collapsible=icon]:block">
-                  <Leaf className="h-6 w-6 text-accent" />
+                  <Leaf className="h-6 w-6 text-primary" />
               </div>
           </div>
         </SidebarHeader>

@@ -24,7 +24,7 @@ export default function MyPlantsPage() {
       {plants.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {plants.map((plant) => (
-            <Link href={`/plant/${plant.id}/details`} key={plant.id} className="group">
+            <Link href={`/plant/${plant.id}`} key={plant.id} className="group">
               <Card className="h-full overflow-hidden transition-all duration-300 group-hover:shadow-lg group-hover:-translate-y-1">
                 <CardHeader className="p-0">
                   <div className="relative aspect-[4/3] w-full">
