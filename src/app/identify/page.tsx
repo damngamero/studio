@@ -10,8 +10,10 @@ import { Camera, Loader2, Sparkles, Save, Upload, CircleUserRound, Trophy } from
 
 import { identifyPlantFromPhoto } from "@/ai/flows/identify-plant-from-photo";
 import type { IdentifyPlantFromPhotoOutput } from "@/ai/flows/identify-plant-from-photo";
+import { getPlantCareTips } from "@/ai/flows/get-plant-care-tips";
 import { usePlantStore } from "@/hooks/use-plant-store";
 import { useAchievementStore } from "@/hooks/use-achievement-store";
+import { useSettingsStore } from "@/hooks/use-settings-store";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -35,10 +37,12 @@ export default function IdentifyPlantPage() {
   const router = useRouter();
   const { addPlant, plants } = usePlantStore();
   const { checkAndUnlock } = useAchievementStore();
+  const { settings } = useSettingsStore();
   const { toast } = useToast();
   const [photoDataUri, setPhotoDataUri] = useState<string | null>(null);
   const [identification, setIdentification] = useState<IdentifyPlantFromPhotoOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [inputMode, setInputMode] = useState<InputMode>("upload");
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -203,30 +207,52 @@ export default function IdentifyPlantPage() {
   });
 
 
-  const onSubmit = (values: z.infer<typeof profileFormSchema>) => {
+  const onSubmit = async (values: z.infer<typeof profileFormSchema>) => {
     if (!identification || !photoDataUri) return;
-
-    const newPlant = addPlant({
-      ...values,
-      photoUrl: photoDataUri,
-      commonName: identification.commonName,
-      latinName: identification.latinName,
-      estimatedAge: identification.estimatedAge,
-      lastWatered: new Date().toISOString(),
-      wateringFrequency: 7, // Default value, will be updated by AI
-    });
+    setIsSaving(true);
     
-    toast({
-      title: "Plant Added!",
-      description: `${values.customName} has been added to your garden.`,
-    });
+    try {
+      // Get initial care tips and watering frequency
+      const careTipsResult = await getPlantCareTips({ 
+        plantSpecies: identification.commonName,
+        estimatedAge: identification.estimatedAge,
+        location: settings.location,
+      });
 
-    // Check for achievements
-    const plantCount = plants.length + 1;
-    checkAndUnlock(['first_plant', 'plant_collector', 'plant_enthusiast'], plantCount);
+      const newPlant = addPlant({
+        ...values,
+        photoUrl: photoDataUri,
+        commonName: identification.commonName,
+        latinName: identification.latinName,
+        estimatedAge: identification.estimatedAge,
+        lastWatered: new Date().toISOString(),
+        wateringFrequency: careTipsResult.wateringFrequency, // Use AI-generated frequency
+        wateringTime: careTipsResult.wateringTime,
+        careTips: careTipsResult.careTips,
+      });
+      
+      toast({
+        title: "Plant Added!",
+        description: `${values.customName} has been added to your garden.`,
+      });
+
+      // Check for achievements
+      const plantCount = plants.length + 1;
+      checkAndUnlock(['first_plant', 'plant_collector', 'plant_enthusiast'], plantCount);
 
 
-    router.push(`/plant/${newPlant.id}`);
+      router.push(`/plant/${newPlant.id}`);
+
+    } catch (e) {
+      console.error(e);
+      toast({
+        variant: 'destructive',
+        title: 'Could not save plant',
+        description: 'Failed to get initial care tips. Please try again.'
+      });
+    } finally {
+        setIsSaving(false);
+    }
   };
 
   const PhotoDisplay = () => (
@@ -353,8 +379,12 @@ export default function IdentifyPlantPage() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit">
-                    <Save className="mr-2 h-4 w-4" />
+                  <Button type="submit" disabled={isSaving}>
+                    {isSaving ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="mr-2 h-4 w-4" />
+                    )}
                     Save to My Plants
                   </Button>
                 </form>
