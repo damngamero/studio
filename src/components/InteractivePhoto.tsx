@@ -5,8 +5,8 @@ import Image from 'next/image';
 import { Loader2, Search } from 'lucide-react';
 import {
   diagnosePlantWithRegions,
-  type RegionOfInterest,
 } from '@/ai/flows/diagnose-plant-with-regions';
+import type { RegionOfInterest } from '@/lib/types';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
