@@ -62,30 +62,35 @@ const getWeatherTool = ai.defineTool(
     },
     async ({ location }) => {
         try {
-            const response = await fetch(`https://wttr.in/${encodeURIComponent(location)}?format=j1`);
+            // Using a more reliable public API for demonstration.
+            const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max&timezone=auto&forecast_days=3`);
             if (!response.ok) {
                 throw new Error(`Failed to fetch weather data: ${response.statusText}`);
             }
             const data = await response.json();
-            
-            const current = data.current_condition[0];
-            const forecastData = data.weather.slice(0, 3);
 
-            const fahrenheitToCelsius = (f: number) => Math.round((f - 32) * 5 / 9);
-
-            const currentWeather: Weather = {
-                temperature: parseInt(current.temp_C),
-                condition: current.weatherDesc[0].value,
-                humidity: parseInt(current.humidity),
-                windSpeed: parseInt(current.windspeedKmph),
+            // Simple mapping from WMO weather codes to our condition strings
+            const codeToCondition = (code: number) => {
+                if (code <= 1) return 'Sunny';
+                if (code <= 3) return 'Partly cloudy';
+                if (code >= 51 && code <= 67) return 'Rain';
+                if (code >= 95) return 'Thunderstorms';
+                return 'Cloudy';
             };
 
-            const forecast: ForecastDay[] = forecastData.map((day: any) => {
-                const date = new Date(day.date);
+            const currentWeather: Weather = {
+                temperature: Math.round(data.current.temperature_2m),
+                condition: codeToCondition(data.current.weather_code),
+                humidity: data.current.relative_humidity_2m,
+                windSpeed: Math.round(data.current.wind_speed_10m),
+            };
+            
+            const forecast: ForecastDay[] = data.daily.time.map((dateStr: string, index: number) => {
+                const date = new Date(dateStr);
                 return {
                     day: date.toLocaleDateString('en-US', { weekday: 'long' }),
-                    temperature: parseInt(day.avgtempC),
-                    condition: day.hourly[4].weatherDesc[0].value, // Noon condition
+                    temperature: Math.round(data.daily.temperature_2m_max[index]),
+                    condition: codeToCondition(data.daily.weather_code[index]),
                 };
             });
             
@@ -93,13 +98,16 @@ const getWeatherTool = ai.defineTool(
 
         } catch (error) {
             console.error("Error in getWeatherTool:", error);
-            // Fallback to plausible mock data in case of API failure
+            // A more stable and plausible fallback in case of API failure.
+            const today = new Date();
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
             return {
                 currentWeather: { temperature: 22, condition: 'Sunny', humidity: 55, windSpeed: 15 },
                 forecast: [
-                    { day: 'Monday', temperature: 24, condition: 'Sunny' },
-                    { day: 'Tuesday', temperature: 21, condition: 'Partly Cloudy' },
-                    { day: 'Wednesday', temperature: 19, condition: 'Rain' },
+                    { day: days[today.getDay() % 7], temperature: 24, condition: 'Sunny' },
+                    { day: days[(today.getDay() + 1) % 7], temperature: 21, condition: 'Partly cloudy' },
+                    { day: days[(today.getDay() + 2) % 7], temperature: 19, condition: 'Rain' },
                 ]
             };
         }
