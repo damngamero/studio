@@ -15,6 +15,8 @@ import type { GetWateringAdviceOutput } from '@/ai/flows/get-watering-advice';
 interface WateringScheduleProps {
   plant: Plant;
   onWaterPlant: () => void;
+  advice: GetWateringAdviceOutput | null;
+  isLoadingAdvice: boolean;
 }
 
 const Countdown = ({ targetDate }: { targetDate: Date }) => {
@@ -44,44 +46,13 @@ const Countdown = ({ targetDate }: { targetDate: Date }) => {
     );
 };
 
-export function WateringSchedule({ plant, onWaterPlant }: WateringScheduleProps) {
-  const { settings } = useSettingsStore();
+export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice }: WateringScheduleProps) {
   const [isWateredToday, setIsWateredToday] = useState(false);
-  const [isLoadingAdvice, setIsLoadingAdvice] = useState(false);
-  const [advice, setAdvice] = useState<GetWateringAdviceOutput | null>(null);
 
-  const { lastWatered, wateringFrequency, wateringTime, customName, commonName } = plant;
+  const { lastWatered, wateringFrequency, wateringTime } = plant;
   
   const lastWateredDate = new Date(lastWatered);
   const nextWateringDate = wateringFrequency ? addDays(lastWateredDate, wateringFrequency) : new Date();
-  const isOverdue = wateringFrequency ? isAfter(new Date(), nextWateringDate) : false;
-
-  useEffect(() => {
-    async function fetchWateringAdvice() {
-      if (!isOverdue || !settings.location) return;
-
-      setIsLoadingAdvice(true);
-      setAdvice(null);
-      try {
-        const result = await getWateringAdvice({
-          plantName: customName,
-          plantCommonName: commonName,
-          location: settings.location,
-          isWateringOverdue: isOverdue,
-        });
-        setAdvice(result);
-      } catch (error) {
-        console.error("Failed to get watering advice:", error);
-        // Fallback to a default "Yes" if AI fails, so user is not blocked
-        setAdvice({ shouldWater: 'Yes', reason: 'Could not get AI advice, but schedule says it\'s time.' });
-      } finally {
-        setIsLoadingAdvice(false);
-      }
-    }
-
-    fetchWateringAdvice();
-  }, [isOverdue, customName, commonName, settings.location]);
-
 
   const handleWaterPlantClick = () => {
     onWaterPlant();
@@ -90,7 +61,6 @@ export function WateringSchedule({ plant, onWaterPlant }: WateringScheduleProps)
   
   useEffect(() => {
       setIsWateredToday(false);
-      setAdvice(null);
   }, [lastWatered]);
 
   if (!wateringFrequency) {
@@ -186,3 +156,5 @@ export function WateringSchedule({ plant, onWaterPlant }: WateringScheduleProps)
     </Card>
   );
 }
+
+    

@@ -6,6 +6,8 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X, MapPin, AlertTriangle, Info, CloudSun, BookOpen } from "lucide-react";
+import { addDays, format, formatDistanceToNowStrict, isAfter } from 'date-fns';
+
 
 import { usePlantStore } from "@/hooks/use-plant-store";
 import { useSettingsStore } from "@/hooks/use-settings-store";
@@ -13,7 +15,8 @@ import { useAchievementStore } from "@/hooks/use-achievement-store";
 import { getPlantCareTips } from "@/ai/flows/get-plant-care-tips";
 import { checkPlantHealth } from "@/ai/flows/check-plant-health";
 import { getWeatherAndPlantAdvice } from "@/ai/flows/get-weather-and-plant-advice";
-import type { GetWeatherAndPlantAdviceOutput } from "@/ai/flows/get-weather-and-plant-advice";
+import { getWateringAdvice } from "@/ai/flows/get-watering-advice";
+import type { GetWateringAdviceOutput } from '@/ai/flows/get-watering-advice';
 import type { Plant } from "@/lib/types";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -31,6 +34,7 @@ import { InteractivePhoto } from "@/components/InteractivePhoto";
 import { DialogDescription } from "@/components/ui/dialog";
 import { PlantJournal } from "@/components/PlantJournal";
 import ReactMarkdown from "react-markdown";
+import { QuickViewWateringStatus } from "@/components/QuickViewWateringStatus";
 
 function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -70,6 +74,8 @@ export default function PlantProfilePage() {
   const [healthCheckCount, setHealthCheckCount] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const [isLoadingWateringAdvice, setIsLoadingWateringAdvice] = useState(false);
+  const [wateringAdvice, setWateringAdvice] = useState<GetWateringAdviceOutput | null>(null);
 
   const plantId = Array.isArray(params.id) ? params.id[0] : params.id;
 
@@ -107,6 +113,40 @@ export default function PlantProfilePage() {
         fetchWeatherAdvice();
     }
   }, [plant, settings.location]);
+
+  useEffect(() => {
+    async function fetchWateringAdvice() {
+        if (!plant || !plant.wateringFrequency) return;
+
+        const nextWateringDate = addDays(new Date(plant.lastWatered), plant.wateringFrequency);
+        const isOverdue = isAfter(new Date(), nextWateringDate);
+
+        if (!isOverdue || !settings.location) {
+            setIsLoadingWateringAdvice(false);
+            setWateringAdvice(null);
+            return;
+        };
+
+        setIsLoadingWateringAdvice(true);
+        setWateringAdvice(null);
+        try {
+            const result = await getWateringAdvice({
+                plantName: plant.customName,
+                plantCommonName: plant.commonName,
+                location: settings.location,
+                isWateringOverdue: isOverdue,
+            });
+            setWateringAdvice(result);
+        } catch (error) {
+            console.error("Failed to get watering advice:", error);
+            setWateringAdvice({ shouldWater: 'Yes', reason: 'Could not get AI advice, but schedule says it\'s time.' });
+        } finally {
+            setIsLoadingWateringAdvice(false);
+        }
+    }
+
+    fetchWateringAdvice();
+}, [plant, settings.location]);
 
   const stopCameraStream = useCallback(() => {
       if (videoRef.current && videoRef.current.srcObject) {
@@ -470,6 +510,8 @@ export default function PlantProfilePage() {
              <WateringSchedule 
                 plant={plant}
                 onWaterPlant={handleWaterPlant}
+                advice={wateringAdvice}
+                isLoadingAdvice={isLoadingWateringAdvice}
               />
             <Card>
               <CardHeader>
@@ -509,10 +551,7 @@ export default function PlantProfilePage() {
                         <span className="text-muted-foreground flex items-center gap-2"><MapPin className="h-4 w-4" /> Location</span>
                         <span>{settings.location}</span>
                       </li>}
-                      <li className="flex items-center justify-between">
-                        <span className="text-muted-foreground flex items-center gap-2"><Droplets className="h-4 w-4" /> Watering</span>
-                        <span>~ Every {plant.wateringFrequency || '?'} days</span>
-                      </li>
+                      <QuickViewWateringStatus plant={plant} advice={wateringAdvice} />
                       <li className="flex items-center justify-between">
                         <span className="text-muted-foreground flex items-center gap-2"><Sun className="h-4 w-4" /> Sunlight</span>
                         <span>Indirect Light</span>
@@ -553,3 +592,5 @@ export default function PlantProfilePage() {
     </AppLayout>
   );
 }
+
+    
