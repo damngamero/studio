@@ -233,7 +233,7 @@ export default function IdentifyPlantPage() {
   }, [handlePaste]);
 
 
-  const onSubmit = async (values: z.infer<typeof profileFormSchema>>) => {
+  const onSubmit = async (values: z.infer<typeof profileFormSchema>) => {
     if (!identification || !photoDataUri) return;
     setIsSaving(true);
     
@@ -492,5 +492,3 @@ export default function IdentifyPlantPage() {
     </AppLayout>
   );
 }
-
-    
