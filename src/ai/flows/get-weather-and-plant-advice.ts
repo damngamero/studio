@@ -27,22 +27,25 @@ const WeatherSchema = z.object({
   humidity: z.number().describe('The current humidity percentage (0-100).'),
   windSpeed: z.number().describe('The current wind speed in km/h.'),
 });
+export type Weather = z.infer<typeof WeatherSchema>;
 
 const ForecastDaySchema = z.object({
   day: z.string().describe("The day of the week (e.g., 'Monday')."),
   temperature: z.number().describe('The forecasted temperature in Celsius.'),
   condition: z.string().describe('The forecasted weather condition.'),
 });
+export type ForecastDay = z.infer<typeof ForecastDaySchema>;
+
 
 const PlantAdviceSchema = z.object({
   customName: z.string(),
-  advice: z.string().describe('Specific, actionable advice for this plant based on the weather forecast.'),
+  advice: z.string().describe('Specific, actionable advice for this plant based on the weather forecast. Use Markdown for emphasis.'),
 });
 
 const GetWeatherAndPlantAdviceOutputSchema = z.object({
   currentWeather: WeatherSchema.describe('The current weather conditions.'),
   forecast: z.array(ForecastDaySchema).describe('A 3-day weather forecast.'),
-  plantAdvice: z.array(PlantAdviceSchema).describe('A list of advice for each plant.'),
+  plantAdvice: z.array(PlantAdviceSchema).describe('A list of advice for each of our plants.'),
 });
 export type GetWeatherAndPlantAdviceOutput = z.infer<typeof GetWeatherAndPlantAdviceOutputSchema>;
 
@@ -58,24 +61,25 @@ const getWeatherTool = ai.defineTool(
       }),
     },
     async ({ location }) => {
-        // Mock data generation
-        const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Rain', 'Thunderstorms', 'Windy'];
-        const randomCondition = () => conditions[Math.floor(Math.random() * conditions.length)];
+        // Mock data that is consistent but plausible.
+        const seed = location.length;
+        const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Rain', 'Windy'];
         
         const currentWeather = {
-            temperature: Math.floor(Math.random() * 15) + 15, // 15-30°C
-            condition: randomCondition(),
-            humidity: Math.floor(Math.random() * 50) + 40, // 40-90%
-            windSpeed: Math.floor(Math.random() * 20) + 5, // 5-25 km/h
+            temperature: 22 + (seed % 5) - 2, // 20-24°C
+            condition: conditions[seed % conditions.length],
+            humidity: 50 + (seed % 20), // 50-70%
+            windSpeed: 10 + (seed % 10), // 10-20 km/h
         };
 
-        const forecast = Array.from({ length: 3 }, (_, i) => {
+        const forecast: ForecastDay[] = Array.from({ length: 3 }, (_, i) => {
             const date = new Date();
             date.setDate(date.getDate() + i + 1);
+            const daySeed = seed + i + 1;
             return {
                 day: date.toLocaleDateString('en-US', { weekday: 'long' }),
-                temperature: Math.floor(Math.random() * 15) + 15,
-                condition: randomCondition(),
+                temperature: 20 + (daySeed % 7) - 3, // 17-26°C
+                condition: conditions[daySeed % conditions.length],
             };
         });
 
@@ -99,7 +103,7 @@ const prompt = ai.definePrompt({
 
 1. First, use the getWeatherForLocation tool to get the weather for the user's location: {{{location}}}.
 2. Then, for each of the user's plants listed below, provide specific, actionable advice based on the 3-day forecast.
-3. Consider the plant type and the upcoming weather. For example, if it's going to be very hot, advise moving sun-sensitive plants to the shade. If heavy rain is forecast, suggest moving potted plants under cover. Be creative and helpful.
+3. Consider the plant type and the upcoming weather. For example, if it's going to be very hot, advise moving sun-sensitive plants to the shade. If heavy rain is forecast, suggest moving potted plants under cover. Be creative and helpful. Use **markdown** for emphasis on key words.
 4. Return the current weather, the forecast, and the specific advice for each plant.
 
 User's Plants:
