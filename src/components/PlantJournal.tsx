@@ -54,7 +54,7 @@ export function PlantJournal({ plant }: PlantJournalProps) {
     }
   };
 
-  const onSubmit = (values: z.infer<typeof journalFormSchema>>) => {
+  const onSubmit = (values: z.infer<typeof journalFormSchema>) => {
     setIsLoading(true);
     const newEntry: JournalEntry = {
       id: crypto.randomUUID(),

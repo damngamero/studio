@@ -11,7 +11,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { getWeatherTool, WeatherSchema, ForecastDaySchema } from './get-weather-and-plant-advice';
+import { getWeatherTool } from '../tools/get-weather';
 
 const PlantStatusSchema = z.object({
     customName: z.string(),
@@ -78,3 +78,4 @@ const getGardenOverviewFlow = ai.defineFlow(
     return output!;
   }
 );
+
