@@ -1,12 +1,13 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Calendar, Droplets } from 'lucide-react';
-import { addDays, differenceInDays, differenceInHours, format, formatDistanceToNowStrict } from 'date-fns';
+import { addDays, differenceInDays, differenceInHours, format, formatDistanceToNowStrict, isAfter } from 'date-fns';
 import { useSettingsStore } from '@/hooks/use-settings-store';
+import { cn } from '@/lib/utils';
 
 interface WateringScheduleProps {
   lastWatered?: string;
@@ -47,6 +48,9 @@ const Countdown = ({ targetDate }: { targetDate: Date }) => {
 };
 
 export function WateringSchedule({ lastWatered, wateringFrequency, wateringTime, onWaterPlant }: WateringScheduleProps) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isWatered, setIsWatered] = useState(false);
+  
   if (!wateringFrequency || !lastWatered) {
     return (
         <Card>
@@ -54,7 +58,7 @@ export function WateringSchedule({ lastWatered, wateringFrequency, wateringTime,
                 <CardTitle className="text-xl flex items-center gap-2"><Calendar /> Watering Schedule</CardTitle>
             </CardHeader>
             <CardContent>
-                <p className="text-sm text-muted-foreground">Generate care tips to get a personalized watering schedule from Sage.</p>
+                <p className="text-sm text-muted-foreground">Generate care tips from Sage to get a personalized watering schedule.</p>
             </CardContent>
         </Card>
     );
@@ -62,15 +66,40 @@ export function WateringSchedule({ lastWatered, wateringFrequency, wateringTime,
 
   const lastWateredDate = new Date(lastWatered);
   const nextWateringDate = addDays(lastWateredDate, wateringFrequency);
-  const isOverdue = new Date() > nextWateringDate;
+  const isOverdue = isAfter(new Date(), nextWateringDate);
+  const isButtonDisabled = isWatered || !isOverdue;
+
+  useEffect(() => {
+    if (isOverdue && !isWatered) {
+      audioRef.current?.play().catch(e => console.error("Audio play failed:", e));
+    } else {
+      audioRef.current?.pause();
+    }
+  }, [isOverdue, isWatered]);
+
+  const handleWaterPlantClick = () => {
+    onWaterPlant();
+    setIsWatered(true);
+    if(audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+    }
+  };
+  
+  // Reset isWatered state when the next watering cycle begins
+  useEffect(() => {
+      if(!isOverdue) {
+          setIsWatered(false);
+      }
+  }, [isOverdue])
 
   return (
-    <Card className={isOverdue ? 'bg-destructive/80 text-destructive-foreground' : ''}>
+    <Card className={cn(isOverdue && !isWatered ? 'bg-destructive/80 text-destructive-foreground animate-pulse' : '')}>
       <CardHeader>
         <CardTitle className="text-xl flex items-center gap-2">
             <Calendar /> Watering Schedule
         </CardTitle>
-        <CardDescription className={isOverdue ? 'text-destructive-foreground/80' : ''}>
+        <CardDescription className={cn(isOverdue && !isWatered ? 'text-destructive-foreground/80' : '')}>
             Next watering due on {format(nextWateringDate, "MMMM do")}
             {wateringTime && ` in the ${wateringTime}`}.
         </CardDescription>
@@ -79,16 +108,19 @@ export function WateringSchedule({ lastWatered, wateringFrequency, wateringTime,
         <div className="text-4xl font-bold">
             <Countdown targetDate={nextWateringDate} />
         </div>
-        <p className={`text-xs ${isOverdue ? 'text-destructive-foreground/80' : 'text-muted-foreground'}`}>
+        <p className={`text-xs ${isOverdue && !isWatered ? 'text-destructive-foreground/80' : 'text-muted-foreground'}`}>
             Last watered {formatDistanceToNowStrict(lastWateredDate)} ago
         </p>
         <Button 
-            onClick={onWaterPlant} 
+            onClick={handleWaterPlantClick} 
             className="w-full"
-            variant={isOverdue ? 'secondary' : 'default'}>
-          <Droplets className="mr-2" /> Mark as Watered
+            disabled={isButtonDisabled}
+            variant={isOverdue && !isWatered ? 'secondary' : 'default'}>
+          <Droplets className="mr-2" /> 
+          {isWatered ? 'Watered!' : 'Mark as Watered'}
         </Button>
       </CardContent>
+      <audio ref={audioRef} loop src="https://assets.mixkit.co/sfx/preview/mixkit-facility-alarm-904.mp3" />
     </Card>
   );
 }
