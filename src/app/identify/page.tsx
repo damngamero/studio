@@ -209,6 +209,7 @@ export default function IdentifyPlantPage() {
       photoUrl: photoDataUri,
       commonName: identification.commonName,
       latinName: identification.latinName,
+      estimatedAge: identification.estimatedAge,
       lastWatered: new Date().toISOString(),
       wateringFrequency: 7, // Default value, will be updated by AI
     });
@@ -313,6 +314,7 @@ export default function IdentifyPlantPage() {
               <div className="mb-4 p-4 bg-secondary rounded-lg border">
                 <p className="font-semibold text-lg">{identification.commonName}</p>
                 <p className="text-sm text-muted-foreground">{identification.latinName}</p>
+                 <p className="text-sm text-muted-foreground">Est. Age: {identification.estimatedAge}</p>
                 <p className="text-xs text-muted-foreground mt-1">Confidence: {Math.round(identification.confidence * 100)}%</p>
               </div>
 

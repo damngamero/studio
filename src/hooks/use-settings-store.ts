@@ -12,6 +12,7 @@ export interface Settings {
   wateringReminders: boolean;
   metricUnits: boolean;
   timezone: string;
+  location: string;
 }
 
 const defaultSettings: Settings = {
@@ -19,6 +20,7 @@ const defaultSettings: Settings = {
   wateringReminders: true,
   metricUnits: false,
   timezone: "UTC",
+  location: "",
 };
 
 function getInitialSettings(): Settings {

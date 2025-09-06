@@ -13,14 +13,16 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useSettingsStore, type Theme } from "@/hooks/use-settings-store";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check } from "lucide-react";
+import { Check, MapPin } from "lucide-react";
 import { timezones } from "@/lib/timezones";
+import { Input } from "@/components/ui/input";
 
 const preferencesFormSchema = z.object({
   theme: z.custom<Theme>(),
   wateringReminders: z.boolean().default(true),
   metricUnits: z.boolean().default(false),
   timezone: z.string().default('UTC'),
+  location: z.string().optional(),
 });
 
 export default function SettingsPage() {
@@ -81,6 +83,27 @@ export default function SettingsPage() {
                         </Select>
                         <FormDescription>
                           Choose a theme for the application.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Separator />
+                   <FormField
+                    control={form.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Your Location</FormLabel>
+                        <FormControl>
+                           <div className="relative">
+                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input placeholder="e.g. San Francisco, CA" {...field} className="pl-10" />
+                           </div>
+                        </FormControl>
+                         <FormDescription>
+                          Used to provide weather-based care tips.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

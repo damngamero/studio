@@ -15,6 +15,14 @@ const GetPlantCareTipsInputSchema = z.object({
   plantSpecies: z
     .string()
     .describe('The identified species of the plant for which to provide care tips.'),
+  estimatedAge: z
+    .string()
+    .optional()
+    .describe("The plant's estimated age (e.g., 'Young seedling', 'Mature plant')."),
+  location: z
+    .string()
+    .optional()
+    .describe("The user's location (e.g., 'San Francisco, CA') for weather-based advice."),
   environmentNotes: z
     .string()
     .optional()
@@ -40,13 +48,19 @@ const prompt = ai.definePrompt({
   name: 'getPlantCareTipsPrompt',
   input: {schema: GetPlantCareTipsInputSchema},
   output: {schema: GetPlantCareTipsOutputSchema},
-  prompt: `You are an expert horticulturalist. Provide care tips for the following plant species. 
+  prompt: `You are an expert horticulturalist. Provide care tips for the following plant. 
   
-Take the user's environment notes into account to provide a tailored watering schedule.
+Take the user's environment notes, location, and the plant's age into account to provide a tailored watering schedule. If a location is provided, infer the general climate.
 Include details on watering, sunlight, and pruning. 
 Also provide a recommended watering frequency in days and the best time of day to water.
 
 Plant Species: {{{plantSpecies}}}
+{{#if estimatedAge}}
+Estimated Age: {{{estimatedAge}}}
+{{/if}}
+{{#if location}}
+User's Location: {{{location}}}
+{{/if}}
 {{#if environmentNotes}}
 Environment Notes: {{{environmentNotes}}}
 {{/if}}

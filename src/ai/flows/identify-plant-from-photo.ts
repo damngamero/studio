@@ -28,6 +28,11 @@ const IdentifyPlantFromPhotoOutputSchema = z.object({
   confidence: z
     .number()
     .describe('The confidence level of the plant identification (0-1).'),
+  estimatedAge: z
+    .string()
+    .describe(
+      'An estimation of the plant\'s age based on the photo (e.g., "Young seedling", "Mature plant", "Approximately 6 months old").'
+    ),
 });
 export type IdentifyPlantFromPhotoOutput = z.infer<
   typeof IdentifyPlantFromPhotoOutputSchema
@@ -49,7 +54,7 @@ You will use this information to identify the plant species in the photo.
 
 Photo: {{media url=photoDataUri}}
 
-Return the common name, latin name, and a confidence level of the plant identification.
+Return the common name, latin name, a confidence level of the plant identification, and an estimate of the plant's age.
 If the input is not a plant, return isPlant as false.
 `,
 });

@@ -22,12 +22,13 @@ export interface Plant {
   customName: string;
   photoUrl: string; // data URI
   commonName: string;
-  latinName: string;
+  latinName:string;
+  estimatedAge?: string;
   notes?: string;
   environmentNotes?: string;
   careTips?: string;
   health?: PlantHealthState;
-  wateringFrequency: number; // in days
+  wateringFrequency?: number; // in days
   wateringTime?: string; // e.g. "morning"
   lastWatered: string; // ISO date string
   annotatedRegions?: RegionOfInterest[];

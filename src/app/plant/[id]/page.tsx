@@ -5,9 +5,10 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X } from "lucide-react";
+import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X, MapPin, AlertTriangle, Info } from "lucide-react";
 
 import { usePlantStore } from "@/hooks/use-plant-store";
+import { useSettingsStore } from "@/hooks/use-settings-store";
 import { getPlantCareTips } from "@/ai/flows/get-plant-care-tips";
 import { checkPlantHealth } from "@/ai/flows/check-plant-health";
 import type { Plant } from "@/lib/types";
@@ -48,6 +49,7 @@ export default function PlantProfilePage() {
   const router = useRouter();
   const params = useParams();
   const { getPlantById, deletePlant, updatePlant } = usePlantStore();
+  const { settings } = useSettingsStore();
   const { toast } = useToast();
   
   const [plant, setPlant] = useState<Plant | null | undefined>(undefined);
@@ -123,6 +125,8 @@ export default function PlantProfilePage() {
         plantSpecies: plant.commonName,
         environmentNotes: plant.environmentNotes,
         lastWatered: plant.lastWatered,
+        estimatedAge: plant.estimatedAge,
+        location: settings.location,
       });
       const updatedPlant = { 
         ...plant, 
@@ -388,6 +392,18 @@ export default function PlantProfilePage() {
                  </div>
               </CardContent>
             </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-xl">Proactive Tips</CardTitle>
+                    <CardDescription>Sage will provide timely advice based on local weather.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg flex items-center gap-3">
+                        <Info className="h-5 w-5"/>
+                        <span>Proactive tips will appear here once you set your location in settings.</span>
+                    </div>
+                </CardContent>
+            </Card>
           </div>
           <div className="grid auto-rows-max items-start gap-6">
              <WateringSchedule 
@@ -422,20 +438,24 @@ export default function PlantProfilePage() {
                 <CardTitle className="text-xl">Quick View</CardTitle>
               </CardHeader>
               <CardContent>
-                 <div className="grid gap-2 text-sm">
-                    <div className="font-semibold">General Care</div>
+                 <div className="grid gap-3 text-sm">
+                    <div className="font-semibold">Details</div>
                     <ul className="grid gap-2">
+                      {plant.estimatedAge && <li className="flex items-center justify-between">
+                        <span className="text-muted-foreground flex items-center gap-2"><Leaf className="h-4 w-4" /> Est. Age</span>
+                        <span>{plant.estimatedAge}</span>
+                      </li>}
+                       {settings.location && <li className="flex items-center justify-between">
+                        <span className="text-muted-foreground flex items-center gap-2"><MapPin className="h-4 w-4" /> Location</span>
+                        <span>{settings.location}</span>
+                      </li>}
                       <li className="flex items-center justify-between">
                         <span className="text-muted-foreground flex items-center gap-2"><Droplets className="h-4 w-4" /> Watering</span>
-                        <span>Twice a week</span>
+                        <span>~ Every {plant.wateringFrequency || '?'} days</span>
                       </li>
                       <li className="flex items-center justify-between">
                         <span className="text-muted-foreground flex items-center gap-2"><Sun className="h-4 w-4" /> Sunlight</span>
                         <span>Indirect Light</span>
-                      </li>
-                      <li className="flex items-center justify-between">
-                        <span className="text-muted-foreground flex items-center gap-2"><Leaf className="h-4 w-4" /> Fertilize</span>
-                        <span>Monthly</span>
                       </li>
                     </ul>
                  </div>
@@ -473,5 +493,3 @@ export default function PlantProfilePage() {
     </AppLayout>
   );
 }
-
-    
