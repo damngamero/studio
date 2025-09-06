@@ -5,147 +5,128 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { useSettingsStore, type Theme } from "@/hooks/use-settings-store";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Check } from "lucide-react";
 
-const settingsFormSchema = z.object({
-  apiKey: z.string().optional(),
-});
-
-// A new schema for the preferences form
 const preferencesFormSchema = z.object({
+  theme: z.custom<Theme>(),
   wateringReminders: z.boolean().default(true),
   metricUnits: z.boolean().default(false),
 });
 
 export default function SettingsPage() {
   const { toast } = useToast();
+  const { settings, setSettings } = useSettingsStore();
 
-  const apiKeyForm = useForm<z.infer<typeof settingsFormSchema>>({
-    resolver: zodResolver(settingsFormSchema),
-    defaultValues: {
-      apiKey: "", // In a real app, this would be loaded from a secure store
-    },
-  });
-  
-  const preferencesForm = useForm<z.infer<typeof preferencesFormSchema>>({
+  const form = useForm<z.infer<typeof preferencesFormSchema>>({
     resolver: zodResolver(preferencesFormSchema),
-    defaultValues: {
-      wateringReminders: true,
-      metricUnits: false,
-    },
+    values: settings,
   });
 
-  const onApiKeySubmit = (values: z.infer<typeof settingsFormSchema>) => {
-    // In a real app, you would securely save the API key.
-    // For this demo, we'll just show a toast.
-    console.log("Saving API Key:", values.apiKey);
-    toast({
-      title: "Settings Saved",
-      description: "Your new API key setting has been applied.",
-    });
-  };
-
-  const onPreferencesSubmit = (values: z.infer<typeof preferencesFormSchema>) => {
-    console.log("Saving preferences:", values);
+  const onSubmit = (values: z.infer<typeof preferencesFormSchema>) => {
+    setSettings(values);
     toast({
       title: "Preferences Saved",
       description: "Your new preferences have been applied.",
+      action: <div className="p-1.5 rounded-full bg-green-500"><Check className="h-4 w-4 text-white" /></div>
     });
-  }
-
+  };
+  
   return (
     <AppLayout>
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold font-headline mb-8">Settings</h1>
+      <div className="max-w-2xl mx-auto space-y-8">
+        <header>
+          <h1 className="text-3xl font-bold font-headline">Settings</h1>
+          <p className="text-muted-foreground mt-1">Customize your app experience.</p>
+        </header>
         
-        <div className="space-y-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>API Key Management</CardTitle>
-              <CardDescription>Manage your external API keys here. This is for demonstration purposes.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...apiKeyForm}>
-                <form onSubmit={apiKeyForm.handleSubmit(onApiKeySubmit)} className="space-y-4">
-                  <FormField
-                    control={apiKeyForm.control}
-                    name="apiKey"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Plant Recognition API Key</FormLabel>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <Card>
+              <CardHeader>
+                <CardTitle>Preferences</CardTitle>
+                <CardDescription>Changes are saved automatically to this device.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="theme"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Theme</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <Input type="password" placeholder="••••••••••••••••" {...field} />
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a theme" />
+                          </SelectTrigger>
                         </FormControl>
-                        <FormDescription>
-                          Your key for the plant identification service.
-                        </FormDescription>
-                        <FormMessage />
+                        <SelectContent>
+                          <SelectItem value="light">Light</SelectItem>
+                          <SelectItem value="dark">Dark</SelectItem>
+                          <SelectItem value="theme-forest">Forest</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Choose a theme for the application.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Separator />
+
+                <FormField
+                  control={form.control}
+                  name="wateringReminders"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                        <FormLabel>Watering Reminders</FormLabel>
+                        <FormDescription>Receive notifications when it's time to water your plants.</FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                    control={form.control}
+                    name="metricUnits"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                          <FormLabel>Use Metric Units</FormLabel>
+                          <FormDescription>Display measurements in cm/ml instead of inches/oz.</FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
                       </FormItem>
                     )}
                   />
-                  <Button type="submit">Save API Key</Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <Form {...preferencesForm}>
-              <form onSubmit={preferencesForm.handleSubmit(onPreferencesSubmit)}>
-                <CardHeader>
-                  <CardTitle>Preferences</CardTitle>
-                  <CardDescription>Customize your app experience.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <FormField
-                      control={preferencesForm.control}
-                      name="wateringReminders"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center justify-between">
-                           <div>
-                            <FormLabel>Watering Reminders</FormLabel>
-                            <FormDescription>Receive notifications when it's time to water your plants.</FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
+              </CardContent>
+            </Card>
 
-                  <Separator />
-
-                  <FormField
-                      control={preferencesForm.control}
-                      name="metricUnits"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center justify-between">
-                           <div>
-                            <FormLabel>Use Metric Units</FormLabel>
-                            <FormDescription>Display measurements in cm/ml instead of inches/oz.</FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                </CardContent>
-              </form>
-            </Form>
-          </Card>
-        </div>
+            <Button type="submit" className="mt-6">
+              Save Preferences
+            </Button>
+          </form>
+        </Form>
       </div>
     </AppLayout>
   );
