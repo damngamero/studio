@@ -23,6 +23,7 @@ import { Chat } from "@/components/Chat";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { WateringSchedule } from "@/components/WateringSchedule";
+import { InteractivePhoto } from "@/components/InteractivePhoto";
 
 function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -31,7 +32,7 @@ function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
       xmlns="http://www.w3.org/2000/svg"
       width="24"
       height="24"
-      viewBox="0 0 24 24"
+      viewBox="0 0 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
@@ -273,14 +274,7 @@ export default function PlantProfilePage() {
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-3xl p-0">
-                        <Image 
-                          src={plant.photoUrl} 
-                          alt={plant.customName} 
-                          width={1920}
-                          height={1080}
-                          className="object-contain rounded-lg"
-                          data-ai-hint="plant" 
-                        />
+                        <InteractivePhoto photoDataUri={plant.photoUrl} plantName={plant.customName} />
                     </DialogContent>
                   </Dialog>
                  {plant.notes && (
@@ -326,7 +320,7 @@ export default function PlantProfilePage() {
                         <div className="grid grid-cols-2 gap-4 my-4">
                            <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center overflow-hidden relative">
                             {healthCheckPhoto ? (
-                                <Image src={healthCheckPhoto} alt="Health check photo" layout="fill" objectFit="contain" />
+                                <Image src={healthCheckPhoto} alt="Health check photo" fill objectFit="contain" />
                             ) : (
                               <>
                                 <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
@@ -469,5 +463,3 @@ export default function PlantProfilePage() {
     </AppLayout>
   );
 }
-
-    
