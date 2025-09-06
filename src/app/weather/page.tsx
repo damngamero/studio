@@ -107,7 +107,7 @@ export default function WeatherPage() {
                             <div className="flex items-center gap-4">
                                 <WeatherIcon condition={weatherData.currentWeather.condition} className="w-20 h-20 text-primary" />
                                 <div>
-                                    <p className="text-5xl font-bold">{weatherData.currentWeather.temperature}°C</p>
+                                    <p className="text-5xl font-bold">{weatherData.currentWeather.temperature}°{weatherData.currentWeather.temperatureUnit === 'celsius' ? 'C' : 'F'}</p>
                                     <p className="text-muted-foreground">{weatherData.currentWeather.condition}</p>
                                 </div>
                             </div>
@@ -115,7 +115,7 @@ export default function WeatherPage() {
                          {isLoading || !weatherData ? <Skeleton className="w-64 h-10" /> : (
                             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
                                 <div className="flex items-center gap-2"><Thermometer className="w-4 h-4 text-muted-foreground" /> Humidity: {weatherData.currentWeather.humidity}%</div>
-                                <div className="flex items-center gap-2"><Wind className="w-4 h-4 text-muted-foreground" /> Wind: {weatherData.currentWeather.windSpeed} km/h</div>
+                                <div className="flex items-center gap-2"><Wind className="w-4 h-4 text-muted-foreground" /> Wind: {weatherData.currentWeather.windSpeed} {weatherData.currentWeather.windSpeedUnit}</div>
                             </div>
                         )}
                     </CardContent>
@@ -137,7 +137,7 @@ export default function WeatherPage() {
                                         <p className="text-sm text-muted-foreground">{day.condition}</p>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                         <p className="text-2xl font-bold">{day.temperature}°C</p>
+                                         <p className="text-2xl font-bold">{day.temperature}°{weatherData.currentWeather.temperatureUnit === 'celsius' ? 'C' : 'F'}</p>
                                         <WeatherIcon condition={day.condition} className="w-8 h-8 text-muted-foreground" />
                                     </div>
                                 </CardContent>
@@ -154,7 +154,7 @@ export default function WeatherPage() {
                              <Card key={p.id}>
                                <CardHeader>
                                    <CardTitle className="text-lg"><Skeleton className="h-6 w-32" /></CardTitle>
-                               </CardHeader>
+                               </Header>
                                <CardContent>
                                    <Skeleton className="h-4 w-full" />
                                    <Skeleton className="h-4 w-2/3 mt-2" />
@@ -166,7 +166,7 @@ export default function WeatherPage() {
                             <Card key={advice.customName}>
                                <CardHeader>
                                    <CardTitle className="text-lg">{advice.customName}</CardTitle>
-                               </CardHeader>
+                               </Header>
                                <CardContent>
                                    <div className="text-sm prose prose-sm max-w-none prose-p:my-1 prose-strong:text-foreground">
                                     <ReactMarkdown>{advice.advice}</ReactMarkdown>

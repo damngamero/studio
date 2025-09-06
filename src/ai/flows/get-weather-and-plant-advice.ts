@@ -10,6 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { getSettings } from '@/hooks/use-settings-store';
 
 const PlantInfoSchema = z.object({
   customName: z.string(),
@@ -23,16 +24,18 @@ const GetWeatherAndPlantAdviceInputSchema = z.object({
 export type GetWeatherAndPlantAdviceInput = z.infer<typeof GetWeatherAndPlantAdviceInputSchema>;
 
 const WeatherSchema = z.object({
-  temperature: z.number().describe('The current temperature in Celsius.'),
+  temperature: z.number().describe('The current temperature.'),
   condition: z.string().describe('A brief description of the weather (e.g., Sunny, Cloudy, Rain).'),
   humidity: z.number().describe('The current humidity percentage (0-100).'),
-  windSpeed: z.number().describe('The current wind speed in km/h.'),
+  windSpeed: z.number().describe('The current wind speed.'),
+  temperatureUnit: z.enum(['celsius', 'fahrenheit']),
+  windSpeedUnit: z.enum(['kmh', 'mph']),
 });
 export type Weather = z.infer<typeof WeatherSchema>;
 
 const ForecastDaySchema = z.object({
   day: z.string().describe("The day of the week (e.g., 'Monday')."),
-  temperature: z.number().describe('The forecasted temperature in Celsius.'),
+  temperature: z.number().describe('The forecasted temperature.'),
   condition: z.string().describe('The forecasted weather condition.'),
 });
 export type ForecastDay = z.infer<typeof ForecastDaySchema>;
@@ -71,9 +74,13 @@ const getWeatherTool = ai.defineTool(
             throw new Error(`No coordinates found for location: ${location}`);
         }
         const { lat, lon } = geocodeData[0];
+        
+        const { metricUnits } = getSettings();
+        const tempUnit = metricUnits ? 'celsius' : 'fahrenheit';
+        const windUnit = metricUnits ? 'kmh' : 'mph';
 
         // 2. Fetch weather using the retrieved coordinates
-        const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max&timezone=auto&forecast_days=3`);
+        const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max&temperature_unit=${tempUnit}&wind_speed_unit=${windUnit}&timezone=auto&forecast_days=3`);
         if (!weatherResponse.ok) {
             throw new Error(`Failed to fetch weather data: ${weatherResponse.statusText}`);
         }
@@ -93,6 +100,8 @@ const getWeatherTool = ai.defineTool(
             condition: codeToCondition(data.current.weather_code),
             humidity: data.current.relative_humidity_2m,
             windSpeed: Math.round(data.current.wind_speed_10m),
+            temperatureUnit: tempUnit,
+            windSpeedUnit: windUnit,
         };
         
         const forecast: ForecastDay[] = data.daily.time.map((dateStr: string, index: number) => {

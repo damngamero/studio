@@ -28,8 +28,23 @@ const defaultSettings: Settings = {
 
 // This function can be called from server components
 export function getSettings(): Settings {
-    // In a real app, you might get this from a cookie or a server-side session
+  if (typeof window === 'undefined') {
+    // In a server context, we can't access localStorage.
+    // In a real app, you might get this from a cookie or a server-side session.
+    // For now, we return defaults.
     return defaultSettings;
+  }
+  try {
+    const item = window.localStorage.getItem(SETTINGS_KEY);
+    if (item) {
+      return { ...defaultSettings, ...JSON.parse(item) };
+    }
+    return defaultSettings;
+  }
+  catch (error) {
+    console.error('Error reading settings from localStorage', error);
+    return defaultSettings;
+  }
 }
 
 
