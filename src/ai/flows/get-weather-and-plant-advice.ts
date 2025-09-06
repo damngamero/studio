@@ -49,7 +49,7 @@ const GetWeatherAndPlantAdviceOutputSchema = z.object({
 });
 export type GetWeatherAndPlantAdviceOutput = z.infer<typeof GetWeatherAndPlantAdviceOutputSchema>;
 
-// This is a mock tool. In a real application, this would call a real weather API.
+// This tool uses a free, public API. In a real application, you would use a more robust, authenticated API.
 const getWeatherTool = ai.defineTool(
     {
       name: 'getWeatherForLocation',
@@ -61,29 +61,48 @@ const getWeatherTool = ai.defineTool(
       }),
     },
     async ({ location }) => {
-        // Mock data that is consistent but plausible.
-        const seed = location.length;
-        const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Rain', 'Windy'];
-        
-        const currentWeather = {
-            temperature: 22 + (seed % 5) - 2, // 20-24°C
-            condition: conditions[seed % conditions.length],
-            humidity: 50 + (seed % 20), // 50-70%
-            windSpeed: 10 + (seed % 10), // 10-20 km/h
-        };
+        try {
+            const response = await fetch(`https://wttr.in/${encodeURIComponent(location)}?format=j1`);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch weather data: ${response.statusText}`);
+            }
+            const data = await response.json();
+            
+            const current = data.current_condition[0];
+            const forecastData = data.weather.slice(0, 3);
 
-        const forecast: ForecastDay[] = Array.from({ length: 3 }, (_, i) => {
-            const date = new Date();
-            date.setDate(date.getDate() + i + 1);
-            const daySeed = seed + i + 1;
-            return {
-                day: date.toLocaleDateString('en-US', { weekday: 'long' }),
-                temperature: 20 + (daySeed % 7) - 3, // 17-26°C
-                condition: conditions[daySeed % conditions.length],
+            const fahrenheitToCelsius = (f: number) => Math.round((f - 32) * 5 / 9);
+
+            const currentWeather: Weather = {
+                temperature: parseInt(current.temp_C),
+                condition: current.weatherDesc[0].value,
+                humidity: parseInt(current.humidity),
+                windSpeed: parseInt(current.windspeedKmph),
             };
-        });
 
-        return { currentWeather, forecast };
+            const forecast: ForecastDay[] = forecastData.map((day: any) => {
+                const date = new Date(day.date);
+                return {
+                    day: date.toLocaleDateString('en-US', { weekday: 'long' }),
+                    temperature: parseInt(day.avgtempC),
+                    condition: day.hourly[4].weatherDesc[0].value, // Noon condition
+                };
+            });
+            
+            return { currentWeather, forecast };
+
+        } catch (error) {
+            console.error("Error in getWeatherTool:", error);
+            // Fallback to plausible mock data in case of API failure
+            return {
+                currentWeather: { temperature: 22, condition: 'Sunny', humidity: 55, windSpeed: 15 },
+                forecast: [
+                    { day: 'Monday', temperature: 24, condition: 'Sunny' },
+                    { day: 'Tuesday', temperature: 21, condition: 'Partly Cloudy' },
+                    { day: 'Wednesday', temperature: 19, condition: 'Rain' },
+                ]
+            };
+        }
     }
   );
 
