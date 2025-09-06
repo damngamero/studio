@@ -7,23 +7,28 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
-import { Save } from "lucide-react";
+import { CalendarIcon, Save } from "lucide-react";
+import { format } from "date-fns";
 
 import { usePlantStore } from "@/hooks/use-plant-store";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import type { Plant } from "@/lib/types";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 const editFormSchema = z.object({
   customName: z.string().min(1, "Please give your plant a name."),
   notes: z.string().optional(),
   environmentNotes: z.string().optional(),
+  lastWatered: z.date(),
 });
 
 export default function EditPlantPage() {
@@ -41,6 +46,7 @@ export default function EditPlantPage() {
       customName: "",
       notes: "",
       environmentNotes: "",
+      lastWatered: new Date(),
     },
   });
 
@@ -53,6 +59,7 @@ export default function EditPlantPage() {
           customName: foundPlant.customName,
           notes: foundPlant.notes || "",
           environmentNotes: foundPlant.environmentNotes || "",
+          lastWatered: new Date(foundPlant.lastWatered),
         });
       }
     }
@@ -64,6 +71,7 @@ export default function EditPlantPage() {
     updatePlant({
       ...plant,
       ...values,
+      lastWatered: values.lastWatered.toISOString(),
     });
     
     toast({
@@ -123,6 +131,50 @@ export default function EditPlantPage() {
                 </FormItem>
               )}
             />
+            <FormField
+                control={form.control}
+                name="lastWatered"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Last Watered Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-[240px] pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("1900-01-01")
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormDescription>
+                      This helps Sage calculate the next watering date.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             <FormField
               control={form.control}
               name="notes"

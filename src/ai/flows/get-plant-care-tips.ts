@@ -19,6 +19,7 @@ const GetPlantCareTipsInputSchema = z.object({
     .string()
     .optional()
     .describe('User-provided notes about the plant\'s environment (e.g., "near a sunny window", "in a cool, dry room").'),
+  lastWatered: z.string().optional().describe('The ISO date string of when the plant was last watered.'),
 });
 export type GetPlantCareTipsInput = z.infer<typeof GetPlantCareTipsInputSchema>;
 
@@ -48,6 +49,9 @@ Also provide a recommended watering frequency in days and the best time of day t
 Plant Species: {{{plantSpecies}}}
 {{#if environmentNotes}}
 Environment Notes: {{{environmentNotes}}}
+{{/if}}
+{{#if lastWatered}}
+Last Watered: {{{lastWatered}}}
 {{/if}}
 `,
 });

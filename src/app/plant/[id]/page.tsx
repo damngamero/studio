@@ -18,7 +18,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose, DialogFooter } from "@/components/ui/dialog";
 import { Chat } from "@/components/Chat";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -122,6 +122,7 @@ export default function PlantProfilePage() {
       const tipsResult = await getPlantCareTips({ 
         plantSpecies: plant.commonName,
         environmentNotes: plant.environmentNotes,
+        lastWatered: plant.lastWatered,
       });
       const updatedPlant = { 
         ...plant, 
@@ -323,7 +324,7 @@ export default function PlantProfilePage() {
                       <DialogContent>
                         <DialogHeader>
                           <DialogTitle>Daily Health Check</DialogTitle>
-                          <DialogDescription>Take a new photo of your plant for today's health assessment.</DialogDescription>
+                           <DialogDescription>Take a new photo of your plant for today's health assessment.</DialogDescription>
                         </DialogHeader>
                         <div className="grid grid-cols-2 gap-4 my-4">
                            <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center overflow-hidden relative">

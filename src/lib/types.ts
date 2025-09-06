@@ -27,8 +27,8 @@ export interface Plant {
   environmentNotes?: string;
   careTips?: string;
   health?: PlantHealthState;
-  wateringFrequency?: number; // in days
+  wateringFrequency: number; // in days
   wateringTime?: string; // e.g. "morning"
-  lastWatered?: string; // ISO date string
+  lastWatered: string; // ISO date string
   annotatedRegions?: RegionOfInterest[];
 }
