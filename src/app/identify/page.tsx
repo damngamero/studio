@@ -204,7 +204,7 @@ export default function IdentifyPlantPage() {
   const onSubmit = (values: z.infer<typeof profileFormSchema>) => {
     if (!identification || !photoDataUri) return;
 
-    addPlant({
+    const newPlant = addPlant({
       ...values,
       photoUrl: photoDataUri,
       commonName: identification.commonName,
@@ -219,7 +219,7 @@ export default function IdentifyPlantPage() {
       description: `${values.customName} has been added to your garden.`,
     });
 
-    router.push("/");
+    router.push(`/plant/${newPlant.id}`);
   };
 
   const PhotoDisplay = () => (
