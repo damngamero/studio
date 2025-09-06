@@ -11,6 +11,8 @@ import { usePlantStore } from "@/hooks/use-plant-store";
 import { useSettingsStore } from "@/hooks/use-settings-store";
 import { getPlantCareTips } from "@/ai/flows/get-plant-care-tips";
 import { checkPlantHealth } from "@/ai/flows/check-plant-health";
+import { getWeatherAndPlantAdvice } from "@/ai/flows/get-weather-and-plant-advice";
+import type { GetWeatherAndPlantAdviceOutput } from "@/ai/flows/get-weather-and-plant-advice";
 import type { Plant } from "@/lib/types";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,7 @@ import { WateringSchedule } from "@/components/WateringSchedule";
 import { InteractivePhoto } from "@/components/InteractivePhoto";
 import { DialogDescription } from "@/components/ui/dialog";
 import { PlantJournal } from "@/components/PlantJournal";
+import ReactMarkdown from "react-markdown";
 
 function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -60,6 +63,8 @@ export default function PlantProfilePage() {
   const [isHealthCheckModalOpen, setIsHealthCheckModalOpen] = useState(false);
   const [healthCheckPhoto, setHealthCheckPhoto] = useState<string | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const [weatherAdvice, setWeatherAdvice] = useState<string | null>(null);
+  const [isFetchingWeather, setIsFetchingWeather] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
 
@@ -72,6 +77,34 @@ export default function PlantProfilePage() {
     }
   }, [plantId, getPlantById]);
   
+  useEffect(() => {
+    async function fetchWeatherAdvice() {
+      if (!plant || !settings.location) {
+        setIsFetchingWeather(false);
+        return;
+      }
+      setIsFetchingWeather(true);
+      try {
+        const result = await getWeatherAndPlantAdvice({
+          location: settings.location,
+          plants: [{ customName: plant.customName, commonName: plant.commonName }]
+        });
+        if (result.plantAdvice.length > 0) {
+          setWeatherAdvice(result.plantAdvice[0].advice);
+        }
+      } catch (error) {
+        console.error("Failed to get weather advice:", error);
+        setWeatherAdvice("Could not fetch weather advice from Sage at this time.");
+      } finally {
+        setIsFetchingWeather(false);
+      }
+    }
+
+    if (plant) {
+        fetchWeatherAdvice();
+    }
+  }, [plant, settings.location]);
+
   const stopCameraStream = useCallback(() => {
       if (videoRef.current && videoRef.current.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream;
@@ -397,16 +430,31 @@ export default function PlantProfilePage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="text-xl">Proactive Tips</CardTitle>
-                    <CardDescription>Sage provides timely advice based on local weather.</CardDescription>
+                    <CardDescription>Sage's timely advice based on local weather for {plant.customName}.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg flex flex-col items-center justify-center text-center gap-3">
-                        <CloudSun className="h-8 w-8"/>
-                        <span>Proactive weather tips for all your plants are available on the new Weather page.</span>
-                        <Button asChild size="sm" className="mt-2">
-                           <Link href="/weather">Go to Weather Center</Link>
-                        </Button>
-                    </div>
+                    {isFetchingWeather ? (
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-2/3" />
+                        </div>
+                    ) : settings.location ? (
+                         weatherAdvice ? (
+                           <div className="text-sm prose prose-sm max-w-none prose-p:my-1 prose-strong:text-foreground">
+                                <ReactMarkdown>{weatherAdvice}</ReactMarkdown>
+                           </div>
+                         ) : (
+                            <p className="text-sm text-muted-foreground">Could not load weather advice.</p>
+                         )
+                    ) : (
+                        <div className="text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg flex flex-col items-center justify-center text-center gap-3">
+                            <Info className="h-8 w-8"/>
+                            <span>Set your location in settings to receive proactive weather advice.</span>
+                            <Button asChild size="sm" className="mt-2">
+                               <Link href="/settings">Go to Settings</Link>
+                            </Button>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
           </div>
