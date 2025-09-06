@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -15,6 +16,7 @@ export interface Settings {
   timezone: string;
   location: string;
   model: AIModel;
+  geminiApiKey?: string;
 }
 
 const defaultSettings: Settings = {
@@ -24,6 +26,7 @@ const defaultSettings: Settings = {
   timezone: "UTC",
   location: "",
   model: 'gemini-2.5-flash',
+  geminiApiKey: "",
 };
 
 // This function can be called from server components
@@ -37,7 +40,9 @@ export function getSettings(): Settings {
   try {
     const item = window.localStorage.getItem(SETTINGS_KEY);
     if (item) {
-      return { ...defaultSettings, ...JSON.parse(item) };
+      const savedSettings = JSON.parse(item);
+      // Ensure all keys from defaultSettings are present
+      return { ...defaultSettings, ...savedSettings };
     }
     return defaultSettings;
   }
@@ -55,7 +60,9 @@ function getInitialSettings(): Settings {
   try {
     const item = window.localStorage.getItem(SETTINGS_KEY);
     if (item) {
-      return { ...defaultSettings, ...JSON.parse(item) };
+      const savedSettings = JSON.parse(item);
+      // Ensure all keys from defaultSettings are present
+      return { ...defaultSettings, ...savedSettings };
     }
     return defaultSettings;
   } catch (error) {
@@ -69,6 +76,7 @@ export function useSettingsStore() {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
+    setSettingsState(getInitialSettings());
     setIsInitialized(true);
   }, []);
   

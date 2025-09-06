@@ -1,6 +1,8 @@
 
+
 "use client";
 
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -11,9 +13,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { useSettingsStore, type Theme, type AIModel } from "@/hooks/use-settings-store.tsx";
+import { useSettingsStore, type Theme, type AIModel, type Settings } from "@/hooks/use-settings-store.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, MapPin, ChevronsUpDown } from "lucide-react";
+import { Check, MapPin, ChevronsUpDown, KeyRound } from "lucide-react";
 import { timezones } from "@/lib/timezones";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -27,6 +29,7 @@ const preferencesFormSchema = z.object({
   timezone: z.string().default('UTC'),
   location: z.string().optional(),
   model: z.custom<AIModel>(),
+  geminiApiKey: z.string().optional(),
 });
 
 export default function SettingsPage() {
@@ -69,7 +72,8 @@ export default function SettingsPage() {
                         <Select 
                           onValueChange={(value: Theme) => {
                             field.onChange(value);
-                            setSettings({ theme: value });
+                            // Also apply immediately
+                            setSettings({ ...settings, theme: value });
                           }} 
                           defaultValue={field.value}
                         >
@@ -100,9 +104,7 @@ export default function SettingsPage() {
                       <FormItem>
                         <FormLabel>AI Model</FormLabel>
                         <Select 
-                          onValueChange={(value: AIModel) => {
-                            field.onChange(value);
-                          }} 
+                          onValueChange={field.onChange} 
                           defaultValue={field.value}
                         >
                           <FormControl>
@@ -117,6 +119,27 @@ export default function SettingsPage() {
                         </Select>
                         <FormDescription>
                           Choose the AI model to power your assistant. Pro is more capable but may be slower.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                   <Separator />
+                   <FormField
+                    control={form.control}
+                    name="geminiApiKey"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Gemini API Key</FormLabel>
+                        <FormControl>
+                           <div className="relative">
+                            <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input placeholder="Enter your Google AI Studio API Key" {...field} className="pl-10" />
+                           </div>
+                        </FormControl>
+                         <FormDescription>
+                          Your API key is stored only on this device. Get a key from{' '}
+                          <Link href="https://aistudio.google.com/app/apikey" target="_blank" className="underline">Google AI Studio</Link>.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

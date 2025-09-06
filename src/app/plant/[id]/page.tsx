@@ -1,11 +1,12 @@
 
+
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X, MapPin, AlertTriangle, Info, CloudSun, BookOpen, RefreshCw } from "lucide-react";
+import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X, MapPin, AlertTriangle, Info, CloudSun, BookOpen, RefreshCw, Search } from "lucide-react";
 import { addDays, format, formatDistanceToNowStrict, isAfter } from 'date-fns';
 
 
@@ -363,22 +364,29 @@ export default function PlantProfilePage() {
           <div className="grid auto-rows-max items-start gap-6">
             <Card>
               <CardContent className="p-4">
-                 <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="relative aspect-video w-full rounded-md overflow-hidden shadow-md mb-6 cursor-pointer">
-                        <Image 
-                          src={plant.photoUrl} 
-                          alt={plant.customName} 
-                          fill
-                          className="object-contain w-full h-full" 
-                          data-ai-hint="plant" 
-                        />
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-3xl p-0">
-                        <InteractivePhoto photoDataUri={plant.photoUrl} plantName={plant.customName} />
-                    </DialogContent>
-                  </Dialog>
+                <div className="relative aspect-video w-full rounded-md overflow-hidden shadow-md mb-6">
+                  <Image 
+                    src={plant.photoUrl} 
+                    alt={plant.customName} 
+                    fill
+                    className="object-contain w-full h-full" 
+                    data-ai-hint="plant" 
+                  />
+                   <Dialog>
+                      <DialogTrigger asChild>
+                        <Button size="sm" className="absolute bottom-2 right-2">
+                           <Search className="mr-2" /> Pest & Disease Detective
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-3xl p-0">
+                          <DialogHeader className="p-4">
+                            <DialogTitle>Pest & Disease Detective</DialogTitle>
+                            <DialogDescription>Sage is analyzing your photo for any signs of trouble.</DialogDescription>
+                          </DialogHeader>
+                          <InteractivePhoto photoDataUri={plant.photoUrl} plantName={plant.customName} />
+                      </DialogContent>
+                    </Dialog>
+                </div>
                  {plant.notes && (
                     <div>
                       <h3 className="font-semibold text-base mb-2">My Notes</h3>

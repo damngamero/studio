@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -32,6 +33,7 @@ export function InteractivePhoto({
   const [regions, setRegions] = useState<RegionOfInterest[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasBeenAnalyzed, setHasBeenAnalyzed] = useState(false);
 
   const handleDiagnose = async () => {
     setIsLoading(true);
@@ -39,6 +41,8 @@ export function InteractivePhoto({
     try {
       const result = await diagnosePlantWithRegions({ photoDataUri });
       setRegions(result.regions);
+      setHasBeenAnalyzed(true);
+
       if (result.regions.length === 0) {
         toast({
           title: 'All Clear!',
@@ -61,9 +65,11 @@ export function InteractivePhoto({
   
   // Automatically run diagnosis when the component mounts
   useEffect(() => {
-    handleDiagnose();
+    if (!hasBeenAnalyzed) {
+      handleDiagnose();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [photoDataUri]);
+  }, [photoDataUri, hasBeenAnalyzed]);
 
   return (
     <div className="relative w-full h-full">
@@ -101,7 +107,7 @@ export function InteractivePhoto({
         </TooltipProvider>
       </div>
 
-      <div className="absolute top-2 right-2 flex items-center gap-2">
+      <div className="absolute top-2 right-2 flex items-center gap-2 bg-background/70 p-1 rounded-md">
         {isLoading && (
           <Badge variant="secondary" className="p-2">
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
