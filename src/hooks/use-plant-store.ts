@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -19,43 +20,43 @@ function getInitialPlants(): Plant[] {
 }
 
 export function usePlantStore() {
-  const [plants, setPlants] = useState<Plant[]>([]);
+  const [plants, setPlants] = useState<Plant[]>(getInitialPlants);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    setPlants(getInitialPlants());
+    // This effect ensures we are client-side before setting isInitialized
+    setIsInitialized(true);
   }, []);
 
-  const syncToLocalStorage = useCallback((updatedPlants: Plant[]) => {
-    try {
-      window.localStorage.setItem(STORE_KEY, JSON.stringify(updatedPlants));
-    } catch (error) {
-      console.error('Error writing to localStorage', error);
+  useEffect(() => {
+    // This effect runs only on the client, after initialization, to sync state to localStorage
+    if (isInitialized) {
+        try {
+            window.localStorage.setItem(STORE_KEY, JSON.stringify(plants));
+        } catch (error) {
+            console.error('Error writing to localStorage', error);
+        }
     }
-  }, []);
+  }, [plants, isInitialized]);
+
 
   const addPlant = useCallback((plant: Omit<Plant, 'id'>) => {
     const newPlant = { ...plant, id: crypto.randomUUID() };
-    const updatedPlants = [...plants, newPlant];
-    setPlants(updatedPlants);
-    syncToLocalStorage(updatedPlants);
+    setPlants(prevPlants => [...prevPlants, newPlant]);
     return newPlant;
-  }, [plants, syncToLocalStorage]);
+  }, []);
 
   const updatePlant = useCallback((updatedPlant: Plant) => {
-    const updatedPlants = plants.map(p => (p.id === updatedPlant.id ? updatedPlant : p));
-    setPlants(updatedPlants);
-    syncToLocalStorage(updatedPlants);
-  }, [plants, syncToLocalStorage]);
+    setPlants(prevPlants => prevPlants.map(p => (p.id === updatedPlant.id ? updatedPlant : p)));
+  }, []);
 
   const deletePlant = useCallback((plantId: string) => {
-    const updatedPlants = plants.filter(p => p.id !== plantId);
-    setPlants(updatedPlants);
-    syncToLocalStorage(updatedPlants);
-  }, [plants, syncToLocalStorage]);
+    setPlants(prevPlants => prevPlants.filter(p => p.id !== plantId));
+  }, []);
 
   const getPlantById = useCallback((plantId: string): Plant | undefined => {
     return plants.find(p => p.id === plantId);
   }, [plants]);
 
-  return { plants, addPlant, updatePlant, deletePlant, getPlantById };
+  return { plants, addPlant, updatePlant, deletePlant, getPlantById, isInitialized };
 }

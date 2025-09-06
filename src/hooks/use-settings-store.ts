@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -38,23 +39,32 @@ function getInitialSettings(): Settings {
 
 export function useSettingsStore() {
   const [settings, setSettingsState] = useState<Settings>(getInitialSettings);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    setSettingsState(getInitialSettings());
+    setIsInitialized(true);
   }, []);
+  
+  useEffect(() => {
+    if (isInitialized) {
+        try {
+            window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        } catch (error) {
+            console.error('Error writing settings to localStorage', error);
+        }
+    }
+  }, [settings, isInitialized]);
+
 
   const setSettings = useCallback((newSettings: Partial<Settings>) => {
-    const updatedSettings = { ...settings, ...newSettings };
-    setSettingsState(updatedSettings);
-    try {
-      window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(updatedSettings));
-      if (newSettings.theme && newSettings.theme !== settings.theme) {
+    setSettingsState(prevSettings => {
+      const updatedSettings = { ...prevSettings, ...newSettings };
+       if (newSettings.theme && newSettings.theme !== prevSettings.theme) {
         document.documentElement.className = newSettings.theme;
       }
-    } catch (error) {
-      console.error('Error writing settings to localStorage', error);
-    }
-  }, [settings]);
+      return updatedSettings;
+    });
+  }, []);
 
-  return { settings, setSettings, theme: settings.theme };
+  return { settings, setSettings, theme: settings.theme, isInitialized };
 }
