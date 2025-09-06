@@ -5,14 +5,17 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from './ui/
 import { Button } from './ui/button';
 import { Calendar, Droplets } from 'lucide-react';
 import { addDays, differenceInDays, differenceInHours, differenceInMinutes, format, formatDistanceToNowStrict } from 'date-fns';
+import { useSettingsStore } from '@/hooks/use-settings-store';
 
 interface WateringScheduleProps {
   lastWatered?: string;
   wateringFrequency?: number;
+  wateringTime?: string;
   onWaterPlant: () => void;
 }
 
 const Countdown = ({ targetDate }: { targetDate: Date }) => {
+    const { settings } = useSettingsStore();
     const [now, setNow] = useState(new Date());
 
     useEffect(() => {
@@ -21,10 +24,12 @@ const Countdown = ({ targetDate }: { targetDate: Date }) => {
         }, 1000 * 60); // Update every minute
         return () => clearInterval(timer);
     }, []);
-
-    const days = differenceInDays(targetDate, now);
-    const hours = differenceInHours(targetDate, now) % 24;
-    const minutes = differenceInMinutes(targetDate, now) % 60;
+    
+    // This is a naive implementation, a proper library should be used for timezone-aware calculations
+    const nowInTimezone = new Date(now.toLocaleString('en-US', { timeZone: settings.timezone || 'UTC' }));
+    
+    const days = differenceInDays(targetDate, nowInTimezone);
+    const hours = differenceInHours(targetDate, nowInTimezone) % 24;
     
     if (days < 0) {
         return <span className="text-destructive-foreground font-bold">Overdue!</span>;
@@ -40,7 +45,7 @@ const Countdown = ({ targetDate }: { targetDate: Date }) => {
     );
 };
 
-export function WateringSchedule({ lastWatered, wateringFrequency, onWaterPlant }: WateringScheduleProps) {
+export function WateringSchedule({ lastWatered, wateringFrequency, wateringTime, onWaterPlant }: WateringScheduleProps) {
   if (!wateringFrequency || !lastWatered) {
     return (
         <Card>
@@ -48,7 +53,7 @@ export function WateringSchedule({ lastWatered, wateringFrequency, onWaterPlant 
                 <CardTitle className="text-xl flex items-center gap-2"><Calendar /> Watering Schedule</CardTitle>
             </CardHeader>
             <CardContent>
-                <p className="text-sm text-muted-foreground">Set a watering frequency to see the schedule.</p>
+                <p className="text-sm text-muted-foreground">Generate care tips to get an AI-powered watering schedule.</p>
             </CardContent>
         </Card>
     );
@@ -65,7 +70,8 @@ export function WateringSchedule({ lastWatered, wateringFrequency, onWaterPlant 
             <Calendar /> Watering Schedule
         </CardTitle>
         <CardDescription className={isOverdue ? 'text-destructive-foreground/80' : ''}>
-            Next watering due on {format(nextWateringDate, "MMMM do")}.
+            Next watering due on {format(nextWateringDate, "MMMM do")}
+            {wateringTime && ` in the ${wateringTime}`}.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 text-center">

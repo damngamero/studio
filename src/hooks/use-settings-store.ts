@@ -10,12 +10,14 @@ export interface Settings {
   theme: Theme;
   wateringReminders: boolean;
   metricUnits: boolean;
+  timezone: string;
 }
 
 const defaultSettings: Settings = {
   theme: "light",
   wateringReminders: true,
   metricUnits: false,
+  timezone: "UTC",
 };
 
 function getInitialSettings(): Settings {

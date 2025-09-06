@@ -22,6 +22,8 @@ const GetPlantCareTipsOutputSchema = z.object({
   careTips: z
     .string()
     .describe('A summary of care tips tailored to the plant species, including watering, sunlight, and pruning.'),
+  wateringFrequency: z.number().describe('The recommended watering frequency in days (e.g., 7).'),
+  wateringTime: z.string().describe('The recommended time of day to water (e.g., morning, evening).'),
 });
 export type GetPlantCareTipsOutput = z.infer<typeof GetPlantCareTipsOutputSchema>;
 
@@ -33,7 +35,10 @@ const prompt = ai.definePrompt({
   name: 'getPlantCareTipsPrompt',
   input: {schema: GetPlantCareTipsInputSchema},
   output: {schema: GetPlantCareTipsOutputSchema},
-  prompt: `You are an expert horticulturalist. Provide care tips for the following plant species, including watering, sunlight, and pruning:
+  prompt: `You are an expert horticulturalist. Provide care tips for the following plant species. 
+  
+Include details on watering, sunlight, and pruning. 
+Also provide a recommended watering frequency in days and the best time of day to water.
 
 Plant Species: {{{plantSpecies}}}`,
 });

@@ -120,12 +120,17 @@ export default function PlantProfilePage() {
     setIsFetchingTips(true);
     try {
       const tipsResult = await getPlantCareTips({ plantSpecies: plant.commonName });
-      const updatedPlant = { ...plant, careTips: tipsResult.careTips };
+      const updatedPlant = { 
+        ...plant, 
+        careTips: tipsResult.careTips,
+        wateringFrequency: tipsResult.wateringFrequency,
+        wateringTime: tipsResult.wateringTime,
+      };
       updatePlant(updatedPlant);
       setPlant(updatedPlant);
       toast({
         title: "Care Tips Generated!",
-        description: "We've added new care tips for your plant.",
+        description: "Farmer has added new care tips for your plant.",
       });
     } catch (error) {
       console.error("Failed to get care tips:", error);
@@ -159,7 +164,7 @@ export default function PlantProfilePage() {
       setPlant(updatedPlant);
       toast({
         title: "Health Check Complete!",
-        description: "We've assessed your plant's health.",
+        description: "Farmer has assessed your plant's health.",
       });
     } catch (error) {
       console.error("Failed to check health:", error);
@@ -287,7 +292,7 @@ export default function PlantProfilePage() {
             </Card>
              <Card>
                <CardHeader>
-                <CardTitle className="text-xl">AI Assistant</CardTitle>
+                <CardTitle className="text-xl">Farmer's Assistant</CardTitle>
                 <CardDescription>Get care tips, check health, and chat about your plant.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -357,7 +362,7 @@ export default function PlantProfilePage() {
                 </div>
                 <Separator />
                  <div>
-                    <h4 className="font-medium text-sm mb-2">AI-Powered Care Tips</h4>
+                    <h4 className="font-medium text-sm mb-2">Farmer's Care Tips</h4>
                     {plant.careTips ? (
                       <Accordion type="single" collapsible defaultValue="item-1">
                         <AccordionItem value="item-1">
@@ -384,11 +389,12 @@ export default function PlantProfilePage() {
              <WateringSchedule 
                 lastWatered={plant.lastWatered}
                 wateringFrequency={plant.wateringFrequency}
+                wateringTime={plant.wateringTime}
                 onWaterPlant={handleWaterPlant}
               />
             <Card>
               <CardHeader>
-                <CardTitle className="text-xl">Chat with AI</CardTitle>
+                <CardTitle className="text-xl">Chat with Farmer</CardTitle>
                  <CardDescription>Ask a question about your <span className="italic">{plant.commonName}</span>.</CardDescription>
               </CardHeader>
               <CardContent>

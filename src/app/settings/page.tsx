@@ -14,11 +14,13 @@ import { Separator } from "@/components/ui/separator";
 import { useSettingsStore, type Theme } from "@/hooks/use-settings-store";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Check } from "lucide-react";
+import { timezones } from "@/lib/timezones";
 
 const preferencesFormSchema = z.object({
   theme: z.custom<Theme>(),
   wateringReminders: z.boolean().default(true),
   metricUnits: z.boolean().default(false),
+  timezone: z.string().default('UTC'),
 });
 
 export default function SettingsPage() {
@@ -79,6 +81,37 @@ export default function SettingsPage() {
                         </Select>
                         <FormDescription>
                           Choose a theme for the application.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Separator />
+                  
+                  <FormField
+                    control={form.control}
+                    name="timezone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Timezone</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a timezone" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-60">
+                            {timezones.map((tz) => (
+                              <SelectItem key={tz} value={tz}>{tz}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          This is used to provide accurate watering schedules.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
