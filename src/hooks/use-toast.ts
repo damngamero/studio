@@ -7,9 +7,10 @@ import type {
   ToastActionElement,
   ToastProps,
 } from "@/components/ui/toast"
+import { VariantProps } from "class-variance-authority";
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_REMOVE_DELAY = 10000
 
 type ToasterToast = ToastProps & {
   id: string
@@ -163,6 +164,13 @@ function toast({ ...props }: Toast) {
       },
     },
   })
+
+  // Auto-dismiss non-destructive toasts
+  if (props.variant !== 'destructive') {
+    setTimeout(() => {
+      dismiss();
+    }, TOAST_REMOVE_DELAY);
+  }
 
   return {
     id: id,
