@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { useSettingsStore, type Theme } from "@/hooks/use-settings-store";
+import { useSettingsStore, type Theme, type AIModel } from "@/hooks/use-settings-store.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Check, MapPin, ChevronsUpDown } from "lucide-react";
 import { timezones } from "@/lib/timezones";
@@ -26,6 +26,7 @@ const preferencesFormSchema = z.object({
   metricUnits: z.boolean().default(false),
   timezone: z.string().default('UTC'),
   location: z.string().optional(),
+  model: z.custom<AIModel>(),
 });
 
 export default function SettingsPage() {
@@ -86,6 +87,36 @@ export default function SettingsPage() {
                         </Select>
                         <FormDescription>
                           Choose a theme for the application.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Separator />
+                   <FormField
+                    control={form.control}
+                    name="model"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>AI Model</FormLabel>
+                        <Select 
+                          onValueChange={(value: AIModel) => {
+                            field.onChange(value);
+                          }} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select an AI model" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="gemini-2.5-flash">Gemini 2.5 Flash (Fast &amp; Default)</SelectItem>
+                            <SelectItem value="gemini-2.5-pro">Gemini 2.5 Pro (Powerful)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Choose the AI model to power your assistant. Pro is more capable but may be slower.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
