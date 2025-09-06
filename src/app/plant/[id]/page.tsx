@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Pencil, Trash2, Bot, Loader2 } from "lucide-react";
+import { Pencil, Trash2, Bot, Loader2, MessageSquare } from "lucide-react";
 
 import { usePlantStore } from "@/hooks/use-plant-store";
 import { getPlantCareTips } from "@/ai/flows/get-plant-care-tips";
@@ -16,6 +16,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Chat } from "@/components/Chat";
 
 export default function PlantProfilePage() {
   const router = useRouter();
@@ -94,7 +96,14 @@ export default function PlantProfilePage() {
         <div className="grid md:grid-cols-2 gap-8">
           <div>
             <div className="relative aspect-square w-full rounded-lg overflow-hidden shadow-lg mb-4">
-              <Image src={plant.photoUrl} alt={plant.customName} fill className="object-cover" data-ai-hint="plant" />
+              <Image 
+                src={plant.photoUrl} 
+                alt={plant.customName} 
+                width={600}
+                height={600}
+                className="object-cover w-full h-full" 
+                data-ai-hint="plant" 
+              />
             </div>
             <div className="flex gap-2">
               <Button asChild variant="outline" className="w-full">
@@ -141,6 +150,21 @@ export default function PlantProfilePage() {
                 </CardContent>
               </Card>
             )}
+            
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  <MessageSquare className="mr-2" /> Chat with AI
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[625px]">
+                <DialogHeader>
+                  <DialogTitle>Chat about {plant.customName}</DialogTitle>
+                </DialogHeader>
+                <Chat plantName={plant.commonName} />
+              </DialogContent>
+            </Dialog>
+
 
             <Card className="bg-secondary/50">
               <CardHeader>
