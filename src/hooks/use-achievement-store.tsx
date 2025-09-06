@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { Leaf, Sprout, Star, Award, Heart, ShieldCheck } from 'lucide-react';
+import { Leaf, Sprout, Star, Award, Heart, ShieldCheck, MessageSquare, BookOpen } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useToast } from './use-toast';
 
@@ -22,9 +22,11 @@ const allAchievements: Omit<Achievement, 'unlocked'>[] = [
     { id: 'first_plant', name: 'First Sprout', description: 'Add your first plant to your garden.', icon: Sprout, goal: 1, check: (plantCount: number) => plantCount >= 1 },
     { id: 'plant_collector', name: 'Green Thumb', description: 'Grow your collection to 5 plants.', icon: Leaf, goal: 5, check: (plantCount: number) => plantCount >= 5 },
     { id: 'plant_enthusiast', name: 'Plant Enthusiast', description: 'Cultivate a garden of 10 plants.', icon: Award, goal: 10, check: (plantCount: number) => plantCount >= 10 },
-    { id: 'healthy_week', name: 'Happy and Healthy', description: 'Keep a plant healthy for 7 consecutive days.', icon: Heart, goal: 7, check: () => false }, // Placeholder
-    { id: 'first_diagnosis', name: 'Budding Detective', description: 'Perform your first AI health check.', icon: ShieldCheck, goal: 1, check: () => false }, // Placeholder
-    { id: 'master_gardener', name: 'Master Gardener', description: 'Unlock all other achievements.', icon: Star, goal: 1, check: () => false }, // Placeholder
+    { id: 'first_diagnosis', name: 'Budding Detective', description: 'Perform your first AI health check.', icon: ShieldCheck, goal: 1, check: (checkCount: number) => checkCount >= 1 },
+    { id: 'first_chat', name: 'First Words', description: 'Chat with Sage about a plant for the first time.', icon: MessageSquare, goal: 1, check: () => false },
+    { id: 'first_journal', name: 'Memory Keeper', description: 'Add your first journal entry.', icon: BookOpen, goal: 1, check: () => false },
+    { id: 'healthy_week', name: 'Happy and Healthy', description: 'Keep a plant healthy for 7 consecutive days.', icon: Heart, goal: 7, check: () => false },
+    { id: 'master_gardener', name: 'Master Gardener', description: 'Unlock all other achievements.', icon: Star, goal: 1, check: () => false },
 ];
 
 function getInitialAchievements(): Achievement[] {
@@ -95,6 +97,12 @@ export function useAchievementStore() {
       });
   }, [achievements, unlockAchievement]);
 
+  const getAchievementCount = useCallback(() => {
+    if (!isInitialized) return { unlocked: 0, total: allAchievements.length };
+    const unlockedCount = achievements.filter(a => a.unlocked).length;
+    return { unlocked: unlockedCount, total: allAchievements.length };
+  }, [achievements, isInitialized]);
 
-  return { achievements, unlockAchievement, checkAndUnlock, isInitialized };
+
+  return { achievements, unlockAchievement, checkAndUnlock, isInitialized, getAchievementCount };
 }

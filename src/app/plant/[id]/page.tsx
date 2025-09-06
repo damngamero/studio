@@ -9,6 +9,7 @@ import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Steth
 
 import { usePlantStore } from "@/hooks/use-plant-store";
 import { useSettingsStore } from "@/hooks/use-settings-store";
+import { useAchievementStore } from "@/hooks/use-achievement-store";
 import { getPlantCareTips } from "@/ai/flows/get-plant-care-tips";
 import { checkPlantHealth } from "@/ai/flows/check-plant-health";
 import { getWeatherAndPlantAdvice } from "@/ai/flows/get-weather-and-plant-advice";
@@ -55,6 +56,7 @@ export default function PlantProfilePage() {
   const params = useParams();
   const { getPlantById, deletePlant, updatePlant } = usePlantStore();
   const { settings } = useSettingsStore();
+  const { checkAndUnlock } = useAchievementStore();
   const { toast } = useToast();
   
   const [plant, setPlant] = useState<Plant | null | undefined>(undefined);
@@ -65,6 +67,7 @@ export default function PlantProfilePage() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [weatherAdvice, setWeatherAdvice] = useState<string | null>(null);
   const [isFetchingWeather, setIsFetchingWeather] = useState(true);
+  const [healthCheckCount, setHealthCheckCount] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
 
@@ -209,6 +212,11 @@ export default function PlantProfilePage() {
         title: "Health Check Complete!",
         description: "Sage has assessed your plant's health.",
       });
+
+      const newHealthCheckCount = healthCheckCount + 1;
+      setHealthCheckCount(newHealthCheckCount);
+      checkAndUnlock(['first_diagnosis'], newHealthCheckCount);
+
     } catch (error) {
       console.error("Failed to check health:", error);
       toast({
