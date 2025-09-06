@@ -5,13 +5,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X, MapPin, AlertTriangle, Info, CloudSun, BookOpen } from "lucide-react";
+import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X, MapPin, AlertTriangle, Info, CloudSun, BookOpen, RefreshCw } from "lucide-react";
 import { addDays, format, formatDistanceToNowStrict, isAfter } from 'date-fns';
 
 
 import { usePlantStore } from "@/hooks/use-plant-store";
 import { useSettingsStore } from "@/hooks/use-settings-store";
-import { useAchievementStore } from "@/hooks/use-achievement-store";
+import { useAchievementStore } from "@/hooks/use-achievement-store.tsx";
 import { getPlantCareTips } from "@/ai/flows/get-plant-care-tips";
 import { checkPlantHealth } from "@/ai/flows/check-plant-health";
 import { getWeatherAndPlantAdvice } from "@/ai/flows/get-weather-and-plant-advice";
@@ -70,6 +70,7 @@ export default function PlantProfilePage() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [weatherAdvice, setWeatherAdvice] = useState<string | null>(null);
   const [isFetchingWeather, setIsFetchingWeather] = useState(true);
+  const [isGeneratingTips, setIsGeneratingTips] = useState(false);
   const [healthCheckCount, setHealthCheckCount] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -85,7 +86,7 @@ export default function PlantProfilePage() {
     }
   }, [plantId, getPlantById]);
   
-  const fetchDynamicData = useCallback(async (currentPlant: Plant) => {
+  const fetchWeatherAdvice = useCallback(async (currentPlant: Plant) => {
     if (!settings.location) {
       setIsFetchingWeather(false);
       return;
@@ -93,56 +94,64 @@ export default function PlantProfilePage() {
 
     setIsFetchingWeather(true);
     try {
-      // Fetch weather advice and dynamic care tips in parallel
-      const [weatherResult, tipsResult] = await Promise.all([
-        getWeatherAndPlantAdvice({
+      const weatherResult = await getWeatherAndPlantAdvice({
           location: settings.location,
           plants: [{ customName: currentPlant.customName, commonName: currentPlant.commonName }]
-        }),
-        getPlantCareTips({ 
-          plantSpecies: currentPlant.commonName,
-          environmentNotes: currentPlant.environmentNotes,
-          lastWatered: currentPlant.lastWatered,
-          estimatedAge: currentPlant.estimatedAge,
-          location: settings.location,
-        })
-      ]);
-
+        });
+      
       if (weatherResult.plantAdvice.length > 0) {
         setWeatherAdvice(weatherResult.plantAdvice[0].advice);
       }
-
-      // Check if the tips have changed before updating
-      if (tipsResult.careTips !== currentPlant.careTips || tipsResult.wateringFrequency !== currentPlant.wateringFrequency) {
-        const updatedPlant = { 
-          ...currentPlant, 
-          careTips: tipsResult.careTips,
-          wateringFrequency: tipsResult.wateringFrequency,
-          wateringTime: tipsResult.wateringTime,
-        };
-        updatePlant(updatedPlant);
-        setPlant(updatedPlant);
-      }
-
     } catch (error) {
-      console.error("Failed to get dynamic data:", error);
+      console.error("Failed to get weather advice:", error);
       setWeatherAdvice("Could not fetch weather advice from Sage at this time.");
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not update dynamic plant data. Please try again later.",
-      });
     } finally {
       setIsFetchingWeather(false);
     }
-  }, [settings.location, updatePlant, toast]);
+  }, [settings.location]);
+
+  const handleRegenerateTips = async () => {
+    if (!plant) return;
+    setIsGeneratingTips(true);
+    try {
+       const tipsResult = await getPlantCareTips({ 
+          plantSpecies: plant.commonName,
+          environmentNotes: plant.environmentNotes,
+          lastWatered: plant.lastWatered,
+          estimatedAge: plant.estimatedAge,
+          location: settings.location,
+        });
+
+      const updatedPlant = { 
+        ...plant, 
+        careTips: tipsResult.careTips,
+        wateringFrequency: tipsResult.wateringFrequency,
+        wateringTime: tipsResult.wateringTime,
+      };
+      updatePlant(updatedPlant);
+      setPlant(updatedPlant);
+      toast({
+        title: 'Care Tips Updated',
+        description: 'Sage has provided new care recommendations based on the latest info.'
+      })
+    } catch (error) {
+        console.error("Failed to regenerate care tips:", error);
+         toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not regenerate care tips. Please try again later.",
+        });
+    } finally {
+        setIsGeneratingTips(false);
+    }
+  };
 
 
   useEffect(() => {
     if (plant) {
-        fetchDynamicData(plant);
+        fetchWeatherAdvice(plant);
     }
-  }, [plant, fetchDynamicData]);
+  }, [plant, fetchWeatherAdvice]);
 
   useEffect(() => {
     async function fetchWateringAdvice() {
@@ -448,8 +457,14 @@ export default function PlantProfilePage() {
                 </div>
                 <Separator />
                  <div>
-                    <h4 className="font-medium text-sm mb-2">Sage's Dynamic Care Tips</h4>
-                    {isFetchingWeather ? (
+                    <div className="flex items-center justify-between mb-2">
+                         <h4 className="font-medium text-sm">Sage's Dynamic Care Tips</h4>
+                         <Button variant="outline" size="xs" onClick={handleRegenerateTips} disabled={isGeneratingTips}>
+                            {isGeneratingTips ? <Loader2 className="mr-2 h-3 w-3 animate-spin"/> : <RefreshCw className="mr-2 h-3 w-3" />}
+                            Regenerate
+                        </Button>
+                    </div>
+                    {isGeneratingTips ? (
                        <div className="space-y-2">
                             <Skeleton className="h-4 w-full" />
                             <Skeleton className="h-4 w-2/3" />
@@ -584,5 +599,3 @@ export default function PlantProfilePage() {
     </AppLayout>
   );
 }
-
-    
