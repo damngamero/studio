@@ -64,7 +64,6 @@ export default function PlantProfilePage() {
   const { toast } = useToast();
   
   const [plant, setPlant] = useState<Plant | null | undefined>(undefined);
-  const [isFetchingTips, setIsFetchingTips] = useState(false);
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
   const [isHealthCheckModalOpen, setIsHealthCheckModalOpen] = useState(false);
   const [healthCheckPhoto, setHealthCheckPhoto] = useState<string | null>(null);
@@ -86,33 +85,64 @@ export default function PlantProfilePage() {
     }
   }, [plantId, getPlantById]);
   
-  useEffect(() => {
-    async function fetchWeatherAdvice() {
-      if (!plant || !settings.location) {
-        setIsFetchingWeather(false);
-        return;
-      }
-      setIsFetchingWeather(true);
-      try {
-        const result = await getWeatherAndPlantAdvice({
-          location: settings.location,
-          plants: [{ customName: plant.customName, commonName: plant.commonName }]
-        });
-        if (result.plantAdvice.length > 0) {
-          setWeatherAdvice(result.plantAdvice[0].advice);
-        }
-      } catch (error) {
-        console.error("Failed to get weather advice:", error);
-        setWeatherAdvice("Could not fetch weather advice from Sage at this time.");
-      } finally {
-        setIsFetchingWeather(false);
-      }
+  const fetchDynamicData = useCallback(async (currentPlant: Plant) => {
+    if (!settings.location) {
+      setIsFetchingWeather(false);
+      return;
     }
 
-    if (plant) {
-        fetchWeatherAdvice();
+    setIsFetchingWeather(true);
+    try {
+      // Fetch weather advice and dynamic care tips in parallel
+      const [weatherResult, tipsResult] = await Promise.all([
+        getWeatherAndPlantAdvice({
+          location: settings.location,
+          plants: [{ customName: currentPlant.customName, commonName: currentPlant.commonName }]
+        }),
+        getPlantCareTips({ 
+          plantSpecies: currentPlant.commonName,
+          environmentNotes: currentPlant.environmentNotes,
+          lastWatered: currentPlant.lastWatered,
+          estimatedAge: currentPlant.estimatedAge,
+          location: settings.location,
+        })
+      ]);
+
+      if (weatherResult.plantAdvice.length > 0) {
+        setWeatherAdvice(weatherResult.plantAdvice[0].advice);
+      }
+
+      // Check if the tips have changed before updating
+      if (tipsResult.careTips !== currentPlant.careTips || tipsResult.wateringFrequency !== currentPlant.wateringFrequency) {
+        const updatedPlant = { 
+          ...currentPlant, 
+          careTips: tipsResult.careTips,
+          wateringFrequency: tipsResult.wateringFrequency,
+          wateringTime: tipsResult.wateringTime,
+        };
+        updatePlant(updatedPlant);
+        setPlant(updatedPlant);
+      }
+
+    } catch (error) {
+      console.error("Failed to get dynamic data:", error);
+      setWeatherAdvice("Could not fetch weather advice from Sage at this time.");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not update dynamic plant data. Please try again later.",
+      });
+    } finally {
+      setIsFetchingWeather(false);
     }
-  }, [plant, settings.location]);
+  }, [settings.location, updatePlant, toast]);
+
+
+  useEffect(() => {
+    if (plant) {
+        fetchDynamicData(plant);
+    }
+  }, [plant, fetchDynamicData]);
 
   useEffect(() => {
     async function fetchWateringAdvice() {
@@ -192,41 +222,6 @@ export default function PlantProfilePage() {
         setHealthCheckPhoto(dataUri);
         stopCameraStream();
       }
-    }
-  };
-
-  const handleGenerateTips = async () => {
-    if (!plant) return;
-    setIsFetchingTips(true);
-    try {
-      const tipsResult = await getPlantCareTips({ 
-        plantSpecies: plant.commonName,
-        environmentNotes: plant.environmentNotes,
-        lastWatered: plant.lastWatered,
-        estimatedAge: plant.estimatedAge,
-        location: settings.location,
-      });
-      const updatedPlant = { 
-        ...plant, 
-        careTips: tipsResult.careTips,
-        wateringFrequency: tipsResult.wateringFrequency,
-        wateringTime: tipsResult.wateringTime,
-      };
-      updatePlant(updatedPlant);
-      setPlant(updatedPlant);
-      toast({
-        title: "Care Tips Generated!",
-        description: "Sage has added new care tips for your plant.",
-      });
-    } catch (error) {
-      console.error("Failed to get care tips:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not generate care tips. Please try again.",
-      });
-    } finally {
-      setIsFetchingTips(false);
     }
   };
 
@@ -453,8 +448,13 @@ export default function PlantProfilePage() {
                 </div>
                 <Separator />
                  <div>
-                    <h4 className="font-medium text-sm mb-2">Sage's Care Tips</h4>
-                    {plant.careTips ? (
+                    <h4 className="font-medium text-sm mb-2">Sage's Dynamic Care Tips</h4>
+                    {isFetchingWeather ? (
+                       <div className="space-y-2">
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-2/3" />
+                        </div>
+                    ) : plant.careTips ? (
                       <Accordion type="single" collapsible defaultValue="item-1">
                         <AccordionItem value="item-1">
                           <AccordionTrigger className="text-sm">View Care Tips</AccordionTrigger>
@@ -464,20 +464,12 @@ export default function PlantProfilePage() {
                     ) : (
                       <p className="text-sm text-muted-foreground">No care tips generated yet.</p>
                     )}
-                    <Button onClick={handleGenerateTips} disabled={isFetchingTips} className="mt-3" size="sm" variant="outline">
-                      {isFetchingTips ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Bot className="mr-2 h-4 w-4" />
-                      )}
-                      {plant.careTips ? 'Regenerate' : 'Generate'}
-                    </Button>
                  </div>
               </CardContent>
             </Card>
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-xl">Proactive Tips</CardTitle>
+                    <CardTitle className="text-xl">Proactive Weather Tips</CardTitle>
                     <CardDescription>Sage's timely advice based on local weather for {plant.customName}.</CardDescription>
                 </CardHeader>
                 <CardContent>
