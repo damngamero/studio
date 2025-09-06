@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 
 const profileFormSchema = z.object({
   customName: z.string().min(1, "Please give your plant a name."),
@@ -39,6 +40,7 @@ export default function IdentifyPlantPage() {
   const [inputMode, setInputMode] = useState<InputMode>("upload");
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     if (inputMode === "camera") {
@@ -72,17 +74,15 @@ export default function IdentifyPlantPage() {
     }
   }, [inputMode, toast]);
 
-  const form = useForm<z.infer<typeof profileFormSchema>>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      customName: "",
-      notes: "",
-    },
-  });
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleFile = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast({
+        variant: "destructive",
+        title: "Invalid File Type",
+        description: "Please upload an image file.",
+      });
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -91,6 +91,11 @@ export default function IdentifyPlantPage() {
       setError(null);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) handleFile(file);
   };
   
   const handleCapture = () => {
@@ -135,6 +140,67 @@ export default function IdentifyPlantPage() {
     }
   };
 
+  const handleDragEnter = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault(); // Necessary to allow drop
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      handleFile(file);
+    }
+  };
+
+  const handlePaste = useCallback((event: ClipboardEvent) => {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if(file) {
+            handleFile(file);
+            // Switch to upload tab if not already there
+            setInputMode("upload");
+            toast({
+                title: "Image Pasted!",
+                description: "We've loaded your image. Ready to identify!",
+            });
+        }
+        break; 
+      }
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    window.addEventListener("paste", handlePaste);
+    return () => {
+      window.removeEventListener("paste", handlePaste);
+    };
+  }, [handlePaste]);
+
+
+  const form = useForm<z.infer<typeof profileFormSchema>>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      customName: "",
+      notes: "",
+    },
+  });
+
+
   const onSubmit = (values: z.infer<typeof profileFormSchema>) => {
     if (!identification || !photoDataUri) return;
 
@@ -175,7 +241,7 @@ export default function IdentifyPlantPage() {
           <Card>
             <CardHeader>
               <CardTitle>1. Provide a Photo</CardTitle>
-              <CardDescription>Upload a photo or use your camera.</CardDescription>
+              <CardDescription>Upload, drag & drop, paste, or use your camera.</CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs value={inputMode} onValueChange={(value) => setInputMode(value as InputMode)} className="w-full">
@@ -184,9 +250,21 @@ export default function IdentifyPlantPage() {
                   <TabsTrigger value="camera"><Camera className="mr-2"/> Camera</TabsTrigger>
                 </TabsList>
                 <TabsContent value="upload" className="mt-4 space-y-4">
-                  <label htmlFor="plant-photo" className="w-full aspect-video rounded-lg border-2 border-dashed border-muted-foreground/50 flex flex-col justify-center items-center cursor-pointer hover:bg-muted transition-colors relative">
+                  <label 
+                    htmlFor="plant-photo" 
+                    className={cn(
+                      "w-full aspect-video rounded-lg border-2 border-dashed border-muted-foreground/50 flex flex-col justify-center items-center cursor-pointer hover:bg-muted transition-colors relative",
+                      isDragging && "bg-accent border-primary"
+                    )}
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                  >
                     <Upload className="w-12 h-12 text-muted-foreground" />
-                    <span className="mt-2 text-sm text-muted-foreground">Click or tap to upload a file</span>
+                    <span className="mt-2 text-sm text-muted-foreground text-center px-4">
+                      {isDragging ? "Drop the image here!" : "Click, paste, or drag & drop a file"}
+                    </span>
                   </label>
                   <Input id="plant-photo" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
                 </TabsContent>

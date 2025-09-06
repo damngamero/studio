@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 
 const SETTINGS_KEY = 'verdantwise-settings';
 
-export type Theme = "light" | "dark" | "theme-forest";
+export type Theme = "light" | "dark" | "theme-forest" | "theme-sunny-meadow";
 
 export interface Settings {
   theme: Theme;

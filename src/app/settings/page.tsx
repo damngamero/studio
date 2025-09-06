@@ -70,6 +70,7 @@ export default function SettingsPage() {
                           <SelectItem value="light">Light</SelectItem>
                           <SelectItem value="dark">Dark</SelectItem>
                           <SelectItem value="theme-forest">Forest</SelectItem>
+                          <SelectItem value="theme-sunny-meadow">Sunny Meadow</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormDescription>
