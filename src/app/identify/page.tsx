@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Camera, Loader2, Sparkles, Save, Upload, CircleUserRound, Lightbulb, AlertTriangle, KeyRound, Pencil } from "lucide-react";
+import { Camera, Loader2, Sparkles, Save, Upload, CircleUserRound, Lightbulb, AlertTriangle, KeyRound, Pencil, Leaf } from "lucide-react";
 import Link from "next/link";
 
 import { identifyPlantFromPhoto } from "@/ai/flows/identify-plant-from-photo";
@@ -29,11 +29,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const profileFormSchema = z.object({
   customName: z.string().min(1, "Please give your plant a nickname."),
   commonName: z.string().min(1, "Please provide the plant's common name."),
   latinName: z.string().min(1, "Please provide the plant's latin name."),
+  displayNameFormat: z.enum(["common", "latin"]),
   notes: z.string().optional(),
 });
 
@@ -64,6 +66,7 @@ export default function IdentifyPlantPage() {
       customName: "",
       commonName: "",
       latinName: "",
+      displayNameFormat: "common",
       notes: "",
     },
   });
@@ -160,6 +163,7 @@ export default function IdentifyPlantPage() {
           customName: result.commonName,
           commonName: result.commonName,
           latinName: result.latinName,
+          displayNameFormat: 'common',
           notes: "",
         });
         
@@ -395,37 +399,7 @@ export default function IdentifyPlantPage() {
               </div>
 
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="commonName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Common Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                         <FormDescription>This is the plant's official species name, used to get care tips.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="latinName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Latin Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <hr className="my-4"/>
-
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <FormField
                     control={form.control}
                     name="customName"
@@ -468,6 +442,77 @@ export default function IdentifyPlantPage() {
                     </div>
                   )}
 
+                  <hr className="my-4"/>
+
+                  <FormField
+                    control={form.control}
+                    name="commonName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Common Name</FormLabel>
+                         <FormControl>
+                           <div className="relative">
+                            <Leaf className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input {...field} className="pl-10" />
+                           </div>
+                        </FormControl>
+                         <FormDescription>The official species name used to get care tips.</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="latinName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Latin Name</FormLabel>
+                        <FormControl>
+                           <div className="relative">
+                             <Leaf className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                             <Input {...field} className="pl-10" />
+                           </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="displayNameFormat"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormLabel>Display Name Format</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            className="flex flex-col space-y-1"
+                          >
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="common" />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                Common Name ({form.getValues('commonName')})
+                              </FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="latin" />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                Latin Name ({form.getValues('latinName')})
+                              </FormLabel>
+                            </FormItem>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
                   <FormField
                     control={form.control}
                     name="notes"

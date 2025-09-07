@@ -436,6 +436,8 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
     );
   }
 
+  const displayName = plant.displayNameFormat === 'latin' ? plant.latinName : plant.commonName;
+
   return (
     <AppLayout>
       <div className="mx-auto grid max-w-5xl flex-1 auto-rows-max gap-4 animate-in fade-in duration-500">
@@ -448,7 +450,7 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
             {plant.customName}
           </h1>
            <Badge variant="outline" className="ml-auto sm:ml-0">
-            {plant.commonName}
+            {displayName}
           </Badge>
           <div className="hidden items-center gap-2 md:ml-auto md:flex">
             <Button variant="outline" size="sm" asChild>
@@ -662,7 +664,7 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
             <Card>
               <CardHeader>
                 <CardTitle className="text-xl">Chat with Sage</CardTitle>
-                 <CardDescription>Ask a question about your <span className="italic">{plant.commonName}</span>.</CardDescription>
+                 <CardDescription>Ask a question about your <span className="italic">{displayName}</span>.</CardDescription>
               </CardHeader>
               <CardContent>
                  <Button className="w-full" disabled={isApiKeyMissing} onClick={() => handleOpenChat()}>

@@ -23,11 +23,13 @@ import type { Plant } from "@/lib/types";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const editFormSchema = z.object({
   customName: z.string().min(1, "Please give your plant a name."),
   commonName: z.string().min(1, "Please provide the plant's common name."),
   latinName: z.string().min(1, "Please provide the plant's Latin name."),
+  displayNameFormat: z.enum(["common", "latin"]),
   notes: z.string().optional(),
   environmentNotes: z.string().optional(),
   lastWatered: z.date(),
@@ -48,6 +50,7 @@ export default function EditPlantPage() {
       customName: "",
       commonName: "",
       latinName: "",
+      displayNameFormat: "common",
       notes: "",
       environmentNotes: "",
       lastWatered: new Date(),
@@ -63,6 +66,7 @@ export default function EditPlantPage() {
           customName: foundPlant.customName,
           commonName: foundPlant.commonName,
           latinName: foundPlant.latinName,
+          displayNameFormat: foundPlant.displayNameFormat || "common",
           notes: foundPlant.notes || "",
           environmentNotes: foundPlant.environmentNotes || "",
           lastWatered: new Date(foundPlant.lastWatered),
@@ -170,6 +174,40 @@ export default function EditPlantPage() {
                 </FormItem>
               )}
             />
+             <FormField
+                    control={form.control}
+                    name="displayNameFormat"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormLabel>Display Name Format</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            className="flex flex-col space-y-1"
+                          >
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="common" />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                Common Name ({form.getValues('commonName')})
+                              </FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="latin" />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                Latin Name ({form.getValues('latinName')})
+                              </FormLabel>
+                            </FormItem>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
             <FormField
                 control={form.control}
                 name="lastWatered"

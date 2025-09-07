@@ -33,6 +33,7 @@ export interface Plant {
   photoUrl: string; // data URI
   commonName: string;
   latinName:string;
+  displayNameFormat: 'common' | 'latin';
   estimatedAge?: string;
   notes?: string;
   environmentNotes?: string;

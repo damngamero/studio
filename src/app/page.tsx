@@ -214,7 +214,7 @@ export default function MyPlantsPage() {
                 </CardHeader>
                 <CardContent className="p-4 bg-card">
                   <CardTitle className="text-lg font-semibold font-heading">{plant.customName}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{plant.commonName}</p>
+                  <p className="text-sm text-muted-foreground">{plant.displayNameFormat === 'latin' ? plant.latinName : plant.commonName}</p>
                 </CardContent>
               </Card>
             </Link>
