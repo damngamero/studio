@@ -189,7 +189,8 @@ export default function PlantProfilePage() {
 
     const recommended = plant.recommendedPlacement;
     
-    if (recommended === 'Indoor/Outdoor' || recommended === newPlacement) {
+    // This is the corrected logic
+    if (!recommended || recommended === newPlacement || recommended === 'Indoor/Outdoor') {
         toast({
             title: "Good choice!",
             description: `This plant should do well ${newPlacement.toLowerCase()}s. Regenerating tips...`,
@@ -199,12 +200,15 @@ export default function PlantProfilePage() {
         toast({
             variant: 'destructive',
             title: "This might be tricky...",
-            description: `This plant is usually kept ${recommended?.toLowerCase()}s. Pay close attention to its needs. Regenerating tips...`,
+            description: `This plant is usually kept ${recommended.toLowerCase()}s. Pay close attention to its needs. Regenerating tips...`,
             action: <div className="p-1.5 rounded-full bg-yellow-400"><ThumbsDown className="h-4 w-4 text-white" /></div>
         });
     }
     
-    handleRegenerateTips();
+    // Delay regeneration slightly to allow the toast to be seen
+    setTimeout(() => {
+        handleRegenerateTips();
+    }, 500);
 
   }, [plant, updatePlant, toast, handleRegenerateTips]);
 
@@ -718,3 +722,4 @@ export default function PlantProfilePage() {
     </AppLayout>
   );
 }
+
