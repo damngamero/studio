@@ -9,7 +9,7 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 import { playSound } from "@/lib/audio";
-import { getSettings } from "./use-settings-store";
+import { useSettingsStore } from "./use-settings-store";
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 10000
@@ -155,10 +155,13 @@ function toast({ ...props }: Toast) {
     })
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
   
-  // Directly check settings and play sound
-  if (getSettings().soundEffectsEnabled) {
-    playSound('notification');
+  if (typeof window !== 'undefined') {
+    const settings = localStorage.getItem('verdantwise-settings');
+    if (settings && JSON.parse(settings).soundEffectsEnabled) {
+      playSound('notification');
+    }
   }
+
 
   dispatch({
     type: "ADD_TOAST",
