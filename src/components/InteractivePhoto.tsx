@@ -25,12 +25,14 @@ interface InteractivePhotoProps {
   photoDataUri: string;
   regions: RegionOfInterest[];
   plantName: string;
+  priority?: boolean;
 }
 
 export function InteractivePhoto({
   photoDataUri,
   regions,
   plantName,
+  priority = false
 }: InteractivePhotoProps) {
   
   return (
@@ -42,6 +44,7 @@ export function InteractivePhoto({
           fill
           className="object-contain"
           data-ai-hint="plant"
+          priority={priority}
         />
         <TooltipProvider>
             {regions.map((region, index) => (

@@ -554,7 +554,7 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
     <AppLayout>
       <div className="mx-auto grid max-w-5xl flex-1 auto-rows-max gap-4 animate-in fade-in duration-500">
         <div className="flex items-center gap-4">
-           <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => router.back()}>
+           <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => router.back()} aria-label="Back">
             <ChevronLeftIcon className="h-4 w-4" />
             <span className="sr-only">Back</span>
           </Button>
@@ -596,7 +596,7 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
             <Card>
               <CardContent className="p-4">
                  <div className="relative aspect-video w-full rounded-md overflow-hidden shadow-md mb-6">
-                  <InteractivePhoto photoDataUri={plant.photoUrl} regions={plant.annotatedRegions || []} plantName={plant.customName} />
+                  <InteractivePhoto photoDataUri={plant.photoUrl} regions={plant.annotatedRegions || []} plantName={plant.customName} priority={true}/>
                 </div>
                  {plant.notes && (
                     <div>

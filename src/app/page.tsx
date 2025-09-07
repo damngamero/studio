@@ -205,10 +205,11 @@ export default function MyPlantsPage() {
                     <Image
                       src={plant.photoUrl}
                       alt={plant.customName}
-                      fill
+                      width={400}
+                      height={300}
                       className="object-cover"
                       data-ai-hint="plant"
-                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                     />
                   </div>
                 </CardHeader>
@@ -255,5 +256,3 @@ export default function MyPlantsPage() {
     </AppLayout>
   );
 }
-
-    

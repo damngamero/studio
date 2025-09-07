@@ -1,3 +1,4 @@
+
 "use client";
 
 import './globals.css';
@@ -33,8 +34,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <title>VerdantWise</title>
-        <meta name="description" content="A smart gardening assistant app for plant care." />
+        <title>VerdantWise - Your Smart Plant Companion</title>
+        <meta name="description" content="VerdantWise is an AI-powered smart gardening assistant to help you identify, care for, and nurture your plants." />
       </head>
       <body className={cn(
           "min-h-screen bg-background font-sans antialiased",
