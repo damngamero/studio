@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Calendar, Droplets, Loader2, Info } from 'lucide-react';
-import { addDays, differenceInDays, differenceInHours, differenceInMinutes, format, formatDistanceToNowStrict, isAfter } from 'date-fns';
+import { addDays, differenceInDays, differenceInHours, differenceInMinutes, format, formatDistanceToNow, formatDistanceToNowStrict, isAfter } from 'date-fns';
 import { useSettingsStore } from '@/hooks/use-settings-store';
 import { cn } from '@/lib/utils';
 import type { Plant } from '@/lib/types';
@@ -58,6 +58,7 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice 
   
   const lastWateredDate = new Date(lastWatered);
   const nextWateringDate = wateringFrequency ? addDays(lastWateredDate, wateringFrequency) : new Date();
+  const isOverdue = isAfter(new Date(), nextWateringDate);
 
   const handleWaterPlantClick = () => {
     onWaterPlant();
@@ -100,7 +101,7 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice 
       );
     }
     
-    if (isAfter(new Date(), nextWateringDate) && advice?.shouldWater !== 'Wait') {
+    if (isOverdue && advice?.shouldWater !== 'Wait') {
        return (
          <CardContent className="space-y-4 text-center">
             {advice?.reason && (
@@ -124,12 +125,11 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice 
     // Default view: countdown
     return (
        <CardContent className="space-y-4 text-center">
-        {wateringTime && <p className="text-xs text-muted-foreground">Recommended: {wateringTime}</p>}
         <div className="text-4xl font-bold">
             <Countdown targetDate={nextWateringDate} />
         </div>
         <p className="text-xs text-muted-foreground">
-            Last watered {formatDistanceToNowStrict(lastWateredDate)} ago
+            Last watered {formatDistanceToNow(lastWateredDate)} ago
         </p>
         <Button 
             onClick={handleWaterPlantClick} 
@@ -144,9 +144,24 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice 
   };
   
   const getCardClass = () => {
-    if (isAfter(new Date(), nextWateringDate) && advice?.shouldWater !== 'Wait' && !isWateredToday) return 'bg-green-100/50 dark:bg-green-900/50 border-green-500/50';
+    if (isOverdue && advice?.shouldWater !== 'Wait' && !isWateredToday) return 'bg-green-100/50 dark:bg-green-900/50 border-green-500/50';
     if (advice?.shouldWater === 'Wait') return 'bg-blue-100/50 dark:bg-blue-900/50 border-blue-500/50';
     return '';
+  }
+
+  const getWateringDescription = () => {
+    if (isOverdue) {
+        return "Watering is overdue.";
+    }
+
+    const friendlyDistance = formatDistanceToNow(nextWateringDate, { addSuffix: true });
+    let description = `Next watering ${friendlyDistance}`;
+    if (wateringTime) {
+      description += ` (around ${wateringTime}).`;
+    } else {
+      description += '.';
+    }
+    return description;
   }
 
   return (
@@ -156,12 +171,10 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice 
             <Calendar /> Watering Schedule
         </CardTitle>
         <CardDescription>
-            Next watering due on {format(nextWateringDate, "MMMM do")}.
+          {getWateringDescription()}
         </CardDescription>
       </CardHeader>
       {renderContent()}
     </Card>
   );
 }
-
-    
