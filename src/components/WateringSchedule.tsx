@@ -199,11 +199,11 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
     }
 
     return (
-      <div className="space-y-1">
+      <div className="space-y-0.5">
         {wateringTime && (
           <div className="flex items-baseline justify-start gap-1.5">
-            <span className="text-xs font-semibold text-muted-foreground">Recommended:</span>
-            <p className="text-xs font-semibold">{wateringTime}</p>
+            <span className="text-xs text-muted-foreground">Recommended:</span>
+            <p className="text-xs">{wateringTime}</p>
           </div>
         )}
         <p className="text-xs text-muted-foreground">
