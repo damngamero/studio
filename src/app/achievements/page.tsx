@@ -8,6 +8,41 @@ import { cn } from "@/lib/utils";
 import { CheckCircle2, Lock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import type { Rarity } from "@/hooks/use-achievement-store";
+
+const rarityStyles: Record<Rarity, { badge: string; border: string; bg: string; icon: string }> = {
+    Common: {
+        badge: "bg-gray-200 text-gray-800 border-gray-300",
+        border: "border-gray-200",
+        bg: "bg-gray-50",
+        icon: "bg-gray-100 text-gray-600"
+    },
+    Uncommon: {
+        badge: "bg-green-200 text-green-800 border-green-300",
+        border: "border-green-500/50",
+        bg: "bg-green-50/50",
+        icon: "bg-green-100 text-green-600"
+    },
+    Rare: {
+        badge: "bg-blue-200 text-blue-800 border-blue-300",
+        border: "border-blue-500/50",
+        bg: "bg-blue-50/50",
+        icon: "bg-blue-100 text-blue-600"
+    },
+    Epic: {
+        badge: "bg-purple-200 text-purple-800 border-purple-300",
+        border: "border-purple-500/50",
+        bg: "bg-purple-50/50",
+        icon: "bg-purple-100 text-purple-600"
+    },
+    Legendary: {
+        badge: "bg-yellow-200 text-yellow-800 border-yellow-300",
+        border: "border-yellow-500/50",
+        bg: "bg-yellow-50/50",
+        icon: "bg-yellow-100 text-yellow-600"
+    },
+};
 
 export default function AchievementsPage() {
   const { achievements, isInitialized } = useAchievementStore();
@@ -19,7 +54,7 @@ export default function AchievementsPage() {
     if (!mounted || !isInitialized) {
       return (
          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-           {Array.from({ length: 6 }).map((_, i) => (
+           {Array.from({ length: 8 }).map((_, i) => (
             <Card key={i}>
                 <CardContent className="p-6 text-center flex flex-col items-center justify-center h-full">
                     <Skeleton className="w-20 h-20 rounded-full mb-4" />
@@ -38,34 +73,44 @@ export default function AchievementsPage() {
           <Card 
             key={achievement.id}
             className={cn(
-                "transition-all duration-300",
-                achievement.unlocked ? "border-primary/50 shadow-lg" : "bg-muted/50"
+                "transition-all duration-300 flex flex-col",
+                achievement.unlocked ? `${rarityStyles[achievement.rarity].border} shadow-lg ${rarityStyles[achievement.rarity].bg}` : "bg-muted/50"
             )}
           >
-            <CardContent className="p-6 text-center flex flex-col items-center justify-center h-full">
+            <CardContent className="p-6 text-center flex flex-col items-center justify-center flex-grow">
               <div 
                 className={cn(
                     "w-20 h-20 rounded-full flex items-center justify-center mb-4 transition-colors",
-                    achievement.unlocked ? "bg-primary/20 text-primary" : "bg-muted-foreground/20 text-muted-foreground"
+                    achievement.unlocked ? rarityStyles[achievement.rarity].icon : "bg-muted-foreground/20 text-muted-foreground"
                 )}
               >
                 <achievement.icon className="w-10 h-10" />
               </div>
               <p className="font-bold text-lg font-heading">{achievement.name}</p>
-              <div className="text-sm text-muted-foreground">{achievement.description}</div>
-               {achievement.unlocked && (
-                <div className="mt-4 flex items-center gap-2 text-sm text-green-600">
+              <div className="text-sm text-muted-foreground flex-grow">{achievement.description}</div>
+            </CardContent>
+            <div className="p-4 pt-0 flex flex-col items-center">
+                 <Badge
+                    variant="outline"
+                    className={cn(
+                        "mb-3",
+                        achievement.unlocked ? rarityStyles[achievement.rarity].badge : 'border-muted-foreground/50'
+                    )}
+                 >
+                    {achievement.rarity}
+                </Badge>
+               {achievement.unlocked ? (
+                <div className="flex items-center gap-2 text-sm text-green-600">
                     <CheckCircle2 className="w-4 h-4"/>
                     <span>Unlocked!</span>
                 </div>
-              )}
-               {!achievement.unlocked && (
-                <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Lock className="w-4 h-4"/>
                     <span>Locked</span>
                 </div>
               )}
-            </CardContent>
+            </div>
           </Card>
         ))}
       </div>
