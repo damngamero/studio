@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -744,10 +743,3 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
     </AppLayout>
   );
 }
-
-
-
-
-
-
-    
