@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePlantStore } from '@/hooks/use-plant-store';
 import { useSettingsStore } from '@/hooks/use-settings-store';
@@ -12,8 +12,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, Sun, Thermometer, Wind } from 'lucide-react';
+import { Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, Sun, Thermometer, Wind, RefreshCw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { cn } from '@/lib/utils';
 
 const weatherIcons: { [key: string]: React.ElementType } = {
   'sunny': Sun,
@@ -39,27 +40,31 @@ export default function WeatherPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchData() {
-      if (!settings.location || plants.length === 0) {
-        setIsLoading(false);
-        return;
-      }
-      setIsLoading(true);
-      setError(null);
-      try {
-        const plantInfo = plants.map(p => ({ customName: p.customName, commonName: p.commonName }));
-        const result = await getWeatherAndPlantAdvice({ location: settings.location, plants: plantInfo });
-        setWeatherData(result);
-      } catch (e) {
-        console.error("Failed to get weather advice:", e);
-        setError("Could not fetch weather advice from Sage. Please try again later.");
-      } finally {
-        setIsLoading(false);
-      }
+  const fetchData = useCallback(async () => {
+    if (!settings.location || plants.length === 0) {
+      setIsLoading(false);
+      return;
     }
-    fetchData();
+    setIsLoading(true);
+    setError(null);
+    try {
+      const plantInfo = plants.map(p => ({ customName: p.customName, commonName: p.commonName }));
+      const result = await getWeatherAndPlantAdvice({ location: settings.location, plants: plantInfo });
+      setWeatherData(result);
+    } catch (e) {
+      console.error("Failed to get weather advice:", e);
+      setError("Could not fetch weather advice from Sage. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
   }, [settings.location, plants]);
+
+  useEffect(() => {
+    fetchData();
+    // Auto-refresh every 12 hours
+    const intervalId = setInterval(fetchData, 12 * 60 * 60 * 1000);
+    return () => clearInterval(intervalId);
+  }, [fetchData]);
 
   const renderContent = () => {
     if (isLoading) {
@@ -210,6 +215,10 @@ export default function WeatherPage() {
           <h1 className="text-3xl font-bold font-heading">Weather Center</h1>
           <p className="text-muted-foreground">Proactive advice from Sage based on your local forecast.</p>
         </div>
+        <Button variant="outline" onClick={fetchData} disabled={isLoading}>
+            <RefreshCw className={cn("mr-2 h-4 w-4", isLoading && "animate-spin")} />
+            Refresh
+        </Button>
       </div>
       {renderContent()}
     </AppLayout>

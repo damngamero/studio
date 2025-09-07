@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { PlusCircle, Bot, Info, Loader2 } from "lucide-react";
+import { PlusCircle, Bot, Info, Loader2, RefreshCw } from "lucide-react";
 import { addDays, isAfter } from "date-fns";
 import { usePlantStore } from "@/hooks/use-plant-store";
 import { useSettingsStore } from "@/hooks/use-settings-store";
@@ -69,11 +69,14 @@ function GardenOverview() {
   useEffect(() => {
     if (plants.length > 0 && settings.location) {
       fetchOverview();
+      // Auto-refresh every 12 hours
+      const intervalId = setInterval(fetchOverview, 12 * 60 * 60 * 1000); 
+      return () => clearInterval(intervalId);
     } else {
         setIsLoading(false);
         setOverview(null);
     }
-  }, [plants, settings.location, fetchOverview]);
+  }, [plants.length, settings.location, fetchOverview]);
 
   if (plants.length === 0) {
       return null;
@@ -101,24 +104,29 @@ function GardenOverview() {
   return (
      <Card className="mb-6 bg-primary/5 dark:bg-primary/10 border-primary/20">
       <CardHeader>
-        <div className="flex items-start gap-4">
-            <Bot className="h-6 w-6 text-primary mt-1" />
-            <div>
-                 <CardTitle className="text-lg">Sage's Daily Digest</CardTitle>
-                <CardDescription>Your AI-powered garden overview for today.</CardDescription>
-                <div className="mt-3 text-sm text-foreground">
-                {isLoading ? (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Asking Sage for your daily digest...</span>
-                    </div>
-                ) : (
-                    <div className="prose prose-sm max-w-none prose-p:my-1 prose-strong:text-foreground">
-                        <ReactMarkdown>{overview || ""}</ReactMarkdown>
-                    </div>
-                )}
+        <div className="flex items-start justify-between">
+            <div className="flex items-start gap-4">
+                <Bot className="h-6 w-6 text-primary mt-1" />
+                <div>
+                    <CardTitle className="text-lg">Sage's Daily Digest</CardTitle>
+                    <CardDescription>Your AI-powered garden overview for today.</CardDescription>
                 </div>
             </div>
+             <Button variant="ghost" size="icon" onClick={fetchOverview} disabled={isLoading} aria-label="Refresh Daily Digest">
+                <RefreshCw className={cn("h-4 w-4 text-muted-foreground", isLoading && "animate-spin")} />
+            </Button>
+        </div>
+        <div className="mt-4 text-sm text-foreground pl-10">
+        {isLoading ? (
+            <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Asking Sage for your daily digest...</span>
+            </div>
+        ) : (
+            <div className="prose prose-sm max-w-none prose-p:my-1 prose-strong:text-foreground">
+                <ReactMarkdown>{overview || ""}</ReactMarkdown>
+            </div>
+        )}
         </div>
       </CardHeader>
     </Card>

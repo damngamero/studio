@@ -10,7 +10,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { getWeatherTool, WeatherSchema, ForecastDaySchema } from '../tools/get-weather';
+import { getWeatherTool } from '../tools/get-weather';
+import { WeatherSchema, ForecastDaySchema } from '@/lib/types';
 
 const PlantInfoSchema = z.object({
   customName: z.string(),

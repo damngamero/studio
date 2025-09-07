@@ -43,3 +43,21 @@ export interface Plant {
   annotatedRegions: RegionOfInterest[];
   journal?: JournalEntry[];
 }
+
+// Weather Schemas
+export const WeatherSchema = z.object({
+    temperature: z.number().describe('The current temperature.'),
+    condition: z.string().describe('A brief description of the weather (e.g., Sunny, Cloudy, Rain).'),
+    humidity: z.number().describe('The current humidity percentage (0-100).'),
+    windSpeed: z.number().describe('The current wind speed.'),
+    temperatureUnit: z.enum(['celsius', 'fahrenheit']),
+    windSpeedUnit: z.enum(['kmh', 'mph']),
+  });
+export type Weather = z.infer<typeof WeatherSchema>;
+
+export const ForecastDaySchema = z.object({
+  day: z.string().describe("The day of the week (e.g., 'Monday')."),
+  temperature: z.number().describe('The forecasted temperature.'),
+  condition: z.string().describe('The forecasted weather condition.'),
+});
+export type ForecastDay = z.infer<typeof ForecastDaySchema>;

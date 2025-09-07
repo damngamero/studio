@@ -78,4 +78,3 @@ const getGardenOverviewFlow = ai.defineFlow(
     return output!;
   }
 );
-
