@@ -410,6 +410,19 @@ export default function PlantProfilePage() {
                         </Badge>
                       </div>
                       <p className="whitespace-pre-wrap"><span className="font-semibold">Diagnosis:</span> {plant.health.diagnosis}</p>
+                       <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="link" size="sm" className="p-0 h-auto mt-1" disabled={isApiKeyMissing}>
+                               <MessageSquare className="mr-2 h-3.5 w-3.5"/> Discuss Diagnosis
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[625px]">
+                            <DialogHeader>
+                              <DialogTitle>Chat about {plant.customName}</DialogTitle>
+                            </DialogHeader>
+                            {plant && <Chat plant={plant} />}
+                          </DialogContent>
+                        </Dialog>
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground">No health check performed yet.</p>
@@ -547,7 +560,7 @@ export default function PlantProfilePage() {
                       <DialogHeader>
                         <DialogTitle>Chat about {plant.customName}</DialogTitle>
                       </DialogHeader>
-                      <Chat plant={plant} />
+                      {plant && <Chat plant={plant} />}
                     </DialogContent>
                   </Dialog>
               </CardContent>
