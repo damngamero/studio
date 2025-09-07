@@ -89,8 +89,10 @@ export default function WeatherPage() {
               <div>
                   <Card>
                       <CardHeader>
-                          <CardTitle><Skeleton className="h-8 w-64" /></CardTitle>
-                          <CardDescription><Skeleton className="h-4 w-48" /></CardDescription>
+                          <div className="space-y-2">
+                             <Skeleton className="h-8 w-64" />
+                             <Skeleton className="h-4 w-48" />
+                          </div>
                       </CardHeader>
                       <CardContent>
                             <Skeleton className="h-20 w-full" />
@@ -111,7 +113,7 @@ export default function WeatherPage() {
                         {Array.from({length: 2}).map((_, i) => (
                             <Card key={i}>
                               <CardHeader>
-                                  <CardTitle className="text-lg"><Skeleton className="h-6 w-32" /></CardTitle>
+                                  <Skeleton className="h-6 w-32" />
                               </CardHeader>
                               <CardContent>
                                   <div className="space-y-2">
@@ -176,7 +178,7 @@ export default function WeatherPage() {
                             <WeatherIcon condition={weatherData.currentWeather.condition} className="w-20 h-20 text-primary" />
                             <div>
                                 <p className="text-5xl font-bold">{weatherData.currentWeather.temperature}°{weatherData.currentWeather.temperatureUnit === 'celsius' ? 'C' : 'F'}</p>
-                                <p className="text-muted-foreground">{weatherData.currentWeather.condition}</p>
+                                <div className="text-muted-foreground">{weatherData.currentWeather.condition}</div>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
@@ -194,7 +196,7 @@ export default function WeatherPage() {
                             <CardContent className="p-4 flex items-center justify-between">
                                  <div>
                                     <p className="font-semibold">{day.day}</p>
-                                    <p className="text-sm text-muted-foreground">{day.condition}</p>
+                                    <div className="text-sm text-muted-foreground">{day.condition}</div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                      <p className="text-2xl font-bold">{day.temperature}°{weatherData.currentWeather.temperatureUnit === 'celsius' ? 'C' : 'F'}</p>

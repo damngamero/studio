@@ -52,7 +52,7 @@ export default function AchievementsPage() {
                 <achievement.icon className="w-10 h-10" />
               </div>
               <p className="font-bold text-lg font-heading">{achievement.name}</p>
-              <p className="text-sm text-muted-foreground">{achievement.description}</p>
+              <div className="text-sm text-muted-foreground">{achievement.description}</div>
                {achievement.unlocked && (
                 <div className="mt-4 flex items-center gap-2 text-sm text-green-600">
                     <CheckCircle2 className="w-4 h-4"/>
