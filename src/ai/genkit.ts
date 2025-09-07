@@ -1,6 +1,3 @@
-
-'use server';
-
 import { genkit, GenerationCommonConfig } from 'genkit';
 import { googleAI, GoogleAIGenerativeAI } from '@genkit-ai/googleai';
 import { Plugin } from 'genkit/plugin';

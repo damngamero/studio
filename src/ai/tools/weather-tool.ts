@@ -1,4 +1,3 @@
-
 /**
  * @fileOverview Defines the Genkit tool for fetching weather data.
  * This file does NOT use 'use server' as it exports an object, not a function.
