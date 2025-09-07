@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -7,6 +8,7 @@ import type { LucideIcon } from 'lucide-react';
 import { useToast } from './use-toast';
 import { usePlantStore } from './use-plant-store';
 import { useAchievementDialogStore } from './use-achievement-dialog-store';
+import { useSound } from './use-sound';
 
 const ACHIEVEMENT_STORE_KEY = 'verdantwise-achievements';
 
@@ -75,6 +77,8 @@ export function useAchievementStore() {
   const [isInitialized, setIsInitialized] = useState(false);
   const { setAchievement: setAchievementToDisplay } = useAchievementDialogStore();
   const { plants } = usePlantStore();
+  const playSound = useSound();
+
 
    useEffect(() => {
     // Correctly initialize state on the client
@@ -105,6 +109,7 @@ export function useAchievementStore() {
         if (achievementToUnlock && !achievementToUnlock.unlocked) {
             const { unlocked, goal, check, ...displayAchievement } = achievementToUnlock;
             setAchievementToDisplay(displayAchievement);
+            playSound('achievement');
 
             return prevAchievements.map(a => 
                 a.id === achievementId ? { ...a, unlocked: true } : a
@@ -112,7 +117,7 @@ export function useAchievementStore() {
         }
         return prevAchievements;
     });
-  }, [setAchievementToDisplay]);
+  }, [setAchievementToDisplay, playSound]);
 
   const checkAndUnlock = useCallback((achievementIds: string[], value: any) => {
     setTimeout(() => {

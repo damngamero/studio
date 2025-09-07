@@ -1,3 +1,4 @@
+
 "use client"
 
 // Inspired by react-hot-toast library
@@ -7,7 +8,7 @@ import type {
   ToastActionElement,
   ToastProps,
 } from "@/components/ui/toast"
-import { VariantProps } from "class-variance-authority";
+import { useSound } from "./use-sound"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 10000
@@ -141,7 +142,14 @@ function dispatch(action: Action) {
   })
 }
 
-type Toast = Omit<ToasterToast, "id">
+type Toast = Omit<ToasterToast, "id">;
+
+let playSound: (sound: 'notification') => void;
+
+function ToastInitializer() {
+  playSound = useSound();
+  return null;
+}
 
 function toast({ ...props }: Toast) {
   const id = genId()
@@ -152,6 +160,10 @@ function toast({ ...props }: Toast) {
       toast: { ...props, id },
     })
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
+  
+  if (playSound) {
+      playSound('notification');
+  }
 
   dispatch({
     type: "ADD_TOAST",
@@ -169,7 +181,7 @@ function toast({ ...props }: Toast) {
   if (props.variant !== 'destructive') {
     setTimeout(() => {
       dismiss();
-    }, TOAST_REMOVE_DELAY);
+    }, 5000); // 5 seconds
   }
 
   return {
@@ -196,6 +208,7 @@ function useToast() {
     ...state,
     toast,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
+    ToastInitializer,
   }
 }
 
