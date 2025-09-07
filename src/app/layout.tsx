@@ -7,7 +7,6 @@ import { useEffect } from 'react';
 import { Inter, Lexend } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { AchievementDialog } from '@/components/AchievementDialog';
-import { SoundPlayer } from '@/components/ui/sound-player';
 
 const fontSans = Inter({
   subsets: ['latin'],
@@ -45,7 +44,6 @@ export default function RootLayout({
         {children}
         <Toaster />
         <AchievementDialog />
-        <SoundPlayer />
       </body>
     </html>
   );
