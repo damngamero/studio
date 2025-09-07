@@ -10,7 +10,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { getSettings } from '@/hooks/use-settings-store';
 
 const IdentifyPlantFromPhotoInputSchema = z.object({
   photoDataUri: z
@@ -68,8 +67,7 @@ const identifyPlantFromPhotoFlow = ai.defineFlow(
     outputSchema: IdentifyPlantFromPhotoOutputSchema,
   },
   async input => {
-    const { model } = getSettings();
-    const {output} = await prompt(input, { config: { model: `googleai/${model}` } });
+    const {output} = await prompt(input);
     return output!;
   }
 );

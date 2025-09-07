@@ -12,7 +12,6 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { getWeatherTool } from '../tools/get-weather';
 import { WeatherSchema, ForecastDaySchema } from '@/lib/types';
-import { getSettings } from '@/hooks/use-settings-store';
 
 const PlantInfoSchema = z.object({
   customName: z.string(),
@@ -69,8 +68,7 @@ const getWeatherAndPlantAdviceFlow = ai.defineFlow(
     outputSchema: GetWeatherAndPlantAdviceOutputSchema,
   },
   async (input) => {
-    const { model } = getSettings();
-    const { output } = await prompt(input, { config: { model: `googleai/${model}` } });
+    const { output } = await prompt(input);
     return output!;
   }
 );

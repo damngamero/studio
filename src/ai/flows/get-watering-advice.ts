@@ -12,7 +12,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { getWeatherAndPlantAdvice } from './get-weather-and-plant-advice';
-import { getSettings } from '@/hooks/use-settings-store';
 
 const GetWateringAdviceInputSchema = z.object({
   plantName: z.string(),
@@ -73,8 +72,7 @@ const getWateringAdviceFlow = ai.defineFlow(
         - Provide a very short, clear reason for your decision based on the advice. For example, "Yes, it's going to be hot and sunny." or "Wait, rain is expected tomorrow."`
     });
 
-    const { model } = getSettings();
-    const { output } = await decisionPrompt({ advice }, { config: { model: `googleai/${model}` } });
+    const { output } = await decisionPrompt({ advice });
     return output!;
   }
 );

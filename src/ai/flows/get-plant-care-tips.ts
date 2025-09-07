@@ -12,7 +12,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { getSettings } from '@/hooks/use-settings-store';
 
 const GetPlantCareTipsInputSchema = z.object({
   plantSpecies: z
@@ -85,8 +84,7 @@ Last Watered: {{{lastWatered}}}
 `,
     });
 
-    const { model } = getSettings();
-    const {output} = await prompt(input, { config: { model: `googleai/${model}` } });
+    const {output} = await prompt(input);
     return output!;
   }
 );

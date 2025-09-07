@@ -1,17 +1,15 @@
 
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
-import {getSettings} from '@/hooks/use-settings-store';
 
 export const ai = genkit({
   plugins: [
     googleAI({
-      apiVersion: 'v2',
-      // Provide a default model to prevent errors when settings aren't available server-side.
-      // This will be overridden by the model from settings in each flow.
+      // The model is a required parameter for the googleAI plugin.
       model: 'gemini-2.5-flash',
     }),
   ],
-  // The 'customize' block is removed because it cannot reliably access localStorage
-  // in the server-side context where flows are executed.
+  // The 'customize' block has been removed. It was attempting to access
+  // client-side settings from the server, which is not possible and was causing errors.
+  // The model is now defaulted directly in the googleAI plugin configuration.
 });

@@ -11,7 +11,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { RegionOfInterestSchema } from '@/lib/types';
-import { getSettings } from '@/hooks/use-settings-store';
 
 const CheckPlantHealthInputSchema = z.object({
   photoDataUri: z
@@ -59,8 +58,7 @@ const checkPlantHealthFlow = ai.defineFlow(
     outputSchema: CheckPlantHealthOutputSchema,
   },
   async (input) => {
-    const { model } = getSettings();
-    const { output } = await prompt(input, { config: { model: `googleai/${model}` } });
+    const { output } = await prompt(input);
     return output!;
   }
 );
