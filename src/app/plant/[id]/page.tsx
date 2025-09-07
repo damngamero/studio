@@ -16,6 +16,7 @@ import { getPlantCareTips } from "@/ai/flows/get-plant-care-tips";
 import { checkPlantHealth } from "@/ai/flows/check-plant-health";
 import { getWeatherAndPlantAdvice } from "@/ai/flows/get-weather-and-plant-advice";
 import { getWateringAdvice } from "@/ai/flows/get-watering-advice";
+import { chatAboutPlant } from "@/ai/flows/chat-about-plant";
 import { getPlantPlacement } from "@/ai/flows/get-plant-placement";
 import { getPlacementFeedback } from "@/ai/flows/get-placement-feedback";
 import type { GetWateringAdviceOutput } from '@/ai/flows/get-watering-advice';
@@ -110,8 +111,35 @@ export default function PlantProfilePage() {
     })
   };
 
-   const handleFeedback = (message: string) => {
-    handleOpenChat(message);
+  const handleFeedback = async (message: string) => {
+    if (!plant) return;
+    toast({
+        title: "Sending feedback to Sage...",
+        description: "Updating your schedule based on your feedback.",
+    })
+    try {
+        const result = await chatAboutPlant({
+            plantName: plant.commonName,
+            question: message,
+        });
+
+        if (result.updatedWateringAmount) {
+            onChatInteraction({ wateringAmount: result.updatedWateringAmount });
+        } else {
+             toast({
+                variant: 'default',
+                title: 'Feedback Noted!',
+                description: "Sage has received your feedback. The schedule hasn't changed this time, but this helps for future advice!",
+            });
+        }
+    } catch (e) {
+        console.error("Failed to send feedback", e);
+        toast({
+            variant: 'destructive',
+            title: 'Failed to Send Feedback',
+            description: "Couldn't connect with Sage. Please try again.",
+        })
+    }
   };
   
   const fetchWeatherAdvice = useCallback(async (currentPlant: Plant, forceRefresh = false) => {

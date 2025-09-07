@@ -30,7 +30,7 @@ export type ChatAboutPlantInput = z.infer<typeof ChatAboutPlantInputSchema>;
 
 const ChatAboutPlantOutputSchema = z.object({
   answer: z.string().describe("The AI's answer to the user's question."),
-  updatedWateringAmount: z.string().optional().describe("If the user's question led to a new watering amount recommendation (e.g., they mentioned pot size), return the new amount here (e.g., '250-500ml'). Otherwise, leave empty."),
+  updatedWateringAmount: z.string().optional().describe("If the user's question led to a new watering amount recommendation (e.g., they mentioned pot size or soil being too dry/wet), return the new amount here (e.g., '250-500ml'). Otherwise, leave empty."),
 });
 export type ChatAboutPlantOutput = z.infer<typeof ChatAboutPlantOutputSchema>;
 
@@ -75,7 +75,7 @@ To help answer the question, here are the user's journal entries for this plant.
 
 Please provide a helpful and concise answer to the user's question. If you use information from the journal or the context, be sure to mention it.
 
-**Crucially**, if your answer includes a new, specific watering amount (e.g., because the user mentioned their pot size or environment), you MUST populate the 'updatedWateringAmount' field in your response with the new recommended amount (e.g., "250-500ml"). Otherwise, leave it empty.`,
+**Crucially**, if your answer includes a new, specific watering amount (e.g., because the user mentioned their pot size, environment, or that the soil is too dry/wet), you MUST populate the 'updatedWateringAmount' field in your response with the new recommended amount (e.g., "250-500ml"). Otherwise, leave it empty.`,
 });
 
 const chatAboutPlantFlow = ai.defineFlow(
