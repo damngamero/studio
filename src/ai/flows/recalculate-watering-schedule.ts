@@ -16,8 +16,8 @@ import { getWeatherTool } from '../tools/get-weather';
 const RecalculateWateringScheduleInputSchema = z.object({
   plantCommonName: z.string().describe("The plant's common name."),
   currentWateringFrequency: z.number().describe('The current watering frequency in days.'),
-  feedback: z.string().describe('The user\'s feedback, e.g., "The soil was dry." or "Watering was overdue, but the plant seems fine."'),
-  timingDiscrepancy: z.string().describe('How much earlier or later the user watered the plant (e.g., "1 day, 4 hours early" or "2 days late").'),
+  feedback: z.string().describe('The user\'s feedback, e.g., "The soil was dry." or "Watering was overdue, but the plant seems fine." or "Skipping watering, soil is still wet."'),
+  timingDiscrepancy: z.string().describe('How much earlier or later the user watered the plant, or if they are skipping it (e.g., "1 day, 4 hours early", "2 days late", "skipping").'),
   location: z.string().describe("The user's location for weather context."),
   environmentNotes: z.string().optional().describe('Notes about the plant\'s specific environment.'),
 });
@@ -46,7 +46,7 @@ const prompt = ai.definePrompt({
 - **Plant:** {{{plantCommonName}}}
 - **Current Schedule:** Water every {{{currentWateringFrequency}}} days.
 - **User Feedback:** "{{feedback}}"
-- **Timing Discrepancy:** The user watered **{{{timingDiscrepancy}}}** than the schedule suggested.
+- **Timing:** The user is acting **{{{timingDiscrepancy}}}**.
 
 ## Environmental Context
 - **Location:** {{{location}}}
@@ -58,6 +58,7 @@ const prompt = ai.definePrompt({
 3.  **Calculate New Frequency:** Based on your analysis, determine a new, more accurate watering frequency in days. 
     - If the user watered *early* because the soil was dry and it's hot/sunny, you should *decrease* the number of days between watering (e.g., from 7 days to 5 days).
     - If the user watered *late* but the plant was fine, you could *increase* the number of days (e.g., from 5 days to 6 days), especially if the weather is mild or humid.
+    - If the user is *skipping* a watering because the soil is still wet, you should *increase* the number of days (e.g., from 7 days to 8 or 9 days).
     - If you think the current schedule is still appropriate despite the feedback, return the original frequency.
 4.  **Provide Reasoning:** Give a short, clear explanation for your new recommendation or for keeping the schedule the same.
 

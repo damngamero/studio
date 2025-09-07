@@ -178,15 +178,15 @@ export default function PlantProfilePage() {
     toast({
         title: "Sending feedback to Sage...",
         description: "Updating your schedule based on your feedback.",
-    })
+    });
 
-    if (waterNow) {
-        const nextWateringDate = addDays(new Date(plant.lastWatered), plant.wateringFrequency);
-        const now = new Date();
-        const duration = intervalToDuration({ start: now, end: nextWateringDate });
-        const timeEarly = `${duration.days || 0} days, ${duration.hours || 0} hours`;
-        
-        try {
+    try {
+        if (waterNow) { // "It's dry, watering now"
+            const nextWateringDate = addDays(new Date(plant.lastWatered), plant.wateringFrequency);
+            const now = new Date();
+            const duration = intervalToDuration({ start: now, end: nextWateringDate });
+            const timeEarly = `${duration.days || 0} days, ${duration.hours || 0} hours`;
+
             const result = await recalculateWateringSchedule({
                 plantCommonName: plant.commonName,
                 currentWateringFrequency: plant.wateringFrequency,
@@ -207,39 +207,35 @@ export default function PlantProfilePage() {
                 title: 'Schedule Adjusted!',
                 description: result.reasoning
             });
-            
-        } catch (e) {
-            console.error("Failed to recalculate schedule", e);
-            // Even if AI fails, still mark as watered since user took the action
-            const updatedPlant = { ...plant, lastWatered: new Date().toISOString() };
+        } else { // "It's wet, skipping"
+             const result = await recalculateWateringSchedule({
+                plantCommonName: plant.commonName,
+                currentWateringFrequency: plant.wateringFrequency,
+                feedback: message,
+                timingDiscrepancy: `skipping`,
+                location: settings.location || '',
+                environmentNotes: plant.environmentNotes,
+            });
+
+            const updatedPlant = {
+                ...plant,
+                wateringFrequency: result.newWateringFrequency,
+                // DO NOT update lastWatered date
+            };
             updatePlant(updatedPlant);
             setPlant(updatedPlant);
             toast({
-                variant: 'destructive',
-                title: 'AI Update Failed',
-                description: "Couldn't connect with Sage to adjust the schedule, but I've marked the plant as watered for you."
-            })
-        }
-    } else {
-        // Handle the "it's wet, skipping" case - for now, just sends to chat for learning
-        try {
-            await chatAboutPlant({
-                plantName: plant.commonName,
-                question: message,
+                title: 'Schedule Adjusted!',
+                description: result.reasoning
             });
-             toast({
-                variant: 'default',
-                title: 'Feedback Noted!',
-                description: "Sage has received your feedback. The schedule hasn't changed this time, but this helps for future advice!",
-            });
-        } catch (e) {
-             console.error("Failed to send feedback", e);
-            toast({
-                variant: 'destructive',
-                title: 'Failed to Send Feedback',
-                description: "Couldn't connect with Sage. Please try again.",
-            })
         }
+    } catch (e) {
+        console.error("Failed to recalculate schedule with feedback", e);
+        toast({
+            variant: 'destructive',
+            title: 'AI Update Failed',
+            description: "Couldn't connect with Sage to adjust the schedule. Please try again."
+        });
     }
   };
   
