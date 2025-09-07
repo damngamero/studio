@@ -25,6 +25,8 @@ export interface JournalEntry {
   photoUrl?: string; // data URI
 }
 
+export type Placement = 'Indoor' | 'Outdoor' | 'Indoor/Outdoor';
+
 export interface Plant {
   id: string;
   customName: string;
@@ -43,7 +45,7 @@ export interface Plant {
   annotatedRegions: RegionOfInterest[];
   journal?: JournalEntry[];
   placement?: 'Indoor' | 'Outdoor';
-  recommendedPlacement?: 'Indoor' | 'Outdoor' | 'Indoor/Outdoor';
+  recommendedPlacement?: Placement;
   placementFeedback?: {
     Indoor?: string;
     Outdoor?: string;

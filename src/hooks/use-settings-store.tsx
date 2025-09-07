@@ -21,7 +21,7 @@ export interface Settings {
 const defaultSettings: Settings = {
   theme: "light",
   wateringReminders: true,
-  timezone: "UTC",
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   location: "",
   model: 'gemini-2.5-flash',
   geminiApiKey: "",
@@ -89,7 +89,7 @@ export function useSettingsStore() {
   }, [settings, isInitialized]);
 
 
-  const setSettings = useCallback((newSettings: Partial<Settings>) => {
+  const setSettings = useCallback((newSettings: Settings) => {
     setSettingsState(prevSettings => {
       const updatedSettings = { ...prevSettings, ...newSettings };
        if (newSettings.theme && newSettings.theme !== prevSettings.theme) {
@@ -101,4 +101,3 @@ export function useSettingsStore() {
 
   return { settings, setSettings, theme: settings.theme, isInitialized };
 }
-

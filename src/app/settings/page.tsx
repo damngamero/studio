@@ -4,7 +4,7 @@
 
 import Link from "next/link";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@rodix-ui/react-hook-form-resolvers";
 import * as z from "zod";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,8 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { useEffect } from "react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const preferencesFormSchema = z.object({
   theme: z.custom<Theme>(),
@@ -40,13 +42,23 @@ export default function SettingsPage() {
     values: settings,
   });
 
+  useEffect(() => {
+    form.reset(settings);
+  }, [settings, form]);
+
   const onSubmit = (values: z.infer<typeof preferencesFormSchema>) => {
-    setSettings(values);
+    setSettings(values as Settings);
     toast({
       title: "Preferences Saved",
       description: "Your new preferences have been applied.",
       action: <div className="p-1.5 rounded-full bg-green-500"><Check className="h-4 w-4 text-white" /></div>
     });
+
+    if (values.wateringReminders) {
+        if ('Notification' in window && Notification.permission === "default") {
+            Notification.requestPermission();
+        }
+    }
   };
   
   return (
@@ -71,8 +83,6 @@ export default function SettingsPage() {
                         <Select 
                           onValueChange={(value: Theme) => {
                             field.onChange(value);
-                            // Also apply immediately
-                            setSettings({ ...settings, theme: value });
                           }} 
                           defaultValue={field.value}
                         >
@@ -155,7 +165,7 @@ export default function SettingsPage() {
                         <FormControl>
                            <div className="relative">
                             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="e.g. San Francisco, CA" {...field} className="pl-10" />
+                            <Input placeholder="e.g. San Francisco, CA" {...field} />
                            </div>
                         </FormControl>
                          <FormDescription>
@@ -233,25 +243,36 @@ export default function SettingsPage() {
                   />
 
                   <Separator />
-
-                  <FormField
-                    control={form.control}
-                    name="wateringReminders"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                          <FormLabel>Watering Reminders</FormLabel>
-                          <FormDescription>Receive notifications when it's time to water your plants.</FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
+                  
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="wateringReminders"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                            <FormLabel>Watering Reminders</FormLabel>
+                            <FormDescription>Receive notifications when it's time to water your plants.</FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    {typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'denied' && (
+                        <Alert variant="destructive" className="mt-2 text-xs">
+                            <AlertTitle>Notifications Blocked</AlertTitle>
+                            <AlertDescription>
+                                You have blocked notifications for this site. To receive reminders, please enable them in your browser settings.
+                            </AlertDescription>
+                        </Alert>
                     )}
-                  />
+                  </div>
+
                 </CardContent>
               </Card>
 
