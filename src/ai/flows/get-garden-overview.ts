@@ -76,13 +76,7 @@ const getGardenOverviewFlow = ai.defineFlow(
     if (!input.location || input.plants.length === 0) {
         return { overview: "Set your location and add a plant to get your daily garden overview from Sage!" };
     }
-    try {
-      const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
-      return output!;
-    } catch (error) {
-      console.warn('Flash model failed, trying Pro model', error);
-      const { output } = await prompt(input, { model: 'googleai/gemini-2.5-pro' });
-      return output!;
-    }
+    const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
+    return output!;
   }
 );

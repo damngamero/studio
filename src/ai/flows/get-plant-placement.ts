@@ -46,13 +46,7 @@ const getPlantPlacementFlow = ai.defineFlow(
     outputSchema: GetPlantPlacementOutputSchema,
   },
   async (input) => {
-    try {
-      const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
-      return output!;
-    } catch (error) {
-      console.warn('Flash model failed, trying Pro model', error);
-      const { output } = await prompt(input, { model: 'googleai/gemini-2.5-pro' });
-      return output!;
-    }
+    const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
+    return output!;
   }
 );

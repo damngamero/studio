@@ -56,7 +56,7 @@ const prompt = ai.definePrompt({
 1.  **Get Weather:** First, use the \`getWeatherForLocation\` tool to get the current weather and 3-day forecast for **{{{location}}}**.
 2.  **Analyze:** Consider all the information: the user's feedback (note the nuance: "bone dry" is more severe than "slightly dry"), the timing discrepancy, the plant species, its environment, and the weather forecast.
 3.  **Calculate New Frequency:** Based on your analysis, determine a new, more accurate watering frequency in days. 
-    - If the user watered *early* because the soil was dry and it's hot/sunny, you should *decrease* the number of days between watering. A "bone dry" report should lead to a larger decrease than a "slightly dry" report. "Medium dry" should be in between.
+    - If the user watered *early* because the soil was dry, you should *decrease* the number of days between watering. A "bone dry" report should lead to a larger decrease than a "slightly dry" report. "Medium dry" should be in between.
     - If the user watered *late* but the plant was fine, you could *increase* the number of days, especially if the weather is mild or humid.
     - If the user is *skipping* a watering because the soil is still wet, you should *increase* the number of days. "Soaking wet" should lead to a larger increase than "slightly damp". "Medium wet" should be in between.
     - If you think the current schedule is still appropriate despite the feedback, return the original frequency.
@@ -72,13 +72,7 @@ const recalculateWateringScheduleFlow = ai.defineFlow(
     outputSchema: RecalculateWateringScheduleOutputSchema,
   },
   async (input) => {
-    try {
-      const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
-      return output!;
-    } catch (error) {
-      console.warn('Flash model failed, trying Pro model', error);
-      const { output } = await prompt(input, { model: 'googleai/gemini-2.5-pro' });
-      return output!;
-    }
+    const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
+    return output!;
   }
 );
