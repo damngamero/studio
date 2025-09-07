@@ -1,11 +1,11 @@
 
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Bot, Loader2, Send, User, Paperclip, X } from 'lucide-react';
+import { Bot, Loader2, Send, User, Paperclip, X, Camera } from 'lucide-react';
 import { format } from 'date-fns';
 import Image from 'next/image';
 
@@ -20,6 +20,8 @@ import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
 import { useAchievementStore } from '@/hooks/use-achievement-store';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose, DialogTrigger } from './ui/dialog';
+import { Alert, AlertTitle, AlertDescription } from './ui/alert';
 
 const chatFormSchema = z.object({
   question: z.string().min(1, 'Please enter a question.'),
@@ -49,9 +51,12 @@ export function Chat({ plant, initialContext, onUpdate }: ChatProps) {
   const [photoDataUri, setPhotoDataUri] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const { checkAndUnlock } = useAchievementStore();
   const [chatCount, setChatCount] = useState(0);
   const { toast } = useToast();
+  const [isCameraDialogOpen, setIsCameraDialogOpen] = useState(false);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
 
   const form = useForm<z.infer<typeof chatFormSchema>>({
     resolver: zodResolver(chatFormSchema),
@@ -74,6 +79,39 @@ export function Chat({ plant, initialContext, onUpdate }: ChatProps) {
     }
   }, [messages]);
 
+  const stopCameraStream = useCallback(() => {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+      }
+    }, []);
+
+  useEffect(() => {
+    if (isCameraDialogOpen) {
+      const getCameraPermission = async () => {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+          setHasCameraPermission(true);
+
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
+        } catch (error) {
+          console.error('Error accessing camera:', error);
+          setHasCameraPermission(false);
+        }
+      };
+
+      getCameraPermission();
+      
+      return () => {
+        stopCameraStream();
+      }
+    }
+  }, [isCameraDialogOpen, stopCameraStream]);
+
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -92,6 +130,22 @@ export function Chat({ plant, initialContext, onUpdate }: ChatProps) {
       reader.readAsDataURL(file);
     }
   };
+
+  const handleCapture = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement("canvas");
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        const dataUri = canvas.toDataURL("image/jpeg");
+        setPhotoDataUri(dataUri);
+        setIsCameraDialogOpen(false);
+      }
+    }
+  };
+
 
   const handleSendMessage = async (question: string) => {
     setIsLoading(true);
@@ -229,6 +283,36 @@ export function Chat({ plant, initialContext, onUpdate }: ChatProps) {
              <Button type="button" variant="outline" size="icon" onClick={() => fileInputRef.current?.click()}>
                 <Paperclip className="h-4 w-4" />
             </Button>
+            <Dialog open={isCameraDialogOpen} onOpenChange={setIsCameraDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button type="button" variant="outline" size="icon">
+                        <Camera className="h-4 w-4" />
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Add Photo from Camera</DialogTitle>
+                    </DialogHeader>
+                    <div className="w-full aspect-video rounded-lg bg-muted flex items-center justify-center overflow-hidden my-4">
+                      <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted playsInline />
+                    </div>
+                    {hasCameraPermission === false && (
+                      <Alert variant="destructive">
+                        <AlertTitle>Camera Access Required</AlertTitle>
+                        <AlertDescription>
+                          Please allow camera access to use this feature.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    <DialogFooter>
+                        <DialogClose asChild><Button variant="ghost">Cancel</Button></DialogClose>
+                        <Button onClick={handleCapture} disabled={!hasCameraPermission}>
+                            <Camera className="mr-2" /> Capture Photo
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             <FormField
               control={form.control}
               name="question"
