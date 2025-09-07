@@ -25,7 +25,7 @@ const Countdown = ({ targetDate }: { targetDate: Date }) => {
     useEffect(() => {
         const timer = setInterval(() => {
             setNow(new Date());
-        }, 1000); 
+        }, 1000 * 60); // Update every minute
         return () => clearInterval(timer);
     }, []);
     
