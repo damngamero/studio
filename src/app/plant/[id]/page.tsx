@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X, MapPin, AlertTriangle, Info, CloudSun, BookOpen, RefreshCw, Search, Home, Wind, Waves, ThumbsUp, ThumbsDown } from "lucide-react";
-import { addDays, format, formatDistanceToNow, isAfter, subDays } from 'date-fns';
+import { addDays, format, formatDistanceToNow, isAfter, intervalToDuration } from 'date-fns';
 
 
 import { usePlantStore } from "@/hooks/use-plant-store";
@@ -19,6 +19,7 @@ import { getWateringAdvice } from "@/ai/flows/get-watering-advice";
 import { chatAboutPlant } from "@/ai/flows/chat-about-plant";
 import { getPlantPlacement } from "@/ai/flows/get-plant-placement";
 import { getPlacementFeedback } from "@/ai/flows/get-placement-feedback";
+import { recalculateWateringSchedule } from "@/ai/flows/recalculate-watering-schedule";
 import type { GetWateringAdviceOutput } from '@/ai/flows/get-watering-advice';
 import type { Plant } from "@/lib/types";
 import { AppLayout } from "@/components/AppLayout";
@@ -123,51 +124,71 @@ export default function PlantProfilePage() {
   };
 
   const handleFeedback = async (message: string, waterNow: boolean) => {
-    if (!plant) return;
+    if (!plant || !plant.wateringFrequency) return;
     
-    // Immediately mark as watered if the action indicates it.
+    toast({
+        title: "Sending feedback to Sage...",
+        description: "Updating your schedule based on your feedback.",
+    })
+
     if (waterNow) {
-        handleWaterPlant();
+        const nextWateringDate = addDays(new Date(plant.lastWatered), plant.wateringFrequency);
+        const now = new Date();
+        const duration = intervalToDuration({ start: now, end: nextWateringDate });
+        const timeEarly = `${duration.days || 0} days, ${duration.hours || 0} hours, ${duration.minutes || 0} minutes`;
+        
+        try {
+            const result = await recalculateWateringSchedule({
+                plantCommonName: plant.commonName,
+                currentWateringFrequency: plant.wateringFrequency,
+                feedback: message,
+                timeEarly: timeEarly,
+                location: settings.location || '',
+                environmentNotes: plant.environmentNotes,
+            });
+
+            const updatedPlant = {
+                ...plant, 
+                wateringFrequency: result.newWateringFrequency,
+                lastWatered: new Date().toISOString(), // Mark as watered now
+            };
+            updatePlant(updatedPlant);
+            setPlant(updatedPlant);
+            toast({
+                title: 'Schedule Adjusted!',
+                description: result.reasoning
+            });
+            
+        } catch (e) {
+            console.error("Failed to recalculate schedule", e);
+            // Even if AI fails, still mark as watered since user took the action
+            handleWaterPlant();
+            toast({
+                variant: 'destructive',
+                title: 'AI Update Failed',
+                description: "Couldn't connect with Sage to adjust the schedule, but I've marked the plant as watered for you."
+            })
+        }
     } else {
-        toast({
-            title: "Sending feedback to Sage...",
-            description: "Updating your schedule based on your feedback.",
-        })
-    }
-
-    try {
-        const result = await chatAboutPlant({
-            plantName: plant.commonName,
-            question: message,
-        });
-
-        if (result.updatedWateringAmount) {
-            // Silently update the watering amount based on feedback
-            // Important: We must use the 'plants' from the store directly, not the local state 'plant'
-            const currentPlantState = getPlantById(plant.id);
-            if (currentPlantState) {
-                const updatedPlant = {...currentPlantState, wateringAmount: result.updatedWateringAmount};
-                updatePlant(updatedPlant);
-                setPlant(updatedPlant); // Sync local state
-                toast({
-                    title: 'Feedback Received!',
-                    description: "Sage has adjusted the recommended watering amount based on your feedback."
-                });
-            }
-        } else {
+        // Handle the "it's wet, skipping" case - for now, just sends to chat for learning
+        try {
+            await chatAboutPlant({
+                plantName: plant.commonName,
+                question: message,
+            });
              toast({
                 variant: 'default',
                 title: 'Feedback Noted!',
                 description: "Sage has received your feedback. The schedule hasn't changed this time, but this helps for future advice!",
             });
+        } catch (e) {
+             console.error("Failed to send feedback", e);
+            toast({
+                variant: 'destructive',
+                title: 'Failed to Send Feedback',
+                description: "Couldn't connect with Sage. Please try again.",
+            })
         }
-    } catch (e) {
-        console.error("Failed to send feedback", e);
-        toast({
-            variant: 'destructive',
-            title: 'Failed to Send Feedback',
-            description: "Couldn't connect with Sage. Please try again.",
-        })
     }
   };
   

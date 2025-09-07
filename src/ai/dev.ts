@@ -14,8 +14,5 @@ import '@/ai/flows/get-garden-overview.ts';
 import '@/ai/flows/get-plant-nicknames.ts';
 import '@/ai/flows/get-plant-placement.ts';
 import '@/ai/flows/get-placement-feedback.ts';
+import '@/ai/flows/recalculate-watering-schedule.ts';
 import '@/ai/tools/get-weather.ts';
-
-
-
-
