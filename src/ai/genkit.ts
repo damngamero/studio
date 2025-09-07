@@ -9,7 +9,6 @@ export const ai = genkit({
       apiVersion: 'v2',
     }),
   ],
-  model: 'googleai/gemini-2.5-flash',
   customize: async (config, context) => {
     const settings = await getSettings();
     
@@ -19,7 +18,7 @@ export const ai = genkit({
         config.apiKey = settings.geminiApiKey;
     }
     
-    return {...config, model: googleAI(settings.model)};
+    return {...config, model: settings.model};
   },
 });
 
