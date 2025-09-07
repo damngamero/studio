@@ -16,6 +16,7 @@ import { WeatherSchema, ForecastDaySchema } from '@/lib/types';
 const PlantInfoSchema = z.object({
   customName: z.string(),
   commonName: z.string(),
+  placement: z.enum(['Indoor', 'Outdoor', 'Indoor/Outdoor']).optional(),
 });
 
 const GetWeatherAndPlantAdviceInputSchema = z.object({
@@ -51,12 +52,13 @@ const prompt = ai.definePrompt({
 
 1. First, use the getWeatherForLocation tool to get the weather for the user's location: {{{location}}}.
 2. Then, for each of the user's plants listed below, provide specific, actionable advice based on the 3-day forecast.
-3. Consider the plant type and the upcoming weather. For example, if it's going to be very hot, advise moving sun-sensitive plants to the shade. If heavy rain is forecast, suggest moving potted plants under cover. Be creative and helpful. Use **markdown** for emphasis on key words.
-4. Return the current weather, the forecast, and the specific advice for each plant.
+3. **Crucially, consider the placement of the plant (Indoor/Outdoor).** Outdoor plants are directly affected by weather, while indoor plants are more sheltered. Your advice must reflect this difference. For example, if heavy rain is forecast, you might tell the user to move a potted outdoor plant under cover, but this advice is irrelevant for an indoor plant.
+4. Be creative and helpful. Use **markdown** for emphasis on key words.
+5. Return the current weather, the forecast, and the specific advice for each plant.
 
 User's Plants:
 {{#each plants}}
-- {{customName}} ({{commonName}})
+- {{customName}} ({{commonName}}). Placement: {{#if placement}}{{placement}}{{else}}Unknown{{/if}}
 {{/each}}
 `,
 });

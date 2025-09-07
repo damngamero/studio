@@ -23,6 +23,7 @@ const ChatAboutPlantInputSchema = z.object({
   question: z.string().describe('The user\'s question about the plant.'),
   context: z.string().optional().describe('Additional context for the conversation, like the current care tips.'),
   journal: z.array(JournalEntrySchema).optional().describe('A list of journal entries for the plant, including date and notes.'),
+  placement: z.enum(['Indoor', 'Outdoor', 'Indoor/Outdoor']).optional().describe('Where the plant is placed.'),
 });
 export type ChatAboutPlantInput = z.infer<typeof ChatAboutPlantInputSchema>;
 
@@ -43,6 +44,10 @@ const prompt = ai.definePrompt({
 
 Plant Name: {{{plantName}}}
 Question: {{{question}}}
+
+{{#if placement}}
+The plant is placed: **{{{placement}}}**. Take this into account.
+{{/if}}
 
 {{#if context}}
 The user has the following context. Your answer should be related to this context.

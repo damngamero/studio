@@ -30,6 +30,7 @@ const GetPlantCareTipsInputSchema = z.object({
     .optional()
     .describe('User-provided notes about the plant\'s environment (e.g., "near a sunny window", "in a cool, dry room").'),
   lastWatered: z.string().optional().describe('The ISO date string of when the plant was last watered.'),
+   placement: z.enum(['Indoor', 'Outdoor', 'Indoor/Outdoor']).optional().describe('Where the plant is placed by the user.'),
 });
 export type GetPlantCareTipsInput = z.infer<typeof GetPlantCareTipsInputSchema>;
 
@@ -69,6 +70,9 @@ Also provide a recommended watering frequency in days, the best time of day to w
 The user prefers the ${unitSystem} system for measurements.
 
 Plant Species: {{{plantSpecies}}}
+{{#if placement}}
+User-defined Placement: **{{{placement}}}**. This is a critical piece of information. Indoor plants are more sheltered than outdoor plants. Your advice MUST reflect this.
+{{/if}}
 {{#if estimatedAge}}
 Estimated Age: {{{estimatedAge}}}
 {{/if}}

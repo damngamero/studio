@@ -85,6 +85,7 @@ export function Chat({ plant, initialContext }: ChatProps) {
         question: question,
         context: initialContext, // Pass the initial context to the flow
         journal: journalEntries,
+        placement: plant.placement,
       });
       const assistantMessage: Message = { role: 'assistant', content: result.answer };
       setMessages((prev) => [...prev, assistantMessage]);

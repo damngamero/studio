@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X, MapPin, AlertTriangle, Info, CloudSun, BookOpen, RefreshCw, Search, Home } from "lucide-react";
+import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X, MapPin, AlertTriangle, Info, CloudSun, BookOpen, RefreshCw, Search, Home, Wind, Waves } from "lucide-react";
 import { addDays, format, formatDistanceToNowStrict, isAfter, subDays } from 'date-fns';
 
 
@@ -39,6 +39,7 @@ import ReactMarkdown from "react-markdown";
 import { QuickViewWateringStatus } from "@/components/QuickViewWateringStatus";
 import { Alert } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -108,7 +109,7 @@ export default function PlantProfilePage() {
     try {
       const weatherResult = await getWeatherAndPlantAdvice({
           location: settings.location,
-          plants: [{ customName: currentPlant.customName, commonName: currentPlant.commonName }]
+          plants: [{ customName: currentPlant.customName, commonName: currentPlant.commonName, placement: currentPlant.placement }]
         });
       
       if (weatherResult.plantAdvice.length > 0) {
@@ -122,7 +123,7 @@ export default function PlantProfilePage() {
     }
   }, [settings.location, isApiKeyMissing]);
 
-  const handleRegenerateTips = async () => {
+  const handleRegenerateTips = useCallback(async () => {
     if (!plant) return;
     setIsGeneratingTips(true);
     try {
@@ -132,17 +133,18 @@ export default function PlantProfilePage() {
           lastWatered: plant.lastWatered,
           estimatedAge: plant.estimatedAge,
           location: settings.location,
+          placement: plant.placement,
         });
 
-      const updatedPlant = { 
+      const updatedPlantData = { 
         ...plant, 
         careTips: tipsResult.careTips,
         wateringFrequency: tipsResult.wateringFrequency,
         wateringTime: tipsResult.wateringTime,
         wateringAmount: tipsResult.wateringAmount,
       };
-      updatePlant(updatedPlant);
-      setPlant(updatedPlant);
+      updatePlant(updatedPlantData);
+      setPlant(updatedPlantData);
       toast({
         title: 'Care Tips Updated',
         description: 'Sage has provided new care recommendations based on the latest info.'
@@ -157,7 +159,24 @@ export default function PlantProfilePage() {
     } finally {
         setIsGeneratingTips(false);
     }
-  };
+  }, [plant, settings.location, updatePlant, toast]);
+
+  const handleSetPlacement = useCallback((placement: 'Indoor' | 'Outdoor') => {
+    if (!plant || plant.placement === placement) return;
+
+    const updatedPlant = { ...plant, placement };
+    updatePlant(updatedPlant);
+    setPlant(updatedPlant);
+
+    toast({
+      title: 'Placement Updated',
+      description: `${plant.customName} is now set as an ${placement.toLowerCase()} plant. Regenerating tips...`,
+    });
+
+    // Automatically regenerate tips with the new context
+    handleRegenerateTips();
+
+  }, [plant, updatePlant, toast, handleRegenerateTips]);
 
 
   useEffect(() => {
@@ -578,22 +597,43 @@ export default function PlantProfilePage() {
                         <span>{plant.estimatedAge}</span>
                       </li>}
                        <li className="flex items-center justify-between">
-                        <span className="text-muted-foreground flex items-center gap-2"><Home className="h-4 w-4" /> Placement</span>
-                        {isFetchingPlacement ? (
-                           <Skeleton className="h-4 w-16" />
-                        ) : (
-                           <span>{plant.placement || 'Unknown'}</span>
-                        )}
+                         <span className="text-muted-foreground flex items-center gap-2"><Home className="h-4 w-4" /> Placement</span>
+                         <div className="flex items-center gap-1">
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button 
+                                            size="xs" 
+                                            variant={plant.placement === 'Indoor' ? 'default' : 'outline'}
+                                            onClick={() => handleSetPlacement('Indoor')}
+                                            className="rounded-full"
+                                            >
+                                            <Home className="h-3 w-3" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Indoor</p></TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button 
+                                            size="xs" 
+                                            variant={plant.placement === 'Outdoor' ? 'default' : 'outline'}
+                                            onClick={() => handleSetPlacement('Outdoor')}
+                                            className="rounded-full"
+                                            >
+                                             <Sun className="h-3 w-3" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Outdoor</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                         </div>
                       </li>
                        {settings.location && <li className="flex items-center justify-between">
                         <span className="text-muted-foreground flex items-center gap-2"><MapPin className="h-4 w-4" /> Location</span>
                         <span>{settings.location}</span>
                       </li>}
                       <QuickViewWateringStatus plant={plant} advice={wateringAdvice} />
-                      <li className="flex items-center justify-between">
-                        <span className="text-muted-foreground flex items-center gap-2"><Sun className="h-4 w-4" /> Sunlight</span>
-                        <span>Indirect Light</span>
-                      </li>
                     </ul>
                  </div>
               </CardContent>
