@@ -34,8 +34,8 @@ function WeatherIcon({ condition, className }: { condition: string; className?: 
 }
 
 export default function WeatherPage() {
-  const { plants } = usePlantStore();
-  const { settings } = useSettingsStore();
+  const { plants, isInitialized: plantsInitialized } = usePlantStore();
+  const { settings, isInitialized: settingsInitialized } = useSettingsStore();
   const [weatherData, setWeatherData] = useState<GetWeatherAndPlantAdviceOutput | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,12 +48,12 @@ export default function WeatherPage() {
     setIsLoading(true);
     setError(null);
 
-    // Client-side cache check
+    // Client-side cache to avoid re-fetching on navigation, but initial load is server-side.
     if (!forceRefresh) {
-        const cached = localStorage.getItem('weather-data');
+        const cached = sessionStorage.getItem('weather-data');
         if (cached) {
             const { data, timestamp } = JSON.parse(cached);
-            const isStale = new Date().getTime() - timestamp > 18 * 60 * 60 * 1000; // 18 hours
+            const isStale = new Date().getTime() - timestamp > 10 * 60 * 1000; // 10 minute cache
             if (!isStale) {
                 setWeatherData(data);
                 setIsLoading(false);
@@ -67,7 +67,7 @@ export default function WeatherPage() {
       const result = await getWeatherAndPlantAdvice({ location: settings.location, plants: plantInfo });
       setWeatherData(result);
        // Cache the new data
-      localStorage.setItem('weather-data', JSON.stringify({ data: result, timestamp: new Date().getTime() }));
+      sessionStorage.setItem('weather-data', JSON.stringify({ data: result, timestamp: new Date().getTime() }));
     } catch (e) {
       console.error("Failed to get weather advice:", e);
       setError("Could not fetch weather advice from Sage. Please try again later.");
@@ -77,10 +77,10 @@ export default function WeatherPage() {
   }, [settings.location, plants]);
 
   useEffect(() => {
-    fetchData();
-    const intervalId = setInterval(() => fetchData(true), 18 * 60 * 60 * 1000);
-    return () => clearInterval(intervalId);
-  }, [fetchData]);
+    if (plantsInitialized && settingsInitialized) {
+        fetchData();
+    }
+  }, [plantsInitialized, settingsInitialized, fetchData]);
 
   const renderContent = () => {
     if (isLoading) {

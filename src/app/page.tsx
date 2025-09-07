@@ -15,6 +15,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
+import { getSettings } from "@/hooks/use-settings-store.tsx";
 
 function LeafIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -45,12 +46,12 @@ function GardenOverview() {
   const fetchOverview = useCallback(async (forceRefresh = false) => {
     setIsLoading(true);
     
-    // Client-side cache check
+    // We still cache on client to avoid re-fetching on simple re-renders, but initial load is faster.
     if (!forceRefresh) {
-        const cached = localStorage.getItem('garden-overview');
+        const cached = sessionStorage.getItem('garden-overview');
         if (cached) {
             const { data, timestamp } = JSON.parse(cached);
-            const isStale = new Date().getTime() - timestamp > 12 * 60 * 60 * 1000; // 12 hours
+            const isStale = new Date().getTime() - timestamp > 10 * 60 * 1000; // 10 minutes
             if (!isStale) {
                 setOverview(data);
                 setIsLoading(false);
@@ -75,8 +76,7 @@ function GardenOverview() {
         plants: plantStatus,
       });
       setOverview(result.overview);
-      // Cache the new data
-      localStorage.setItem('garden-overview', JSON.stringify({ data: result.overview, timestamp: new Date().getTime() }));
+      sessionStorage.setItem('garden-overview', JSON.stringify({ data: result.overview, timestamp: new Date().getTime() }));
 
     } catch (error) {
       console.error("Failed to get garden overview:", error);
@@ -90,8 +90,6 @@ function GardenOverview() {
     if (isPlantsInitialized && isSettingsInitialized) {
         if (plants.length > 0 && settings.location) {
           fetchOverview();
-          const intervalId = setInterval(() => fetchOverview(true), 12 * 60 * 60 * 1000); 
-          return () => clearInterval(intervalId);
         } else {
             setIsLoading(false);
             setOverview(null);
