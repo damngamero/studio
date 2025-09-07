@@ -41,11 +41,11 @@ const Countdown = ({ targetDate }: { targetDate: Date }) => {
 
     return (
         <div className="flex items-baseline gap-2">
-           <span className="text-2xl font-bold">{days}</span>
+           <span className="text-2xl font-bold">{String(days).padStart(2, '0')}</span>
            <span className="text-sm">d</span>
-           <span className="text-2xl font-bold">{hours}</span>
+           <span className="text-2xl font-bold">{String(hours).padStart(2, '0')}</span>
            <span className="text-sm">h</span>
-           <span className="text-2xl font-bold">{minutes}</span>
+           <span className="text-2xl font-bold">{String(minutes).padStart(2, '0')}</span>
            <span className="text-sm">m</span>
         </div>
     );
@@ -100,13 +100,15 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice 
       );
     }
     
-    if (advice && advice.shouldWater === 'Yes') {
+    if (isAfter(new Date(), nextWateringDate) && advice?.shouldWater !== 'Wait') {
        return (
          <CardContent className="space-y-4 text-center">
-            <div className="text-sm p-2 bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 rounded-md flex items-center gap-2 justify-center">
-              <Info className="h-4 w-4"/>
-              <p>{advice.reason}</p>
-            </div>
+            {advice?.reason && (
+              <div className="text-sm p-2 bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 rounded-md flex items-center gap-2 justify-center">
+                <Info className="h-4 w-4"/>
+                <p>{advice.reason}</p>
+              </div>
+            )}
             <Button 
                 onClick={handleWaterPlantClick} 
                 className="w-full"
@@ -141,7 +143,7 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice 
   };
   
   const getCardClass = () => {
-    if (advice?.shouldWater === 'Yes' && !isWateredToday) return 'bg-green-100/50 dark:bg-green-900/50 border-green-500/50';
+    if (isAfter(new Date(), nextWateringDate) && advice?.shouldWater !== 'Wait' && !isWateredToday) return 'bg-green-100/50 dark:bg-green-900/50 border-green-500/50';
     if (advice?.shouldWater === 'Wait') return 'bg-blue-100/50 dark:bg-blue-900/50 border-blue-500/50';
     return '';
   }
