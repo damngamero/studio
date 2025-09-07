@@ -25,7 +25,6 @@ import { cn } from "@/lib/utils";
 const preferencesFormSchema = z.object({
   theme: z.custom<Theme>(),
   wateringReminders: z.boolean().default(true),
-  metricUnits: z.boolean().default(false),
   timezone: z.string().default('UTC'),
   location: z.string().optional(),
   model: z.custom<AIModel>(),
@@ -253,25 +252,6 @@ export default function SettingsPage() {
                       </FormItem>
                     )}
                   />
-
-                  <FormField
-                      control={form.control}
-                      name="metricUnits"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                            <div className="space-y-0.5">
-                            <FormLabel>Use Metric Units</FormLabel>
-                            <FormDescription>Display measurements in cm/ml instead of inches/oz.</FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
                 </CardContent>
               </Card>
 

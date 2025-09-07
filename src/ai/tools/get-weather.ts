@@ -1,8 +1,8 @@
 
+
 'use server';
 
 import { ai } from '@/ai/genkit';
-import { getSettings } from '@/hooks/use-settings-store';
 import { z } from 'genkit';
 import { WeatherSchema, ForecastDaySchema, Weather, ForecastDay } from '@/lib/types';
 
@@ -29,9 +29,8 @@ export const getWeatherTool = ai.defineTool(
       }
       const { lat, lon } = geocodeData[0];
       
-      const { metricUnits } = getSettings();
-      const tempUnit = metricUnits ? 'celsius' : 'fahrenheit';
-      const windUnit = metricUnits ? 'kmh' : 'mph';
+      const tempUnit = 'celsius';
+      const windUnit = 'kmh';
 
       // 2. Fetch weather using the retrieved coordinates
       const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max&temperature_unit=${tempUnit}&wind_speed_unit=${windUnit}&timezone=auto&forecast_days=3`);

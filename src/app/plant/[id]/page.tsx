@@ -127,7 +127,6 @@ export default function PlantProfilePage() {
           lastWatered: plant.lastWatered,
           estimatedAge: plant.estimatedAge,
           location: settings.location,
-          metricUnits: settings.metricUnits,
         });
 
       const updatedPlant = { 

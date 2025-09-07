@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -243,7 +244,6 @@ export default function IdentifyPlantPage() {
         plantSpecies: values.commonName,
         estimatedAge: identification.estimatedAge,
         location: settings.location,
-        metricUnits: settings.metricUnits,
       });
 
       const newPlant = addPlant({

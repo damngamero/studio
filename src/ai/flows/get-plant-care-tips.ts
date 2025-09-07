@@ -1,4 +1,5 @@
 
+
 'use server';
 
 /**
@@ -29,7 +30,6 @@ const GetPlantCareTipsInputSchema = z.object({
     .optional()
     .describe('User-provided notes about the plant\'s environment (e.g., "near a sunny window", "in a cool, dry room").'),
   lastWatered: z.string().optional().describe('The ISO date string of when the plant was last watered.'),
-  metricUnits: z.boolean().optional().describe('Whether the user prefers metric units for measurements.'),
 });
 export type GetPlantCareTipsInput = z.infer<typeof GetPlantCareTipsInputSchema>;
 
@@ -39,7 +39,7 @@ const GetPlantCareTipsOutputSchema = z.object({
     .describe('A summary of care tips tailored to the plant species, including watering, sunlight, and pruning.'),
   wateringFrequency: z.number().describe('The recommended watering frequency in days (e.g., 7).'),
   wateringTime: z.string().describe('The recommended time of day to water (e.g., morning, evening).'),
-  wateringAmount: z.string().describe("The recommended amount of water to use for each watering session (e.g., '1-2 cups' or '250-500ml')."),
+  wateringAmount: z.string().describe("The recommended amount of water to use for each watering session (e.g., '250-500ml')."),
 });
 export type GetPlantCareTipsOutput = z.infer<typeof GetPlantCareTipsOutputSchema>;
 
@@ -54,7 +54,7 @@ const getPlantCareTipsFlow = ai.defineFlow(
     outputSchema: GetPlantCareTipsOutputSchema,
   },
   async input => {
-    const unitSystem = input.metricUnits ? "metric (ml)" : "imperial (cups)";
+    const unitSystem = "metric (ml)";
 
     const prompt = ai.definePrompt({
       name: 'getPlantCareTipsPrompt',

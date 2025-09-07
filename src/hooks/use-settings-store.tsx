@@ -12,7 +12,6 @@ export type AIModel = 'gemini-2.5-flash' | 'gemini-2.5-pro';
 export interface Settings {
   theme: Theme;
   wateringReminders: boolean;
-  metricUnits: boolean;
   timezone: string;
   location: string;
   model: AIModel;
@@ -22,7 +21,6 @@ export interface Settings {
 const defaultSettings: Settings = {
   theme: "light",
   wateringReminders: true,
-  metricUnits: false,
   timezone: "UTC",
   location: "",
   model: 'gemini-2.5-flash',
@@ -103,3 +101,4 @@ export function useSettingsStore() {
 
   return { settings, setSettings, theme: settings.theme, isInitialized };
 }
+
