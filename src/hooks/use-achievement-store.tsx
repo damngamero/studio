@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { Leaf, Sprout, Star, Award, Heart, ShieldCheck, MessageSquare, BookOpen, Droplets, Sun, Wind, Cloud, Trees, Globe, Search, ThumbsUp, PencilRuler, Microscope, BrainCircuit, BotMessageSquare, Sparkles } from 'lucide-react';
+import { Leaf, Sprout, Star, Award, Heart, ShieldCheck, MessageSquare, BookOpen, Droplets, Sun, Wind, Cloud, Trees, Globe, Search, ThumbsUp, PencilRuler, Microscope, BrainCircuit, BotMessageSquare, Sparkles, CloudSun } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useToast } from './use-toast';
 import { usePlantStore } from './use-plant-store';
