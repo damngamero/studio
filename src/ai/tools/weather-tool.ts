@@ -7,8 +7,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { WeatherSchema, ForecastDaySchema, Weather, ForecastDay } from '@/lib/types';
 
-export function getWeatherTool() {
-  return ai.defineTool(
+export const getWeatherTool = ai.defineTool(
     {
       name: 'getWeatherForLocation',
       description: 'Gets the current weather and a 3-day forecast for a specific location.',
@@ -70,4 +69,3 @@ export function getWeatherTool() {
         return { currentWeather, forecast };
     }
   );
-}
