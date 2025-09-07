@@ -344,7 +344,8 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
     try {
       const healthResult = await checkPlantHealth({ 
         photoDataUri: healthCheckPhoto,
-        notes: plant.notes 
+        notes: plant.notes,
+        currentCommonName: plant.commonName,
       });
 
       let updatedPlant: Plant = { 
@@ -656,7 +657,7 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
                 plant={plant}
                 onWaterPlant={handleWaterPlant}
                 advice={wateringAdvice}
-                isLoadingAdvice={isLoadingWateringAdvice}
+                isLoadingAdvice={isLoadingAdvice}
               />
             <Card>
               <CardHeader>

@@ -19,6 +19,7 @@ const CheckPlantHealthInputSchema = z.object({
       "A photo of a plant, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'"
     ),
   notes: z.string().optional().describe('User-provided notes about the plant\'s condition.'),
+  currentCommonName: z.string().optional().describe("The plant's current common name, for context."),
 });
 export type CheckPlantHealthInput = z.infer<typeof CheckPlantHealthInputSchema>;
 
@@ -48,8 +49,13 @@ Photo: {{media url=photoDataUri}}
 {{#if notes}}
 User Notes: {{{notes}}}
 {{/if}}
+{{#if currentCommonName}}
+The plant is currently named: **{{{currentCommonName}}}**.
+{{/if}}
 
 1.  **Identify the plant species.** Return its common and Latin names, along with a confidence score (0-1) for your identification.
+    **CRUCIAL RULE:** If the user has provided a `currentCommonName` and your new identification is just a broader category or a less common synonym (e.g., changing 'Corn Plant' to 'Dracaena', or 'Snake Plant' to 'Dracaena trifasciata'), you **MUST** return the original `currentCommonName` the user provided. Only change the name if you are confident it's a completely different species.
+
 2.  **Assess the plant's health.** Based on your analysis, determine if the plant is healthy and provide a concise diagnosis. 
 3.  **Identify key regions of interest.** For each region, provide a label, a brief description of its condition, and a normalized bounding box. If you identify a problem, be specific. If the plant is generally healthy, your diagnosis should state that, and the regions should reflect healthy parts.`,
 });
