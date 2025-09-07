@@ -99,21 +99,40 @@ export default function PlantProfilePage() {
     }
   }, [plantId, getPlantById]);
   
-  const fetchWeatherAdvice = useCallback(async (currentPlant: Plant) => {
+  const fetchWeatherAdvice = useCallback(async (currentPlant: Plant, forceRefresh = false) => {
     if (!settings.location || isApiKeyMissing) {
       setIsFetchingWeather(false);
       return;
     }
 
     setIsFetchingWeather(true);
+    const cacheKey = `weather-advice-${currentPlant.id}`;
+
+    // Client-side cache check
+    if (!forceRefresh) {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        const isStale = new Date().getTime() - timestamp > 6 * 60 * 60 * 1000; // 6 hours
+        if (!isStale) {
+          setWeatherAdvice(data);
+          setIsFetchingWeather(false);
+          return;
+        }
+      }
+    }
+
     try {
       const weatherResult = await getWeatherAndPlantAdvice({
-          location: settings.location,
-          plants: [{ customName: currentPlant.customName, commonName: currentPlant.commonName, placement: currentPlant.placement }]
-        });
-      
+        location: settings.location,
+        plants: [{ customName: currentPlant.customName, commonName: currentPlant.commonName, placement: currentPlant.placement }]
+      });
+
       if (weatherResult.plantAdvice.length > 0) {
-        setWeatherAdvice(weatherResult.plantAdvice[0].advice);
+        const advice = weatherResult.plantAdvice[0].advice;
+        setWeatherAdvice(advice);
+        // Cache the new data
+        localStorage.setItem(cacheKey, JSON.stringify({ data: advice, timestamp: new Date().getTime() }));
       }
     } catch (error) {
       console.error("Failed to get weather advice:", error);
@@ -535,7 +554,7 @@ export default function PlantProfilePage() {
                         <CardTitle className="text-xl">Proactive Weather Tips</CardTitle>
                         <CardDescription>Sage's advice based on local weather.</CardDescription>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => fetchWeatherAdvice(plant)} disabled={isFetchingWeather} aria-label="Refresh Weather Tips">
+                    <Button variant="ghost" size="icon" onClick={() => fetchWeatherAdvice(plant, true)} disabled={isFetchingWeather} aria-label="Refresh Weather Tips">
                         <RefreshCw className={cn("h-4 w-4 text-muted-foreground", isFetchingWeather && "animate-spin")} />
                     </Button>
                 </CardHeader>
