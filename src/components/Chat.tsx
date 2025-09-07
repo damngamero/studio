@@ -227,7 +227,7 @@ export function Chat({ plant, initialContext, onUpdate }: ChatProps) {
                   'p-3 rounded-lg max-w-sm whitespace-pre-wrap',
                   message.role === 'user'
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted'
+                    : 'bg-muted animate-in fade-in'
                 )}
               >
                 <p className="text-sm">{message.content}</p>
