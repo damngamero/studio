@@ -39,7 +39,7 @@ import { DialogDescription } from "@/components/ui/dialog";
 import { PlantJournal } from "@/components/PlantJournal";
 import ReactMarkdown from "react-markdown";
 import { QuickViewWateringStatus } from "@/components/QuickViewWateringStatus";
-import { Alert } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
