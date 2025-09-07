@@ -7,19 +7,11 @@ export const ai = genkit({
   plugins: [
     googleAI({
       apiVersion: 'v2',
+      // Provide a default model to prevent errors when settings aren't available server-side.
+      // This will be overridden by the model from settings in each flow.
+      model: 'gemini-2.5-flash',
     }),
   ],
-  customize: async (config, context) => {
-    const settings = await getSettings();
-    
-    // Use the API key from settings if it exists, otherwise it will fallback
-    // to the default configuration (e.g., environment variables).
-    if (settings.geminiApiKey) {
-        config.apiKey = settings.geminiApiKey;
-    }
-    
-    // Use the model from settings, otherwise default to gemini-2.5-flash.
-    const model = settings.model || 'gemini-2.5-flash';
-    return {...config, model: `googleai/${model}`};
-  },
+  // The 'customize' block is removed because it cannot reliably access localStorage
+  // in the server-side context where flows are executed.
 });

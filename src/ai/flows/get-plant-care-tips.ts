@@ -12,6 +12,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { getSettings } from '@/hooks/use-settings-store';
 
 const GetPlantCareTipsInputSchema = z.object({
   plantSpecies: z
@@ -62,7 +63,7 @@ const getPlantCareTipsFlow = ai.defineFlow(
       output: {schema: GetPlantCareTipsOutputSchema},
       prompt: `You are an expert horticulturalist. Provide care tips for the following plant. 
       
-Take the user's environment notes, location, and the plant's age into account to provide a tailored watering schedule. If a location is provided, infer the general climate.
+Take the user's environment notes, location, and the plant's age into account to provide a tailored watering schedule.
 Include details on watering, sunlight, and pruning. 
 Also provide a recommended watering frequency in days, the best time of day to water, and the recommended amount of water to give.
 
@@ -84,7 +85,8 @@ Last Watered: {{{lastWatered}}}
 `,
     });
 
-    const {output} = await prompt(input);
+    const { model } = getSettings();
+    const {output} = await prompt(input, { config: { model: `googleai/${model}` } });
     return output!;
   }
 );

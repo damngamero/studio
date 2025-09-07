@@ -12,6 +12,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { getWeatherTool } from '../tools/get-weather';
+import { getSettings } from '@/hooks/use-settings-store';
 
 const PlantStatusSchema = z.object({
     customName: z.string(),
@@ -74,7 +75,8 @@ const getGardenOverviewFlow = ai.defineFlow(
     if (!input.location || input.plants.length === 0) {
         return { overview: "Set your location and add a plant to get your daily garden overview from Sage!" };
     }
-    const { output } = await prompt(input);
+    const { model } = getSettings();
+    const { output } = await prompt(input, { config: { model: `googleai/${model}` } });
     return output!;
   }
 );

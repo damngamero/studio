@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -11,6 +12,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import type { JournalEntry } from '@/lib/types';
+import { getSettings } from '@/hooks/use-settings-store';
 
 const JournalEntrySchema = z.object({
   date: z.string(),
@@ -61,7 +63,8 @@ const chatAboutPlantFlow = ai.defineFlow(
     outputSchema: ChatAboutPlantOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    const { model } = getSettings();
+    const { output } = await prompt(input, { config: { model: `googleai/${model}` } });
     return output!;
   }
 );
