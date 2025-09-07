@@ -89,12 +89,14 @@ export function useAchievementStore() {
   }, [toast]);
 
   const checkAndUnlock = useCallback((achievementIds: string[], value: any) => {
+    setTimeout(() => {
       achievementIds.forEach(id => {
           const achievement = achievements.find(a => a.id === id);
           if (achievement && !achievement.unlocked && achievement.check(value)) {
               unlockAchievement(id);
           }
       });
+    }, 0);
   }, [achievements, unlockAchievement]);
 
   const getAchievementCount = useCallback(() => {
