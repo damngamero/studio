@@ -143,21 +143,21 @@ export default function PlantProfilePage() {
     }
   }, [settings.location, isApiKeyMissing]);
 
-  const handleRegenerateTips = useCallback(async () => {
-    if (!plant) return;
+  const handleRegenerateTips = useCallback(async (plantToUpdate: Plant) => {
+    if (!plantToUpdate) return;
     setIsGeneratingTips(true);
     try {
        const tipsResult = await getPlantCareTips({ 
-          plantSpecies: plant.commonName,
-          environmentNotes: plant.environmentNotes,
-          lastWatered: plant.lastWatered,
-          estimatedAge: plant.estimatedAge,
+          plantSpecies: plantToUpdate.commonName,
+          environmentNotes: plantToUpdate.environmentNotes,
+          lastWatered: plantToUpdate.lastWatered,
+          estimatedAge: plantToUpdate.estimatedAge,
           location: settings.location,
-          placement: plant.placement,
+          placement: plantToUpdate.placement,
         });
 
       const updatedPlantData = { 
-        ...plant, 
+        ...plantToUpdate, 
         careTips: tipsResult.careTips,
         wateringFrequency: tipsResult.wateringFrequency,
         wateringTime: tipsResult.wateringTime,
@@ -179,21 +179,19 @@ export default function PlantProfilePage() {
     } finally {
         setIsGeneratingTips(false);
     }
-  }, [plant, settings.location, updatePlant, toast]);
+  }, [settings.location, updatePlant, toast]);
 
 const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor') => {
     if (!plant || plant.placement === newPlacement || isSettingPlacement) return;
 
     setIsSettingPlacement(newPlacement);
-    let feedbackToastShown = false;
 
     try {
-        let feedbackResult;
         let finalPlantState = { ...plant, placement: newPlacement };
 
         // Only fetch feedback if it's the first time for this placement
         if (!plant.placementFeedback?.[newPlacement]) {
-            feedbackResult = await getPlacementFeedback({
+            const feedbackResult = await getPlacementFeedback({
                 plantSpecies: plant.commonName,
                 recommendedPlacement: plant.recommendedPlacement || 'Indoor/Outdoor',
                 userChoice: newPlacement,
@@ -205,7 +203,6 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
                 title: feedbackResult.isGoodChoice ? 'Good Choice!' : 'Heads Up!',
                 description: feedbackResult.feedback,
             });
-            feedbackToastShown = true;
             
             // Add the new feedback to the plant state
             finalPlantState = {
@@ -217,13 +214,11 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
             };
         }
         
-        // Always update the plant's placement
         updatePlant(finalPlantState);
-        setPlant(finalPlantState); // This is crucial to update the UI immediately
+        setPlant(finalPlantState);
 
-        // Regenerate tips in the background after the state is updated
-        // Use a small timeout to allow the UI to update first.
-        setTimeout(() => handleRegenerateTips(), 100);
+        // Regenerate tips with the updated plant state
+        await handleRegenerateTips(finalPlantState);
 
     } catch (error) {
         console.error("Failed to set placement:", error);
@@ -560,7 +555,7 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
                          <h4 className="font-medium text-sm">Sage's General Care Tips</h4>
                          {plant.wateringAmount && <p className="text-xs text-muted-foreground">Recommended water: {plant.wateringAmount}</p>}
                         </div>
-                         <Button variant="outline" size="xs" onClick={handleRegenerateTips} disabled={isGeneratingTips || isApiKeyMissing}>
+                         <Button variant="outline" size="xs" onClick={() => handleRegenerateTips(plant)} disabled={isGeneratingTips || isApiKeyMissing}>
                             {isGeneratingTips ? <Loader2 className="mr-2 h-3 w-3 animate-spin"/> : <RefreshCw className="mr-2 h-3 w-3" />}
                             Regenerate
                         </Button>
