@@ -194,6 +194,7 @@ export default function PlantProfilePage() {
                 plantSpecies: plant.commonName,
                 recommendedPlacement: plant.recommendedPlacement || 'Indoor/Outdoor', 
                 userChoice: newPlacement,
+                location: settings.location,
             });
             
              toast({
@@ -231,7 +232,7 @@ export default function PlantProfilePage() {
     } finally {
         setIsSettingPlacement(false);
     }
-  }, [plant, updatePlant, toast, handleRegenerateTips, isSettingPlacement]);
+  }, [plant, updatePlant, toast, handleRegenerateTips, isSettingPlacement, settings.location]);
 
 
   useEffect(() => {
@@ -745,6 +746,7 @@ export default function PlantProfilePage() {
     </AppLayout>
   );
 }
+
 
 
 
