@@ -62,6 +62,11 @@ function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
   )
 }
 
+interface PlantPageData {
+  weatherAdvice: string | null;
+  wateringAdvice: GetWateringAdviceOutput | null;
+}
+
 export default function PlantProfilePage() {
   const router = useRouter();
   const params = useParams();
@@ -75,15 +80,14 @@ export default function PlantProfilePage() {
   const [isHealthCheckModalOpen, setIsHealthCheckModalOpen] = useState(false);
   const [healthCheckPhoto, setHealthCheckPhoto] = useState<string | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
-  const [weatherAdvice, setWeatherAdvice] = useState<string | null>(null);
-  const [isFetchingWeather, setIsFetchingWeather] = useState(true);
   const [isGeneratingTips, setIsGeneratingTips] = useState(false);
   const [isSettingPlacement, setIsSettingPlacement] = useState<"Indoor" | "Outdoor" | false>(false);
   const [healthCheckCount, setHealthCheckCount] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const [isLoadingWateringAdvice, setIsLoadingWateringAdvice] = useState(false);
-  const [wateringAdvice, setWateringAdvice] = useState<GetWateringAdviceOutput | null>(null);
+  const [pageData, setPageData] = useState<PlantPageData>({ weatherAdvice: null, wateringAdvice: null });
+  const [isPageLoading, setIsPageLoading] = useState(true);
+
   const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
   const [chatContext, setChatContext] = useState<string | undefined>(undefined);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -100,6 +104,80 @@ export default function PlantProfilePage() {
       setPlant(foundPlant);
     }
   }, [plantId, getPlantById]);
+
+  const fetchPageData = useCallback(async (currentPlant: Plant, forceRefresh = false) => {
+    if (!settings.location || isApiKeyMissing) {
+      setIsPageLoading(false);
+      return;
+    }
+
+    setIsPageLoading(true);
+    const cacheKey = `plant-page-data-${currentPlant.id}`;
+
+    if (!forceRefresh) {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        const isStale = new Date().getTime() - timestamp > 6 * 60 * 60 * 1000; // 6 hours
+        if (!isStale) {
+          setPageData(data);
+          setIsPageLoading(false);
+          return;
+        }
+      }
+    }
+
+    try {
+      const promises: Promise<any>[] = [];
+      const nextWateringDate = addDays(new Date(currentPlant.lastWatered), currentPlant.wateringFrequency || 7);
+      const isWateringOverdue = isAfter(new Date(), nextWateringDate);
+
+      // Fetch weather and plant advice
+      promises.push(getWeatherAndPlantAdvice({
+        location: settings.location,
+        plants: [{ customName: currentPlant.customName, commonName: currentPlant.commonName, placement: currentPlant.placement }]
+      }));
+      
+      // Fetch watering advice only if it's overdue
+      if (isWateringOverdue) {
+        promises.push(getWateringAdvice({
+          plantName: currentPlant.customName,
+          plantCommonName: currentPlant.commonName,
+          location: settings.location,
+          isWateringOverdue: true,
+          placement: currentPlant.placement,
+        }));
+      } else {
+        promises.push(Promise.resolve(null));
+      }
+
+      const [weatherResult, wateringResult] = await Promise.all(promises);
+
+      const newData = {
+        weatherAdvice: weatherResult.plantAdvice.length > 0 ? weatherResult.plantAdvice[0].advice : "Could not fetch weather advice.",
+        wateringAdvice: wateringResult
+      };
+
+      setPageData(newData);
+      localStorage.setItem(cacheKey, JSON.stringify({ data: newData, timestamp: new Date().getTime() }));
+
+    } catch (error) {
+      console.error("Failed to fetch page data:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not load AI-powered advice. Please try again later.",
+      });
+    } finally {
+      setIsPageLoading(false);
+    }
+  }, [settings.location, isApiKeyMissing, toast]);
+
+  useEffect(() => {
+    if (plant) {
+        fetchPageData(plant, false);
+    }
+  }, [plant, fetchPageData]);
 
   const onChatInteraction = (updatedPlantData: Partial<Plant>) => {
     if (!plant) return;
@@ -239,49 +317,6 @@ export default function PlantProfilePage() {
     }
   };
   
-  const fetchWeatherAdvice = useCallback(async (currentPlant: Plant, forceRefresh = false) => {
-    if (!settings.location || isApiKeyMissing) {
-      setIsFetchingWeather(false);
-      return;
-    }
-
-    setIsFetchingWeather(true);
-    const cacheKey = `weather-advice-${currentPlant.id}`;
-
-    // Client-side cache check
-    if (!forceRefresh) {
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        const isStale = new Date().getTime() - timestamp > 6 * 60 * 60 * 1000; // 6 hours
-        if (!isStale) {
-          setWeatherAdvice(data);
-          setIsFetchingWeather(false);
-          return;
-        }
-      }
-    }
-
-    try {
-      const weatherResult = await getWeatherAndPlantAdvice({
-        location: settings.location,
-        plants: [{ customName: currentPlant.customName, commonName: currentPlant.commonName, placement: currentPlant.placement }]
-      });
-
-      if (weatherResult.plantAdvice.length > 0) {
-        const advice = weatherResult.plantAdvice[0].advice;
-        setWeatherAdvice(advice);
-        // Cache the new data
-        localStorage.setItem(cacheKey, JSON.stringify({ data: advice, timestamp: new Date().getTime() }));
-      }
-    } catch (error) {
-      console.error("Failed to get weather advice:", error);
-      setWeatherAdvice("Could not fetch weather advice from Sage at this time.");
-    } finally {
-      setIsFetchingWeather(false);
-    }
-  }, [settings.location, isApiKeyMissing]);
-
   const handleRegenerateTips = useCallback(async (plantToUpdate: Plant) => {
     if (!plantToUpdate) return;
     setIsGeneratingTips(true);
@@ -366,47 +401,6 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
         setIsSettingPlacement(false);
     }
 }, [plant, updatePlant, toast, handleRegenerateTips, isSettingPlacement, settings.location]);
-
-
-  useEffect(() => {
-    if (plant) {
-        fetchWeatherAdvice(plant, false); // Pass false to respect cache
-    }
-  }, [plant, fetchWeatherAdvice]);
-
-  useEffect(() => {
-    async function fetchWateringAdvice() {
-        if (!plant || !plant.wateringFrequency || isApiKeyMissing) return;
-
-        const nextWateringDate = addDays(new Date(plant.lastWatered), plant.wateringFrequency);
-        const isOverdue = isAfter(new Date(), nextWateringDate);
-
-        if (!isOverdue || !settings.location) {
-            setIsLoadingWateringAdvice(false);
-            setWateringAdvice(null);
-            return;
-        };
-
-        setIsLoadingWateringAdvice(true);
-        setWateringAdvice(null);
-        try {
-            const result = await getWateringAdvice({
-                plantName: plant.customName,
-                plantCommonName: plant.commonName,
-                location: settings.location,
-                isWateringOverdue: isOverdue,
-            });
-            setWateringAdvice(result);
-        } catch (error) {
-            console.error("Failed to get watering advice:", error);
-            setWateringAdvice({ shouldWater: 'Yes', reason: 'Could not get AI advice, but schedule says it\'s time.' });
-        } finally {
-            setIsLoadingWateringAdvice(false);
-        }
-    }
-
-    fetchWateringAdvice();
-}, [plant, settings.location, isApiKeyMissing]);
 
   const stopCameraStream = useCallback(() => {
       if (videoRef.current && videoRef.current.srcObject) {
@@ -741,21 +735,21 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
                         <CardTitle className="text-xl">Proactive Weather Tips</CardTitle>
                         <CardDescription>Sage's advice based on local weather.</CardDescription>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => fetchWeatherAdvice(plant, true)} disabled={isFetchingWeather} aria-label="Refresh Weather Tips">
-                        <RefreshCw className={cn("h-4 w-4 text-muted-foreground", isFetchingWeather && "animate-spin")} />
+                    <Button variant="ghost" size="icon" onClick={() => fetchPageData(plant, true)} disabled={isPageLoading} aria-label="Refresh Weather Tips">
+                        <RefreshCw className={cn("h-4 w-4 text-muted-foreground", isPageLoading && "animate-spin")} />
                     </Button>
                 </CardHeader>
                 <CardContent>
-                    {isFetchingWeather ? (
+                    {isPageLoading ? (
                         <div className="space-y-2">
                             <Skeleton className="h-4 w-full" />
                             <Skeleton className="h-4 w-full" />
                             <Skeleton className="h-4 w-2/3" />
                         </div>
                     ) : settings.location ? (
-                         weatherAdvice ? (
+                         pageData.weatherAdvice ? (
                            <div className="text-sm prose prose-sm max-w-none prose-p:my-1 prose-strong:text-foreground">
-                                <ReactMarkdown>{weatherAdvice}</ReactMarkdown>
+                                <ReactMarkdown>{pageData.weatherAdvice}</ReactMarkdown>
                            </div>
                          ) : (
                             <p className="text-sm text-muted-foreground">Could not load weather advice.</p>
@@ -776,8 +770,8 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
              <WateringSchedule 
                 plant={plant}
                 onWaterPlant={handleWaterPlant}
-                advice={wateringAdvice}
-                isLoadingAdvice={isLoadingWateringAdvice}
+                advice={pageData.wateringAdvice}
+                isLoadingAdvice={isPageLoading}
                 onFeedback={handleFeedback}
               />
             <Card>
@@ -843,7 +837,7 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
                         <span className="text-muted-foreground flex items-center gap-2"><MapPin className="h-4 w-4" /> Location</span>
                         <span>{settings.location}</span>
                       </li>}
-                      <QuickViewWateringStatus plant={plant} advice={wateringAdvice} />
+                      <QuickViewWateringStatus plant={plant} advice={pageData.wateringAdvice} />
                     </ul>
                  </div>
               </CardContent>

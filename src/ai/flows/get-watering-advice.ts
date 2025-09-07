@@ -11,13 +11,16 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { getWeatherAndPlantAdvice } from './get-weather-and-plant-advice';
+import { getWeatherTool } from '../tools/get-weather';
+import { WeatherSchema, ForecastDaySchema } from '@/lib/types';
+
 
 const GetWateringAdviceInputSchema = z.object({
   plantName: z.string(),
   plantCommonName: z.string(),
   location: z.string(),
   isWateringOverdue: z.boolean(),
+  placement: z.enum(['Indoor', 'Outdoor', 'Indoor/Outdoor']).optional(),
 });
 export type GetWateringAdviceInput = z.infer<
   typeof GetWateringAdviceInputSchema
@@ -38,6 +41,37 @@ export async function getWateringAdvice(
   return getWateringAdviceFlow(input);
 }
 
+const GetWateringAdviceFlowInputSchema = GetWateringAdviceInputSchema.extend({
+    currentWeather: WeatherSchema,
+    forecast: z.array(ForecastDaySchema),
+});
+
+
+const prompt = ai.definePrompt({
+    name: 'wateringDecisionPrompt',
+    input: { schema: GetWateringAdviceFlowInputSchema },
+    output: { schema: GetWateringAdviceOutputSchema },
+    prompt: `You are a plant care expert. A user's plant is due for watering. 
+    
+    Plant: {{plantCommonName}}
+    Placement: {{#if placement}}{{placement}}{{else}}Unknown{{/if}}
+
+    Here is the weather forecast for their location, "{{location}}":
+    - Current: {{currentWeather.temperature}}°, {{currentWeather.condition}}
+    - Forecast:
+    {{#each forecast}}
+      - {{day}}: {{temperature}}°, {{condition}}
+    {{/each}}
+
+    Based *only* on this weather analysis and the plant's placement, decide if the user should water their plant now, or wait. 
+    - If the plant is an **Outdoor** plant and the forecast includes **rain**, you MUST recommend 'Wait'.
+    - If the forecast includes **heat**, **sun**, or dry conditions, recommend 'Yes'.
+    - If the forecast is mild and the plant is **Indoor**, 'Yes' is usually the safe answer since it's overdue.
+    - Provide a very short, clear reason for your decision based on the weather. For example, "Yes, it's going to be hot and sunny." or "Wait, rain is expected tomorrow."
+    - **Crucially**, if you recommend 'Wait', you MUST calculate a new watering time based on the forecast (e.g., after the rain passes) and return it as a valid ISO 8601 string in the 'newWateringTime' field.`
+});
+
+
 const getWateringAdviceFlow = ai.defineFlow(
   {
     name: 'getWateringAdviceFlow',
@@ -50,36 +84,21 @@ const getWateringAdviceFlow = ai.defineFlow(
         return { shouldWater: 'No', reason: "It's not time to water yet according to the schedule." };
     }
     
-    // Get weather-based advice.
-    const weatherData = await getWeatherAndPlantAdvice({
-        location: input.location,
-        plants: [{ customName: input.plantName, commonName: input.plantCommonName }],
-    });
-
-    const advice = weatherData.plantAdvice[0]?.advice || "No specific weather advice available.";
+    // Get weather data first.
+    const weatherData = await getWeatherTool( { location: input.location });
 
     // Now, ask the LLM to make a final decision based on the weather advice.
-    const decisionPrompt = ai.definePrompt({
-        name: 'wateringDecisionPrompt',
-        input: { schema: z.object({ advice: z.string() })},
-        output: { schema: GetWateringAdviceOutputSchema },
-        prompt: `You are a plant care expert. A user's plant is due for watering. 
-        
-        Your expert analysis of the weather forecast is: "${advice}"
-        
-        Based *only* on this weather analysis, decide if the user should water their plant now, or wait. 
-        - If the advice mentions heat, sun, or dry conditions, recommend 'Yes'.
-        - If the advice mentions upcoming rain, high humidity, or suggests holding off, recommend 'Wait'.
-        - Provide a very short, clear reason for your decision based on the advice. For example, "Yes, it's going to be hot and sunny." or "Wait, rain is expected tomorrow."
-        - **Crucially**, if you recommend 'Wait', you MUST calculate a new watering time based on the forecast (e.g., after the rain passes) and return it as a valid ISO 8601 string in the 'newWateringTime' field.`
-    });
-
+    const flowInput = {
+        ...input,
+        ...weatherData,
+    };
+    
     try {
-      const { output } = await decisionPrompt({ advice }, { model: 'googleai/gemini-2.5-flash' });
+      const { output } = await prompt(flowInput, { model: 'googleai/gemini-2.5-flash' });
       return output!;
     } catch (error) {
       console.warn('Flash model failed, trying Pro model', error);
-      const { output } = await decisionPrompt({ advice }, { model: 'googleai/gemini-2.5-pro' });
+      const { output } = await prompt(flowInput, { model: 'googleai/gemini-2.5-pro' });
       return output!;
     }
   }
