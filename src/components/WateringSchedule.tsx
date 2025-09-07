@@ -159,6 +159,7 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
                      <DropdownMenuPortal>
                         <DropdownMenuSubContent>
                             <DropdownMenuItem onSelect={() => onFeedback("The soil was slightly dry, so I'm watering now.", true)}>Slightly Dry</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => onFeedback("The soil was medium dry, so I'm watering now.", true)}>Medium Dry</DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => onFeedback("The soil was bone dry, so I'm watering now.", true)}>Bone Dry</DropdownMenuItem>
                         </DropdownMenuSubContent>
                     </DropdownMenuPortal>
@@ -170,8 +171,9 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
                     </DropdownMenuSubTrigger>
                      <DropdownMenuPortal>
                         <DropdownMenuSubContent>
-                            <DropdownMenuItem onSelect={() => onFeedback("The soil is still a little damp, so I'm skipping watering.", false)}>Slightly Damp</DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => onFeedback("The soil is still soaking wet, so I'm skipping watering.", false)}>Soaking Wet</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => onFeedback("The soil is still medium wet, so I'm skipping watering.", false)}>Medium Wet</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => onFeedback("The soil is still a little damp, so I'm skipping watering.", false)}>Slightly Damp</DropdownMenuItem>
                         </DropdownMenuSubContent>
                     </DropdownMenuPortal>
                 </DropdownMenuSub>
@@ -223,4 +225,3 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
     </Card>
   );
 }
-
