@@ -1,5 +1,5 @@
-import { genkit, GenerationCommonConfig } from 'genkit';
-import { googleAI, GoogleAIGenerativeAI } from '@genkit-ai/googleai';
+import { genkit } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
 import { Plugin } from 'genkit/plugin';
 
 // Store plugins in a map to avoid re-initializing them
