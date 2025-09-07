@@ -124,6 +124,7 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice 
     // Default view: countdown
     return (
        <CardContent className="space-y-4 text-center">
+        {wateringTime && <p className="text-xs text-muted-foreground">Recommended: {wateringTime}</p>}
         <div className="text-4xl font-bold">
             <Countdown targetDate={nextWateringDate} />
         </div>
@@ -156,7 +157,6 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice 
         </CardTitle>
         <CardDescription>
             Next watering due on {format(nextWateringDate, "MMMM do")}.
-            {wateringTime && <span className="block mt-1">Recommended: {wateringTime}</span>}
         </CardDescription>
       </CardHeader>
       {renderContent()}
