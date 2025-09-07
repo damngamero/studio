@@ -176,13 +176,11 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
         return "Watering is overdue.";
     }
 
-    const friendlyDistance = formatDistanceToNow(nextWateringDate, { addSuffix: true });
-    let description = `Next watering ${friendlyDistance}`;
+    let description = "The timer shows minimum wait time till watering.";
     if (wateringTime) {
-      description += ` (around ${wateringTime}).`;
-    } else {
-      description += '.';
+        description += `\nRecommended: ${wateringTime}.`;
     }
+    
     return description;
   }
 
@@ -192,7 +190,7 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
         <CardTitle className="text-xl flex items-center gap-2">
             <Calendar /> Watering Schedule
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="whitespace-pre-line">
           {getWateringDescription()}
         </CardDescription>
       </CardHeader>
