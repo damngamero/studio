@@ -60,6 +60,9 @@ const getPlantCareTipsFlow = ai.defineFlow(
       name: 'getPlantCareTipsPrompt',
       input: {schema: GetPlantCareTipsInputSchema},
       output: {schema: GetPlantCareTipsOutputSchema},
+      config: {
+        model: 'googleai/gemini-2.5-flash',
+      },
       prompt: `You are an expert horticulturalist. Provide care tips for the following plant. 
       
 Take the user's environment notes, location, and the plant's age into account to provide a tailored watering schedule.

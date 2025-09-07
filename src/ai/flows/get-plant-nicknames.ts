@@ -37,6 +37,9 @@ const prompt = ai.definePrompt({
   name: 'getPlantNicknamesPrompt',
   input: { schema: GetPlantNicknamesInputSchema },
   output: { schema: GetPlantNicknamesOutputSchema },
+  config: {
+    model: 'googleai/gemini-2.5-flash',
+  },
   prompt: `You are a creative AI assistant. A user has identified a new plant and needs help naming it. 
   
 Based on the plant's common and latin name, generate a list of 3 or 4 short, fun, and creative nicknames.

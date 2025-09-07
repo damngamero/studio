@@ -62,6 +62,9 @@ const getWateringAdviceFlow = ai.defineFlow(
         name: 'wateringDecisionPrompt',
         input: { schema: z.object({ advice: z.string() })},
         output: { schema: GetWateringAdviceOutputSchema },
+        config: {
+            model: 'googleai/gemini-2.5-flash',
+        },
         prompt: `You are a plant care expert. A user's plant is due for watering. 
         
         Your expert analysis of the weather forecast is: "${advice}"

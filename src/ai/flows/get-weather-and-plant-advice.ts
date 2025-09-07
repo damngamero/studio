@@ -47,6 +47,9 @@ const prompt = ai.definePrompt({
   input: { schema: GetWeatherAndPlantAdviceInputSchema },
   output: { schema: GetWeatherAndPlantAdviceOutputSchema },
   tools: [getWeatherTool],
+  config: {
+    model: 'googleai/gemini-2.5-flash',
+  },
   prompt: `You are Sage, an expert horticulturalist AI. Your goal is to provide proactive, weather-based advice for plant care.
 
 1. First, use the getWeatherForLocation tool to get the weather for the user's location: {{{location}}}.
