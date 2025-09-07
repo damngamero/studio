@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X, MapPin, AlertTriangle, Info, CloudSun, BookOpen, RefreshCw, Search, Home, Wind, Waves, ThumbsUp, ThumbsDown } from "lucide-react";
-import { addDays, format, formatDistanceToNowStrict, isAfter, subDays } from 'date-fns';
+import { addDays, format, formatDistanceToNow, isAfter, subDays } from 'date-fns';
 
 
 import { usePlantStore } from "@/hooks/use-plant-store";
@@ -143,11 +143,12 @@ export default function PlantProfilePage() {
 
         if (result.updatedWateringAmount) {
             // Silently update the watering amount based on feedback
+            // Important: We must use the 'plants' from the store directly, not the local state 'plant'
             const currentPlantState = getPlantById(plant.id);
             if (currentPlantState) {
                 const updatedPlant = {...currentPlantState, wateringAmount: result.updatedWateringAmount};
                 updatePlant(updatedPlant);
-                setPlant(updatedPlant);
+                setPlant(updatedPlant); // Sync local state
                 toast({
                     title: 'Feedback Received!',
                     description: "Sage has adjusted the recommended watering amount based on your feedback."
@@ -825,5 +826,3 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
     </AppLayout>
   );
 }
-
-    

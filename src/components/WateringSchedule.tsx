@@ -174,6 +174,9 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
 
   const getWateringDescription = () => {
     if (isOverdue) {
+        if (advice?.shouldWater === 'Wait') {
+            return `Overdue, but Sage says to wait.`;
+        }
         return "Watering is overdue.";
     }
 
@@ -201,5 +204,3 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
     </Card>
   );
 }
-
-    
