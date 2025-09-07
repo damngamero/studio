@@ -37,6 +37,7 @@ import { PlantJournal } from "@/components/PlantJournal";
 import ReactMarkdown from "react-markdown";
 import { QuickViewWateringStatus } from "@/components/QuickViewWateringStatus";
 import { Alert } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 
 function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -508,9 +509,14 @@ export default function PlantProfilePage() {
               </CardContent>
             </Card>
             <Card>
-                <CardHeader>
-                    <CardTitle className="text-xl">Proactive Weather Tips</CardTitle>
-                    <CardDescription>Sage's timely advice based on local weather for {plant.customName}.</CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle className="text-xl">Proactive Weather Tips</CardTitle>
+                        <CardDescription>Sage's advice based on local weather.</CardDescription>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => fetchWeatherAdvice(plant)} disabled={isFetchingWeather} aria-label="Refresh Weather Tips">
+                        <RefreshCw className={cn("h-4 w-4 text-muted-foreground", isFetchingWeather && "animate-spin")} />
+                    </Button>
                 </CardHeader>
                 <CardContent>
                     {isFetchingWeather ? (

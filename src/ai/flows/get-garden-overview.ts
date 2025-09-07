@@ -54,7 +54,7 @@ For example, if it's hot and plants need water, say something like: "It's a hot 
 If it's going to rain and plants need water, you could say: "Good news! Rain is on the way, so you can hold off on watering the *Monstera* for now."
 If all is well, say something like: "Everything looks great in your garden today! Enjoy the sunshine."
 
-Keep the summary to one or two sentences. Be warm and encouraging.
+Keep the summary to two or three sentences. Be warm and encouraging.
 
 User's Plants:
 {{#each plants}}
