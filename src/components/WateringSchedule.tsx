@@ -199,15 +199,17 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
     }
 
     return (
-        <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Minimum wait till watering</p>
-            {wateringTime && (
-                <div className="flex items-baseline justify-start gap-2">
-                    <span className="text-xs text-muted-foreground">Recommended:</span>
-                    <p className="text-xs">{wateringTime}</p>
-                </div>
-            )}
-        </div>
+      <div className="space-y-1">
+        {wateringTime && (
+          <div className="flex items-baseline justify-start gap-1.5">
+            <span className="text-xs text-muted-foreground">Recommended:</span>
+            <p className="text-xs">{wateringTime}</p>
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Minimum wait till watering.
+        </p>
+      </div>
     );
   }
 
