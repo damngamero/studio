@@ -15,4 +15,4 @@ import '@/ai/flows/get-plant-nicknames.ts';
 import '@/ai/flows/get-plant-placement.ts';
 import '@/ai/flows/get-placement-feedback.ts';
 import '@/ai/flows/recalculate-watering-schedule.ts';
-import '@/ai/tools/get-weather.ts';
+import '@/ai/tools/weather-tool.ts';

@@ -35,7 +35,6 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { WateringSchedule } from "@/components/WateringSchedule";
 import { InteractivePhoto } from "@/components/InteractivePhoto";
-import { DialogDescription } from "@/components/ui/dialog";
 import { PlantJournal } from "@/components/PlantJournal";
 import ReactMarkdown from "react-markdown";
 import { QuickViewWateringStatus } from "@/components/QuickViewWateringStatus";

@@ -11,7 +11,7 @@
 
 import { getAi } from '@/ai/genkit';
 import { z } from 'genkit';
-import { getWeatherTool } from '../tools/get-weather';
+import { getWeather } from '../tools/get-weather';
 import { WeatherSchema, ForecastDaySchema } from '@/lib/types';
 
 
@@ -52,7 +52,7 @@ export async function getWateringAdvice(
   const ai = await getAi(input.apiKey);
   
   // Get weather data first.
-  const weatherData = await getWeatherTool( { location: input.location });
+  const weatherData = await getWeather( { location: input.location });
 
   // Now, ask the LLM to make a final decision based on the weather advice.
   const flowInput = {

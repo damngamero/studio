@@ -11,7 +11,7 @@
 
 import { getAi } from '@/ai/genkit';
 import { z } from 'genkit';
-import { getWeatherTool } from '../tools/get-weather';
+import { getWeatherTool } from '../tools/weather-tool';
 
 const PlantStatusSchema = z.object({
     customName: z.string(),

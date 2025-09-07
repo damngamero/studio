@@ -11,7 +11,7 @@
 
 import { getAi } from '@/ai/genkit';
 import { z } from 'genkit';
-import { getWeatherTool } from '../tools/get-weather';
+import { getWeatherTool } from '../tools/weather-tool';
 
 const RecalculateWateringScheduleInputSchema = z.object({
   plantCommonName: z.string().describe("The plant's common name."),
