@@ -8,7 +8,8 @@ import type {
   ToastActionElement,
   ToastProps,
 } from "@/components/ui/toast"
-import { useSound } from "./use-sound"
+import { playSound } from "@/lib/audio";
+import { getSettings } from "./use-settings-store";
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 10000
@@ -144,7 +145,6 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">;
 
-// This function can be called from anywhere, but it can't use hooks.
 function toast({ ...props }: Toast) {
   const id = genId()
 
@@ -155,8 +155,11 @@ function toast({ ...props }: Toast) {
     })
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
   
-  // We can't use the useSound hook here.
-  // We'll play the sound from the ToastInitializer component instead.
+  // Directly check settings and play sound
+  if (getSettings().soundEffectsEnabled) {
+    playSound('notification');
+  }
+
   dispatch({
     type: "ADD_TOAST",
     toast: {
@@ -183,20 +186,6 @@ function toast({ ...props }: Toast) {
   }
 }
 
-// A new component that will listen to toasts and play sounds
-function ToastSoundPlayer({ toasts }: { toasts: ToasterToast[] }) {
-    const playSound = useSound();
-    
-    React.useEffect(() => {
-        // Whenever a new toast appears, play the sound.
-        if (toasts.length > 0) {
-            playSound('notification');
-        }
-    }, [toasts, playSound]);
-
-    return null;
-}
-
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 
@@ -214,8 +203,6 @@ function useToast() {
     ...state,
     toast,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
-    // This component will be rendered by the Toaster to handle sound playback.
-    ToastSoundPlayer,
   }
 }
 
