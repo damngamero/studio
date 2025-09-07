@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import ReactMarkdown from "react-markdown";
+import { cn } from "@/lib/utils";
 
 function LeafIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
