@@ -39,7 +39,7 @@ const GetPlantCareTipsOutputSchema = z.object({
     .string()
     .describe('A summary of care tips tailored to the plant species, including watering, sunlight, and pruning. Use Markdown and emojis.'),
   wateringFrequency: z.number().describe('The recommended watering frequency in days (e.g., 7).'),
-  wateringTime: z.string().describe('The recommended time of day to water (e.g., morning, evening).'),
+  wateringTime: z.string().describe('The recommended time of day to water, including a general time and a specific time range (e.g., "Morning (6-9 AM)").'),
   wateringAmount: z.string().describe("The recommended amount of water to use for each watering session (e.g., '250-500ml')."),
 });
 export type GetPlantCareTipsOutput = z.infer<typeof GetPlantCareTipsOutputSchema>;
@@ -63,7 +63,9 @@ Create a "careTips" response with the following sections:
 - 🌱 **Fertilizing**: When and how to fertilize.
 - ✂️ **Pruning**: General pruning and maintenance advice.
 
-Take the user's environment notes, location, and the plant's age into account to provide a tailored watering schedule (frequency in days, time of day, amount).
+Take the user's environment notes, location, and the plant's age into account to provide a tailored watering schedule.
+
+**Crucially, determine the BEST time of day to water the plant (e.g., morning, evening).** As a general rule, morning is best to allow leaves to dry and prevent fungus. Return this as a human-friendly string with a specific time range, like "Morning (6-9 AM)" or "Evening (6-8 PM)".
 
 The user prefers the metric system (ml) for measurements.
 

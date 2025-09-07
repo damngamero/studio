@@ -25,25 +25,27 @@ const Countdown = ({ targetDate }: { targetDate: Date }) => {
     useEffect(() => {
         const timer = setInterval(() => {
             setNow(new Date());
-        }, 1000 * 60); // Update every minute
+        }, 1000); 
         return () => clearInterval(timer);
     }, []);
     
-    const days = differenceInDays(targetDate, now);
-    const hours = differenceInHours(targetDate, now) % 24;
-    const minutes = differenceInMinutes(targetDate, now) % 60;
+    const totalSeconds = (targetDate.getTime() - now.getTime()) / 1000;
     
-    if (isAfter(now, targetDate)) {
+    if (totalSeconds <= 0) {
         return <span className="text-destructive-foreground font-bold">Overdue!</span>;
     }
 
+    const days = Math.floor(totalSeconds / (3600 * 24));
+    const hours = Math.floor((totalSeconds % (3600*24)) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+
     return (
         <div className="flex items-baseline gap-2">
-           <span className="text-2xl font-bold">{days < 0 ? 0 : days}</span>
+           <span className="text-2xl font-bold">{days}</span>
            <span className="text-sm">d</span>
-           <span className="text-2xl font-bold">{hours < 0 ? 0 : hours}</span>
+           <span className="text-2xl font-bold">{hours}</span>
            <span className="text-sm">h</span>
-           <span className="text-2xl font-bold">{minutes < 0 ? 0 : minutes}</span>
+           <span className="text-2xl font-bold">{minutes}</span>
            <span className="text-sm">m</span>
         </div>
     );
@@ -152,6 +154,7 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice 
         </CardTitle>
         <CardDescription>
             Next watering due on {format(nextWateringDate, "MMMM do")}.
+            {wateringTime && <span className="block mt-1">Recommended: {wateringTime}</span>}
         </CardDescription>
       </CardHeader>
       {renderContent()}
