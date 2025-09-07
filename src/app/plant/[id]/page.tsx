@@ -186,7 +186,7 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
     setIsSettingPlacement(newPlacement);
 
     try {
-        let finalPlantState = { ...plant, placement: newPlacement };
+        let plantStateForTips = { ...plant, placement: newPlacement };
 
         // Only fetch feedback if it's the first time for this placement
         if (!plant.placementFeedback?.[newPlacement]) {
@@ -204,20 +204,16 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
             });
             
             // Add the new feedback to the plant state
-            finalPlantState = {
-                ...finalPlantState,
-                placementFeedback: {
-                    ...(plant.placementFeedback || {}),
-                    [newPlacement]: feedbackResult.feedback
-                }
+             plantStateForTips.placementFeedback = {
+                ...(plant.placementFeedback || {}),
+                [newPlacement]: feedbackResult.feedback
             };
         }
         
-        updatePlant(finalPlantState);
-        setPlant(finalPlantState);
-
-        // Regenerate tips with the updated plant state
-        await handleRegenerateTips(finalPlantState);
+        // This is the critical step: update the state for the UI, then regenerate tips.
+        updatePlant(plantStateForTips);
+        setPlant(plantStateForTips); 
+        await handleRegenerateTips(plantStateForTips);
 
     } catch (error) {
         console.error("Failed to set placement:", error);
@@ -743,3 +739,5 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
     </AppLayout>
   );
 }
+
+    
