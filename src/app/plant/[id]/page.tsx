@@ -185,14 +185,15 @@ export default function PlantProfilePage() {
     if (!plant || plant.placement === newPlacement || isSettingPlacement) return;
     
     setIsSettingPlacement(newPlacement);
+    let currentPlant = { ...plant };
     
-    let feedbackResult;
     try {
+        let feedbackResult;
         // If we haven't given feedback for this placement before, get it from the AI.
-        if (!plant.placementFeedback || !plant.placementFeedback[newPlacement]) {
+        if (!currentPlant.placementFeedback || !currentPlant.placementFeedback[newPlacement]) {
             feedbackResult = await getPlacementFeedback({
-                plantSpecies: plant.commonName,
-                recommendedPlacement: plant.recommendedPlacement || 'Indoor/Outdoor', 
+                plantSpecies: currentPlant.commonName,
+                recommendedPlacement: currentPlant.recommendedPlacement || 'Indoor/Outdoor', 
                 userChoice: newPlacement,
                 location: settings.location,
             });
@@ -206,16 +207,17 @@ export default function PlantProfilePage() {
         
         // This runs regardless of whether we fetched new feedback.
         const updatedPlant = { 
-            ...plant, 
+            ...currentPlant, 
             placement: newPlacement,
             placementFeedback: {
-                ...(plant.placementFeedback || {}),
+                ...(currentPlant.placementFeedback || {}),
                 ...(feedbackResult && {[newPlacement]: feedbackResult.feedback})
             }
         };
 
         updatePlant(updatedPlant);
         setPlant(updatedPlant);
+        currentPlant = updatedPlant; // Ensure currentPlant is the most up-to-date version
         
         // Regenerate tips in the background based on the new placement
         await handleRegenerateTips();
@@ -227,12 +229,10 @@ export default function PlantProfilePage() {
             title: "Update Failed",
             description: "Could not get new tips for the updated placement.",
         });
-        // Revert local state if AI calls fail
-        setPlant(plant);
     } finally {
         setIsSettingPlacement(false);
     }
-  }, [plant, updatePlant, toast, handleRegenerateTips, isSettingPlacement, settings.location]);
+}, [plant, updatePlant, toast, handleRegenerateTips, isSettingPlacement, settings.location]);
 
 
   useEffect(() => {
@@ -666,7 +666,7 @@ export default function PlantProfilePage() {
                                             size="xs" 
                                             variant={plant.placement === 'Indoor' ? 'default' : 'outline'}
                                             onClick={() => handleSetPlacement('Indoor')}
-                                            disabled={!!isSettingPlacement || isApiKeyMissing}
+                                            disabled={isSettingPlacement === 'Indoor' || isApiKeyMissing}
                                             className="rounded-full"
                                             >
                                             {isSettingPlacement === 'Indoor' ? <Loader2 className="h-3 w-3 animate-spin"/> : <Home className="h-3 w-3" />}
@@ -680,7 +680,7 @@ export default function PlantProfilePage() {
                                             size="xs" 
                                             variant={plant.placement === 'Outdoor' ? 'default' : 'outline'}
                                             onClick={() => handleSetPlacement('Outdoor')}
-                                            disabled={!!isSettingPlacement || isApiKeyMissing}
+                                            disabled={isSettingPlacement === 'Outdoor' || isApiKeyMissing}
                                             className="rounded-full"
                                             >
                                              {isSettingPlacement === 'Outdoor' ? <Loader2 className="h-3 w-3 animate-spin"/> : <Sun className="h-3 w-3" />}
@@ -750,3 +750,6 @@ export default function PlantProfilePage() {
 
 
 
+
+
+    
