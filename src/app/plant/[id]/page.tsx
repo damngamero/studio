@@ -6,8 +6,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X, MapPin, AlertTriangle, Info, CloudSun, BookOpen, RefreshCw, Search } from "lucide-react";
-import { addDays, format, formatDistanceToNowStrict, isAfter } from 'date-fns';
+import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X, MapPin, AlertTriangle, Info, CloudSun, BookOpen, RefreshCw, Search, Home } from "lucide-react";
+import { addDays, format, formatDistanceToNowStrict, isAfter, subDays } from 'date-fns';
 
 
 import { usePlantStore } from "@/hooks/use-plant-store";
@@ -17,6 +17,7 @@ import { getPlantCareTips } from "@/ai/flows/get-plant-care-tips";
 import { checkPlantHealth } from "@/ai/flows/check-plant-health";
 import { getWeatherAndPlantAdvice } from "@/ai/flows/get-weather-and-plant-advice";
 import { getWateringAdvice } from "@/ai/flows/get-watering-advice";
+import { getPlantPlacement } from "@/ai/flows/get-plant-placement";
 import type { GetWateringAdviceOutput } from '@/ai/flows/get-watering-advice';
 import type { Plant } from "@/lib/types";
 import { AppLayout } from "@/components/AppLayout";
@@ -74,6 +75,7 @@ export default function PlantProfilePage() {
   const [weatherAdvice, setWeatherAdvice] = useState<string | null>(null);
   const [isFetchingWeather, setIsFetchingWeather] = useState(true);
   const [isGeneratingTips, setIsGeneratingTips] = useState(false);
+  const [isFetchingPlacement, setIsFetchingPlacement] = useState(false);
   const [healthCheckCount, setHealthCheckCount] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -95,6 +97,32 @@ export default function PlantProfilePage() {
       setPlant(foundPlant);
     }
   }, [plantId, getPlantById]);
+
+  const fetchPlacement = useCallback(async (currentPlant: Plant) => {
+    if (isApiKeyMissing) return;
+
+    const tenDaysAgo = subDays(new Date(), 10);
+    const lastChecked = currentPlant.placementLastChecked ? new Date(currentPlant.placementLastChecked) : null;
+    
+    if (!currentPlant.placement || (lastChecked && lastChecked < tenDaysAgo)) {
+      setIsFetchingPlacement(true);
+      try {
+        const result = await getPlantPlacement({ plantSpecies: currentPlant.commonName });
+        const updatedPlant = {
+          ...currentPlant,
+          placement: result.placement,
+          placementLastChecked: new Date().toISOString(),
+        };
+        updatePlant(updatedPlant);
+        setPlant(updatedPlant);
+      } catch (error) {
+        console.error('Failed to get plant placement:', error);
+        // We don't show a toast here to avoid bothering the user for a background task.
+      } finally {
+        setIsFetchingPlacement(false);
+      }
+    }
+  }, [isApiKeyMissing, updatePlant]);
   
   const fetchWeatherAdvice = useCallback(async (currentPlant: Plant) => {
     if (!settings.location || isApiKeyMissing) {
@@ -161,8 +189,9 @@ export default function PlantProfilePage() {
   useEffect(() => {
     if (plant) {
         fetchWeatherAdvice(plant);
+        fetchPlacement(plant);
     }
-  }, [plant, fetchWeatherAdvice]);
+  }, [plant, fetchWeatherAdvice, fetchPlacement]);
 
   useEffect(() => {
     async function fetchWateringAdvice() {
@@ -575,6 +604,14 @@ export default function PlantProfilePage() {
                         <span className="text-muted-foreground flex items-center gap-2"><Leaf className="h-4 w-4" /> Est. Age</span>
                         <span>{plant.estimatedAge}</span>
                       </li>}
+                       <li className="flex items-center justify-between">
+                        <span className="text-muted-foreground flex items-center gap-2"><Home className="h-4 w-4" /> Placement</span>
+                        {isFetchingPlacement ? (
+                           <Skeleton className="h-4 w-16" />
+                        ) : (
+                           <span>{plant.placement || 'Unknown'}</span>
+                        )}
+                      </li>
                        {settings.location && <li className="flex items-center justify-between">
                         <span className="text-muted-foreground flex items-center gap-2"><MapPin className="h-4 w-4" /> Location</span>
                         <span>{settings.location}</span>

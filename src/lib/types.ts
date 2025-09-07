@@ -42,6 +42,8 @@ export interface Plant {
   lastWatered: string; // ISO date string
   annotatedRegions: RegionOfInterest[];
   journal?: JournalEntry[];
+  placement?: 'Indoor' | 'Outdoor' | 'Indoor/Outdoor';
+  placementLastChecked?: string; // ISO date string
 }
 
 // Weather Schemas

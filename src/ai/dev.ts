@@ -12,6 +12,7 @@ import '@/ai/flows/get-weather-and-plant-advice.ts';
 import '@/ai/flows/get-watering-advice.ts';
 import '@/ai/flows/get-garden-overview.ts';
 import '@/ai/flows/get-plant-nicknames.ts';
+import '@/ai/flows/get-plant-placement.ts';
 import '@/ai/tools/get-weather.ts';
 
 
