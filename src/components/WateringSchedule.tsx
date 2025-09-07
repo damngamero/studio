@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from './ui/card';
 import { Button } from './ui/button';
-import { Calendar, Droplets, Loader2, Info, ThumbsDown, ThumbsUp, MoreVertical, ChevronRight } from 'lucide-react';
+import { Calendar, Droplets, Loader2, Info, ThumbsDown, ThumbsUp, ChevronDown } from 'lucide-react';
 import { addDays, format, formatDistanceToNow, isAfter } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Plant } from '@/lib/types';
@@ -199,15 +199,16 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
     }
 
     return (
-      <div className="space-y-0.5">
+      <div className="space-y-1">
         {wateringTime && (
           <div className="flex items-baseline justify-start gap-1.5">
-            <span className="text-xs text-muted-foreground">Recommended:</span>
+            <span className="text-xs text-muted-foreground">Recommended: </span>
             <p className="text-xs">{wateringTime}</p>
           </div>
         )}
-        <p className="text-xs text-muted-foreground">
-          Minimum wait till watering.
+        <p className="text-xs text-muted-foreground flex items-center justify-start gap-1">
+            <span>Minimum wait till watering.</span>
+            <ChevronDown className="h-3 w-3" />
         </p>
       </div>
     );
