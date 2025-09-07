@@ -111,12 +111,30 @@ export default function PlantProfilePage() {
     })
   };
 
-  const handleFeedback = async (message: string) => {
+  const handleWaterPlant = () => {
     if (!plant) return;
+    const updatedPlant = { ...plant, lastWatered: new Date().toISOString() };
+    updatePlant(updatedPlant);
+    setPlant(updatedPlant);
     toast({
-        title: "Sending feedback to Sage...",
-        description: "Updating your schedule based on your feedback.",
-    })
+      title: "Plant Watered!",
+      description: `Nice work! ${plant.customName} has been watered.`,
+    });
+  };
+
+  const handleFeedback = async (message: string, waterNow: boolean) => {
+    if (!plant) return;
+    
+    // Immediately mark as watered if the action indicates it.
+    if (waterNow) {
+        handleWaterPlant();
+    } else {
+        toast({
+            title: "Sending feedback to Sage...",
+            description: "Updating your schedule based on your feedback.",
+        })
+    }
+
     try {
         const result = await chatAboutPlant({
             plantName: plant.commonName,
@@ -124,7 +142,17 @@ export default function PlantProfilePage() {
         });
 
         if (result.updatedWateringAmount) {
-            onChatInteraction({ wateringAmount: result.updatedWateringAmount });
+            // Silently update the watering amount based on feedback
+            const currentPlantState = getPlantById(plant.id);
+            if (currentPlantState) {
+                const updatedPlant = {...currentPlantState, wateringAmount: result.updatedWateringAmount};
+                updatePlant(updatedPlant);
+                setPlant(updatedPlant);
+                toast({
+                    title: 'Feedback Received!',
+                    description: "Sage has adjusted the recommended watering amount based on your feedback."
+                });
+            }
         } else {
              toast({
                 variant: 'default',
@@ -437,17 +465,6 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
       });
       router.push("/");
     }
-  };
-
-  const handleWaterPlant = () => {
-    if (!plant) return;
-    const updatedPlant = { ...plant, lastWatered: new Date().toISOString() };
-    updatePlant(updatedPlant);
-    setPlant(updatedPlant);
-    toast({
-      title: "Plant Watered!",
-      description: `Nice work! ${plant.customName} has been watered.`,
-    });
   };
 
   if (plant === undefined) {
@@ -808,3 +825,5 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
     </AppLayout>
   );
 }
+
+    

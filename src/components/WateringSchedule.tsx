@@ -22,7 +22,7 @@ interface WateringScheduleProps {
   onWaterPlant: () => void;
   advice: GetWateringAdviceOutput | null;
   isLoadingAdvice: boolean;
-  onFeedback: (message: string) => void;
+  onFeedback: (message: string, waterNow: boolean) => void;
 }
 
 const Countdown = ({ targetDate }: { targetDate: Date }) => {
@@ -152,11 +152,11 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-                 <DropdownMenuItem onSelect={() => onFeedback("The soil is dry, so I'm watering it now even though the schedule says not to.")}>
+                 <DropdownMenuItem onSelect={() => onFeedback("The soil is dry, so I'm watering it now even though the schedule says not to.", true)}>
                     <ThumbsUp className="mr-2 h-4 w-4 text-green-500" />
                     <span>It's dry, watering now</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => onFeedback("The soil is still wet, so I'm skipping this watering.")}>
+                <DropdownMenuItem onSelect={() => onFeedback("The soil is still wet, so I'm skipping this watering.", false)}>
                     <ThumbsDown className="mr-2 h-4 w-4 text-red-500" />
                     <span>It's wet, skipping</span>
                 </DropdownMenuItem>
@@ -201,3 +201,5 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
     </Card>
   );
 }
+
+    
