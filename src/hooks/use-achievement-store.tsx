@@ -6,6 +6,7 @@ import { Leaf, Sprout, Star, Award, Heart, ShieldCheck, MessageSquare, BookOpen,
 import type { LucideIcon } from 'lucide-react';
 import { useToast } from './use-toast';
 import { usePlantStore } from './use-plant-store';
+import { useAchievementDialogStore } from './use-achievement-dialog-store';
 
 const ACHIEVEMENT_STORE_KEY = 'verdantwise-achievements';
 
@@ -65,7 +66,7 @@ function getInitialAchievements(): Achievement[] {
 export function useAchievementStore() {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
-  const { toast } = useToast();
+  const { setAchievement: setAchievementToDisplay } = useAchievementDialogStore();
   const { plants } = usePlantStore();
 
    useEffect(() => {
@@ -95,18 +96,16 @@ export function useAchievementStore() {
     setAchievements(prevAchievements => {
         const achievementToUnlock = prevAchievements.find(a => a.id === achievementId);
         if (achievementToUnlock && !achievementToUnlock.unlocked) {
-             toast({
-                title: 'Achievement Unlocked!',
-                description: `You've earned the "${achievementToUnlock.name}" badge.`,
-                action: <div className="p-1.5 rounded-full bg-yellow-400"><Star className="h-4 w-4 text-white" /></div>
-            });
+            const { unlocked, goal, check, ...displayAchievement } = achievementToUnlock;
+            setAchievementToDisplay(displayAchievement);
+
             return prevAchievements.map(a => 
                 a.id === achievementId ? { ...a, unlocked: true } : a
             );
         }
         return prevAchievements;
     });
-  }, [toast]);
+  }, [setAchievementToDisplay]);
 
   const checkAndUnlock = useCallback((achievementIds: string[], value: any) => {
     setTimeout(() => {
