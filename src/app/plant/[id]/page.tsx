@@ -113,14 +113,63 @@ export default function PlantProfilePage() {
   };
 
   const handleWaterPlant = () => {
-    if (!plant) return;
-    const updatedPlant = { ...plant, lastWatered: new Date().toISOString() };
-    updatePlant(updatedPlant);
-    setPlant(updatedPlant);
-    toast({
-      title: "Plant Watered!",
-      description: `Nice work! ${plant.customName} has been watered.`,
-    });
+    if (!plant || !plant.wateringFrequency) return;
+
+    const nextWateringDate = addDays(new Date(plant.lastWatered), plant.wateringFrequency);
+    const now = new Date();
+    const isOverdue = isAfter(now, nextWateringDate);
+
+    // If watering was overdue, trigger the AI schedule recalculation
+    if (isOverdue) {
+        const duration = intervalToDuration({ start: nextWateringDate, end: now });
+        const timeLate = `${duration.days || 0} days, ${duration.hours || 0} hours`;
+        const feedbackMessage = `Watering was ${timeLate} late, but the plant seemed fine.`;
+        
+        // Update last watered date immediately for UI responsiveness
+        const updatedPlant = { ...plant, lastWatered: now.toISOString() };
+        updatePlant(updatedPlant);
+        setPlant(updatedPlant);
+        toast({
+            title: "Plant Watered!",
+            description: `Nice work! ${plant.customName} has been watered.`,
+        });
+
+        // Silently ask AI to review the schedule
+        recalculateWateringSchedule({
+            plantCommonName: plant.commonName,
+            currentWateringFrequency: plant.wateringFrequency,
+            feedback: feedbackMessage,
+            timingDiscrepancy: `${timeLate} late`,
+            location: settings.location || '',
+            environmentNotes: plant.environmentNotes,
+        }).then(result => {
+            if (result.newWateringFrequency !== plant.wateringFrequency) {
+                const aiUpdatedPlant = {
+                    ...updatedPlant,
+                    wateringFrequency: result.newWateringFrequency,
+                };
+                updatePlant(aiUpdatedPlant);
+                setPlant(aiUpdatedPlant);
+                toast({
+                    title: 'Schedule Adjusted by Sage!',
+                    description: result.reasoning
+                });
+            }
+        }).catch(e => {
+            console.error("Failed to recalculate schedule after late watering", e);
+            // Don't bother the user with an error, the watering is already logged.
+        });
+
+    } else {
+         // If not overdue, just update the date
+        const updatedPlant = { ...plant, lastWatered: new Date().toISOString() };
+        updatePlant(updatedPlant);
+        setPlant(updatedPlant);
+        toast({
+          title: "Plant Watered!",
+          description: `Nice work! ${plant.customName} has been watered.`,
+        });
+    }
   };
 
   const handleFeedback = async (message: string, waterNow: boolean) => {
@@ -135,14 +184,14 @@ export default function PlantProfilePage() {
         const nextWateringDate = addDays(new Date(plant.lastWatered), plant.wateringFrequency);
         const now = new Date();
         const duration = intervalToDuration({ start: now, end: nextWateringDate });
-        const timeEarly = `${duration.days || 0} days, ${duration.hours || 0} hours, ${duration.minutes || 0} minutes`;
+        const timeEarly = `${duration.days || 0} days, ${duration.hours || 0} hours`;
         
         try {
             const result = await recalculateWateringSchedule({
                 plantCommonName: plant.commonName,
                 currentWateringFrequency: plant.wateringFrequency,
                 feedback: message,
-                timeEarly: timeEarly,
+                timingDiscrepancy: `${timeEarly} early`,
                 location: settings.location || '',
                 environmentNotes: plant.environmentNotes,
             });
@@ -162,7 +211,9 @@ export default function PlantProfilePage() {
         } catch (e) {
             console.error("Failed to recalculate schedule", e);
             // Even if AI fails, still mark as watered since user took the action
-            handleWaterPlant();
+            const updatedPlant = { ...plant, lastWatered: new Date().toISOString() };
+            updatePlant(updatedPlant);
+            setPlant(updatedPlant);
             toast({
                 variant: 'destructive',
                 title: 'AI Update Failed',
