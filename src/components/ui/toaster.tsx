@@ -12,11 +12,11 @@ import {
 } from "@/components/ui/toast"
 
 export function Toaster() {
-  const { toasts, ToastInitializer } = useToast()
+  const { toasts, ToastSoundPlayer } = useToast()
 
   return (
     <ToastProvider>
-      <ToastInitializer />
+      <ToastSoundPlayer toasts={toasts} />
       {toasts.map(function ({ id, title, description, action, ...props }) {
         return (
           <Toast key={id} {...props}>
