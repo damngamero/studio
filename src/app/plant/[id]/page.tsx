@@ -211,7 +211,7 @@ export default function PlantProfilePage() {
 
   useEffect(() => {
     if (plant) {
-        fetchWeatherAdvice(plant);
+        fetchWeatherAdvice(plant, false); // Pass false to respect cache
     }
   }, [plant, fetchWeatherAdvice]);
 
@@ -528,7 +528,7 @@ export default function PlantProfilePage() {
                  <div>
                     <div className="flex items-start justify-between mb-2">
                         <div>
-                         <h4 className="font-medium text-sm">Sage's Dynamic Care Tips</h4>
+                         <h4 className="font-medium text-sm">Sage's General Care Tips</h4>
                          {plant.wateringAmount && <p className="text-xs text-muted-foreground">Recommended water: {plant.wateringAmount}</p>}
                         </div>
                          <Button variant="outline" size="xs" onClick={handleRegenerateTips} disabled={isGeneratingTips || isApiKeyMissing}>
@@ -539,6 +539,7 @@ export default function PlantProfilePage() {
                     {isGeneratingTips ? (
                        <div className="space-y-2">
                             <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
                             <Skeleton className="h-4 w-2/3" />
                         </div>
                     ) : plant.careTips ? (
@@ -546,7 +547,9 @@ export default function PlantProfilePage() {
                         <AccordionItem value="item-1">
                           <AccordionTrigger className="text-sm">View Care Tips</AccordionTrigger>
                           <AccordionContent>
-                            <div className="whitespace-pre-wrap text-sm">{plant.careTips}</div>
+                            <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap">
+                                <ReactMarkdown>{plant.careTips}</ReactMarkdown>
+                            </div>
                             <Button variant="link" size="sm" className="p-0 h-auto mt-2" disabled={isApiKeyMissing} onClick={() => handleOpenChat(plant.careTips)}>
                                 <MessageSquare className="mr-2 h-3.5 w-3.5"/> Discuss Tips
                             </Button>
@@ -572,6 +575,7 @@ export default function PlantProfilePage() {
                 <CardContent>
                     {isFetchingWeather ? (
                         <div className="space-y-2">
+                            <Skeleton className="h-4 w-full" />
                             <Skeleton className="h-4 w-full" />
                             <Skeleton className="h-4 w-2/3" />
                         </div>

@@ -37,7 +37,7 @@ export type GetPlantCareTipsInput = z.infer<typeof GetPlantCareTipsInputSchema>;
 const GetPlantCareTipsOutputSchema = z.object({
   careTips: z
     .string()
-    .describe('A summary of care tips tailored to the plant species, including watering, sunlight, and pruning.'),
+    .describe('A summary of care tips tailored to the plant species, including watering, sunlight, and pruning. Use Markdown and emojis.'),
   wateringFrequency: z.number().describe('The recommended watering frequency in days (e.g., 7).'),
   wateringTime: z.string().describe('The recommended time of day to water (e.g., morning, evening).'),
   wateringAmount: z.string().describe("The recommended amount of water to use for each watering session (e.g., '250-500ml')."),
@@ -63,15 +63,23 @@ const getPlantCareTipsFlow = ai.defineFlow(
       output: {schema: GetPlantCareTipsOutputSchema},
       prompt: `You are an expert horticulturalist. Provide care tips for the following plant. 
       
-Take the user's environment notes, location, and the plant's age into account to provide a tailored watering schedule.
-Include details on watering, sunlight, and pruning. 
-Also provide a recommended watering frequency in days, the best time of day to water, and the recommended amount of water to give.
+Your advice should be general and not based on a specific weather forecast. Focus on the plant's species and the provided environment details.
+Use Markdown for formatting and include relevant emojis for each section.
+
+Create a `careTips` response with the following sections:
+- 💧 **Watering**: General watering advice. The specific frequency, time, and amount will be returned separately.
+- ☀️ **Sunlight**: Ideal sunlight conditions.
+- 🌱 **Fertilizing**: When and how to fertilize.
+- ✂️ **Pruning**: General pruning and maintenance advice.
+
+Take the user's environment notes, location, and the plant's age into account to provide a tailored watering schedule (frequency in days, time of day, amount).
 
 The user prefers the ${unitSystem} system for measurements.
 
+## Plant Details
 Plant Species: {{{plantSpecies}}}
 {{#if placement}}
-User-defined Placement: **{{{placement}}}**. This is a critical piece of information. Indoor plants are more sheltered than outdoor plants. Your advice MUST reflect this.
+Placement: **{{{placement}}}**. This is a critical piece of information. Indoor plants are more sheltered than outdoor plants. Your advice MUST reflect this.
 {{/if}}
 {{#if estimatedAge}}
 Estimated Age: {{{estimatedAge}}}

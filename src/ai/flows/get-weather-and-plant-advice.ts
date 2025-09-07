@@ -27,7 +27,7 @@ export type GetWeatherAndPlantAdviceInput = z.infer<typeof GetWeatherAndPlantAdv
 
 const PlantAdviceSchema = z.object({
   customName: z.string(),
-  advice: z.string().describe('Specific, actionable advice for this plant based on the weather forecast. Use Markdown for emphasis.'),
+  advice: z.string().describe('Specific, actionable advice for this plant based on the weather forecast. Use Markdown and emojis for emphasis.'),
 });
 
 const GetWeatherAndPlantAdviceOutputSchema = z.object({
@@ -53,7 +53,7 @@ const prompt = ai.definePrompt({
 1. First, use the getWeatherForLocation tool to get the weather for the user's location: {{{location}}}.
 2. Then, for each of the user's plants listed below, provide specific, actionable advice based on the 3-day forecast.
 3. **Crucially, consider the placement of the plant (Indoor/Outdoor).** Outdoor plants are directly affected by weather, while indoor plants are more sheltered. Your advice must reflect this difference. For example, if heavy rain is forecast, you might tell the user to move a potted outdoor plant under cover, but this advice is irrelevant for an indoor plant.
-4. Be creative and helpful. Use **markdown** for emphasis on key words.
+4. Be creative and helpful. Use **markdown** and relevant emojis (e.g., ☀️, 💧, 💨) for emphasis on key words.
 5. Return the current weather, the forecast, and the specific advice for each plant.
 
 User's Plants:
