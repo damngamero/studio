@@ -26,6 +26,9 @@ const CheckPlantHealthOutputSchema = z.object({
   isHealthy: z.boolean().describe('Whether or not the plant is healthy.'),
   diagnosis: z.string().describe("The AI's diagnosis of the plant's health and any potential issues."),
   regions: z.array(RegionOfInterestSchema).describe('A list of identified regions of interest on the plant photo, such as leaves, stems, flowers, or any visible signs of distress (e.g., yellowing leaves, spots, pests). If a region is healthy, state that.'),
+  commonName: z.string().describe('The common name of the identified plant. If not confident, return the original name if provided.'),
+  latinName: z.string().describe('The Latin name of the identified plant. If not confident, return the original name if provided.'),
+  confidence: z.number().describe('The confidence level of the plant re-identification (0-1).'),
 });
 export type CheckPlantHealthOutput = z.infer<typeof CheckPlantHealthOutputSchema>;
 
@@ -37,7 +40,7 @@ const prompt = ai.definePrompt({
   name: 'checkPlantHealthPrompt',
   input: { schema: CheckPlantHealthInputSchema },
   output: { schema: CheckPlantHealthOutputSchema },
-  prompt: `You are an expert botanist specializing in diagnosing plant illnesses from photos and descriptions.
+  prompt: `You are an expert botanist specializing in diagnosing plant illnesses and identifying species from photos.
 
 Analyze the provided photo and notes to determine the health of the plant.
 
@@ -46,9 +49,9 @@ Photo: {{media url=photoDataUri}}
 User Notes: {{{notes}}}
 {{/if}}
 
-Based on your analysis, determine if the plant is healthy and provide a concise diagnosis. 
-Also, identify key regions of interest on the plant. For each region, provide a label, a brief description of its condition, and a normalized bounding box. If you identify a problem, be specific.
-If the plant is generally healthy, your diagnosis should state that, and the regions should reflect healthy parts.`,
+1.  **Identify the plant species.** Return its common and Latin names, along with a confidence score (0-1) for your identification.
+2.  **Assess the plant's health.** Based on your analysis, determine if the plant is healthy and provide a concise diagnosis. 
+3.  **Identify key regions of interest.** For each region, provide a label, a brief description of its condition, and a normalized bounding box. If you identify a problem, be specific. If the plant is generally healthy, your diagnosis should state that, and the regions should reflect healthy parts.`,
 });
 
 const checkPlantHealthFlow = ai.defineFlow(

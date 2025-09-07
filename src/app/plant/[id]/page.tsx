@@ -335,13 +335,35 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
         photoDataUri: healthCheckPhoto,
         notes: plant.notes 
       });
-      const updatedPlant: Plant = { ...plant, health: {isHealthy: healthResult.isHealthy, diagnosis: healthResult.diagnosis}, annotatedRegions: healthResult.regions, photoUrl: healthCheckPhoto };
+
+      let updatedPlant: Plant = { 
+        ...plant,
+        health: {isHealthy: healthResult.isHealthy, diagnosis: healthResult.diagnosis},
+        annotatedRegions: healthResult.regions, 
+        photoUrl: healthCheckPhoto 
+      };
+
+      // Check if the species was re-identified with high confidence and is different
+      if (healthResult.confidence > 0.75 && healthResult.commonName !== plant.commonName) {
+        toast({
+          title: "Species Re-identified!",
+          description: `Sage thinks this is a ${healthResult.commonName}, not a ${plant.commonName}. The profile has been updated.`
+        });
+        updatedPlant.commonName = healthResult.commonName;
+        updatedPlant.latinName = healthResult.latinName;
+      }
+      
       updatePlant(updatedPlant);
       setPlant(updatedPlant);
       toast({
         title: "Health Check Complete!",
         description: "Sage has assessed your plant's health.",
       });
+
+      // If the species was updated, we should also regenerate the care tips
+      if (updatedPlant.commonName !== plant.commonName) {
+        await handleRegenerateTips(updatedPlant);
+      }
 
       const newHealthCheckCount = healthCheckCount + 1;
       setHealthCheckCount(newHealthCheckCount);
