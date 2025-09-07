@@ -12,7 +12,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { getWeatherTool } from '../tools/get-weather';
-import { getSettings } from '@/hooks/use-settings-store.tsx';
 
 const PlantStatusSchema = z.object({
     customName: z.string(),
@@ -75,8 +74,13 @@ const getGardenOverviewFlow = ai.defineFlow(
     if (!input.location || input.plants.length === 0) {
         return { overview: "Set your location and add a plant to get your daily garden overview from Sage!" };
     }
-    const settings = getSettings();
-    const { output } = await prompt(input, { model: `googleai/${settings.model}` });
-    return output!;
+    try {
+      const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
+      return output!;
+    } catch (error) {
+      console.warn('Flash model failed, trying Pro model', error);
+      const { output } = await prompt(input, { model: 'googleai/gemini-2.5-pro' });
+      return output!;
+    }
   }
 );

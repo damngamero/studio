@@ -12,7 +12,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { getWeatherAndPlantAdvice } from './get-weather-and-plant-advice';
-import { getSettings } from '@/hooks/use-settings-store.tsx';
 
 const GetWateringAdviceInputSchema = z.object({
   plantName: z.string(),
@@ -73,8 +72,13 @@ const getWateringAdviceFlow = ai.defineFlow(
         - Provide a very short, clear reason for your decision based on the advice. For example, "Yes, it's going to be hot and sunny." or "Wait, rain is expected tomorrow."`
     });
 
-    const settings = getSettings();
-    const { output } = await decisionPrompt({ advice }, { model: `googleai/${settings.model}` });
-    return output!;
+    try {
+      const { output } = await decisionPrompt({ advice }, { model: 'googleai/gemini-2.5-flash' });
+      return output!;
+    } catch (error) {
+      console.warn('Flash model failed, trying Pro model', error);
+      const { output } = await decisionPrompt({ advice }, { model: 'googleai/gemini-2.5-pro' });
+      return output!;
+    }
   }
 );

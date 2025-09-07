@@ -12,7 +12,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { getSettings } from '@/hooks/use-settings-store.tsx';
 
 const GetPlantCareTipsInputSchema = z.object({
   plantSpecies: z
@@ -49,21 +48,12 @@ export async function getPlantCareTips(input: GetPlantCareTipsInput): Promise<Ge
   return getPlantCareTipsFlow(input);
 }
 
-const getPlantCareTipsFlow = ai.defineFlow(
-  {
-    name: 'getPlantCareTipsFlow',
-    inputSchema: GetPlantCareTipsInputSchema,
-    outputSchema: GetPlantCareTipsOutputSchema,
-  },
-  async input => {
-    const unitSystem = "metric (ml)";
-
-    const prompt = ai.definePrompt({
-      name: 'getPlantCareTipsPrompt',
-      input: {schema: GetPlantCareTipsInputSchema},
-      output: {schema: GetPlantCareTipsOutputSchema},
-      prompt: `You are an expert horticulturalist. Provide care tips for the following plant. 
-      
+const prompt = ai.definePrompt({
+  name: 'getPlantCareTipsPrompt',
+  input: {schema: GetPlantCareTipsInputSchema},
+  output: {schema: GetPlantCareTipsOutputSchema},
+  prompt: `You are an expert horticulturalist. Provide care tips for the following plant. 
+  
 Your advice should be general and not based on a specific weather forecast. Focus on the plant's species and the provided environment details.
 Use Markdown for formatting and include relevant emojis for each section.
 
@@ -75,7 +65,7 @@ Create a "careTips" response with the following sections:
 
 Take the user's environment notes, location, and the plant's age into account to provide a tailored watering schedule (frequency in days, time of day, amount).
 
-The user prefers the ${unitSystem} system for measurements.
+The user prefers the metric system (ml) for measurements.
 
 ## Plant Details
 Plant Species: {{{plantSpecies}}}
@@ -95,10 +85,22 @@ Environment Notes: {{{environmentNotes}}}
 Last Watered: {{{lastWatered}}}
 {{/if}}
 `,
-    });
-    
-    const settings = getSettings();
-    const {output} = await prompt(input, { model: `googleai/${settings.model}` });
-    return output!;
+});
+
+const getPlantCareTipsFlow = ai.defineFlow(
+  {
+    name: 'getPlantCareTipsFlow',
+    inputSchema: GetPlantCareTipsInputSchema,
+    outputSchema: GetPlantCareTipsOutputSchema,
+  },
+  async input => {
+    try {
+      const {output} = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
+      return output!;
+    } catch (error) {
+      console.warn('Flash model failed, trying Pro model', error);
+      const {output} = await prompt(input, { model: 'googleai/gemini-2.5-pro' });
+      return output!;
+    }
   }
 );

@@ -12,7 +12,6 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { getWeatherTool } from '../tools/get-weather';
 import { WeatherSchema, ForecastDaySchema } from '@/lib/types';
-import { getSettings } from '@/hooks/use-settings-store.tsx';
 
 const PlantInfoSchema = z.object({
   customName: z.string(),
@@ -71,8 +70,13 @@ const getWeatherAndPlantAdviceFlow = ai.defineFlow(
     outputSchema: GetWeatherAndPlantAdviceOutputSchema,
   },
   async (input) => {
-    const settings = getSettings();
-    const { output } = await prompt(input, { model: `googleai/${settings.model}` });
-    return output!;
+    try {
+      const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
+      return output!;
+    } catch (error) {
+      console.warn('Flash model failed, trying Pro model', error);
+      const { output } = await prompt(input, { model: 'googleai/gemini-2.5-pro' });
+      return output!;
+    }
   }
 );

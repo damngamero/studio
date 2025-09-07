@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { useSettingsStore, type Theme, type AIModel, type Settings } from "@/hooks/use-settings-store.tsx";
+import { useSettingsStore, type Theme, type Settings } from "@/hooks/use-settings-store.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Check, MapPin, ChevronsUpDown, KeyRound } from "lucide-react";
 import { timezones } from "@/lib/timezones";
@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const preferencesFormSchema = z.object({
@@ -29,13 +29,17 @@ const preferencesFormSchema = z.object({
   wateringReminders: z.boolean().default(true),
   timezone: z.string().default('UTC'),
   location: z.string().optional(),
-  model: z.custom<AIModel>(),
   geminiApiKey: z.string().optional(),
 });
 
 export default function SettingsPage() {
   const { toast } = useToast();
   const { settings, setSettings } = useSettingsStore();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const form = useForm<z.infer<typeof preferencesFormSchema>>({
     resolver: zodResolver(preferencesFormSchema),
@@ -81,9 +85,7 @@ export default function SettingsPage() {
                       <FormItem>
                         <FormLabel>Theme</FormLabel>
                         <Select 
-                          onValueChange={(value: Theme) => {
-                            field.onChange(value);
-                          }} 
+                          onValueChange={field.onChange} 
                           defaultValue={field.value}
                         >
                           <FormControl>
@@ -105,34 +107,7 @@ export default function SettingsPage() {
                       </FormItem>
                     )}
                   />
-                  <Separator />
-                   <FormField
-                    control={form.control}
-                    name="model"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>AI Model</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select an AI model" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="gemini-2.5-flash">Gemini 2.5 Flash (Fast &amp; Default)</SelectItem>
-                            <SelectItem value="gemini-2.5-pro">Gemini 2.5 Pro (Powerful)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          Choose the AI model to power your assistant. Pro is more capable but may be slower.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  
                    <Separator />
                    <FormField
                     control={form.control}
@@ -178,7 +153,7 @@ export default function SettingsPage() {
 
                   <Separator />
                   
-                  <FormField
+                  {isClient && <FormField
                     control={form.control}
                     name="timezone"
                     render={({ field }) => (
@@ -240,7 +215,7 @@ export default function SettingsPage() {
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
+                  />}
 
                   <Separator />
                   

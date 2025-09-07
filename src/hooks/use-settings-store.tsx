@@ -7,14 +7,12 @@ import * as cookie from 'cookie';
 const SETTINGS_KEY = 'verdantwise-settings';
 
 export type Theme = "light" | "dark" | "theme-forest" | "theme-sunny-meadow";
-export type AIModel = 'gemini-2.5-flash' | 'gemini-2.5-pro';
 
 export interface Settings {
   theme: Theme;
   wateringReminders: boolean;
   timezone: string;
   location: string;
-  model: AIModel;
   geminiApiKey?: string;
 }
 
@@ -23,7 +21,6 @@ const defaultSettings: Settings = {
   wateringReminders: true,
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   location: "",
-  model: 'gemini-2.5-flash',
   geminiApiKey: "",
 };
 
