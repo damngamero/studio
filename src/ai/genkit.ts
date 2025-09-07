@@ -18,11 +18,8 @@ export const ai = genkit({
         config.apiKey = settings.geminiApiKey;
     }
     
-    // Use the model from settings, prefixing with 'googleai/'
-    if (settings.model) {
-      return {...config, model: `googleai/${settings.model}`};
-    }
-    
-    return config;
+    // Use the model from settings, otherwise default to gemini-2.5-flash.
+    const model = settings.model || 'gemini-2.5-flash';
+    return {...config, model: `googleai/${model}`};
   },
 });
