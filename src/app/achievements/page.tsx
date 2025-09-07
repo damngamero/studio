@@ -75,7 +75,7 @@ export default function AchievementsPage() {
   return (
     <AppLayout>
       <div className="flex items-center justify-between mb-6">
-        <div>
+        <div className="space-y-1">
           <h1 className="text-3xl font-bold font-heading">Achievements</h1>
           <p className="text-muted-foreground">Celebrate your plant care milestones!</p>
         </div>

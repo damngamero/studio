@@ -98,7 +98,7 @@ export default function WeatherPage() {
                   </Card>
               </div>
               <div>
-                  <h2 className="text-2xl font-bold font-heading mb-4"><Skeleton className="h-8 w-48" /></h2>
+                  <div className="mb-4"><Skeleton className="h-8 w-48" /></div>
                   <div className="grid md:grid-cols-3 gap-4">
                       {Array.from({length: 3}).map((_, i) => (
                           <Card key={i}><CardContent className="p-4"><Skeleton className="h-16 w-full" /></CardContent></Card>
@@ -106,7 +106,7 @@ export default function WeatherPage() {
                   </div>
               </div>
                 <div>
-                  <h2 className="text-2xl font-bold font-heading mb-4"><Skeleton className="h-8 w-56" /></h2>
+                  <div className="mb-4"><Skeleton className="h-8 w-56" /></div>
                     <div className="space-y-4">
                         {Array.from({length: 2}).map((_, i) => (
                             <Card key={i}>
@@ -114,8 +114,10 @@ export default function WeatherPage() {
                                   <CardTitle className="text-lg"><Skeleton className="h-6 w-32" /></CardTitle>
                               </CardHeader>
                               <CardContent>
-                                  <Skeleton className="h-4 w-full" />
-                                  <Skeleton className="h-4 w-2/3 mt-2" />
+                                  <div className="space-y-2">
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-2/3" />
+                                  </div>
                               </CardContent>
                           </Card>
                         ))}
@@ -227,7 +229,7 @@ export default function WeatherPage() {
   return (
     <AppLayout>
       <div className="flex items-center justify-between mb-6">
-        <div>
+        <div className="space-y-1">
           <h1 className="text-3xl font-bold font-heading">Weather Center</h1>
           <p className="text-muted-foreground">Proactive advice from Sage based on your local forecast.</p>
         </div>

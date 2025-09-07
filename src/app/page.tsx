@@ -217,7 +217,7 @@ export default function MyPlantsPage() {
   return (
     <AppLayout>
       <div className="flex items-center justify-between mb-6">
-        <div>
+        <div className="space-y-1">
           <h1 className="text-2xl font-bold font-heading">My Plants</h1>
           <p className="text-muted-foreground">Your digital garden.</p>
         </div>
