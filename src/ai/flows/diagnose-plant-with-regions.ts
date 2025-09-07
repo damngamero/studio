@@ -12,6 +12,7 @@
 import { ai } from '@/ai/genkit';
 import { RegionOfInterestSchema } from '@/lib/types';
 import { z } from 'genkit';
+import { getSettings } from '@/hooks/use-settings-store.tsx';
 
 const DiagnosePlantWithRegionsInputSchema = z.object({
   photoDataUri: z
@@ -61,7 +62,8 @@ const diagnosePlantWithRegionsFlow = ai.defineFlow(
     outputSchema: DiagnosePlantWithRegionsOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
+    const settings = getSettings();
+    const { output } = await prompt(input, { model: `googleai/${settings.model}` });
     return output!;
   }
 );

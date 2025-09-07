@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { getSettings } from '@/hooks/use-settings-store.tsx';
 
 const IdentifyPlantFromPhotoInputSchema = z.object({
   photoDataUri: z
@@ -67,7 +68,8 @@ const identifyPlantFromPhotoFlow = ai.defineFlow(
     outputSchema: IdentifyPlantFromPhotoOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
+    const settings = getSettings();
+    const {output} = await prompt(input, { model: `googleai/${settings.model}` });
     return output!;
   }
 );

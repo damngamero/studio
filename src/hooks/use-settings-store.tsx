@@ -1,8 +1,8 @@
 
-
-"use client";
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import * as cookie from 'cookie';
 
 const SETTINGS_KEY = 'verdantwise-settings';
 
@@ -27,19 +27,31 @@ const defaultSettings: Settings = {
   geminiApiKey: "",
 };
 
-// This function can be called from server components
+// This function can be called from server components or server actions
 export function getSettings(): Settings {
   if (typeof window === 'undefined') {
-    // In a server context, we can't access localStorage.
-    // In a real app, you might get this from a cookie or a server-side session.
-    // For now, we return defaults.
+    // In a server context, we try to read from cookies
+    try {
+        const { headers } = require('next/headers');
+        const cookieHeader = headers().get('cookie');
+        if (cookieHeader) {
+            const cookies = cookie.parse(cookieHeader);
+            const settingsCookie = cookies[SETTINGS_KEY];
+            if (settingsCookie) {
+                return { ...defaultSettings, ...JSON.parse(settingsCookie) };
+            }
+        }
+    } catch (e) {
+        // This might fail if called outside a request context, fall back to defaults
+        return defaultSettings;
+    }
     return defaultSettings;
   }
+  // On the client, we prefer localStorage
   try {
     const item = window.localStorage.getItem(SETTINGS_KEY);
     if (item) {
       const savedSettings = JSON.parse(item);
-      // Ensure all keys from defaultSettings are present
       return { ...defaultSettings, ...savedSettings };
     }
     return defaultSettings;
@@ -50,8 +62,7 @@ export function getSettings(): Settings {
   }
 }
 
-
-function getInitialSettings(): Settings {
+function getInitialClientSettings(): Settings {
   if (typeof window === 'undefined') {
     return defaultSettings;
   }
@@ -59,7 +70,6 @@ function getInitialSettings(): Settings {
     const item = window.localStorage.getItem(SETTINGS_KEY);
     if (item) {
       const savedSettings = JSON.parse(item);
-      // Ensure all keys from defaultSettings are present
       return { ...defaultSettings, ...savedSettings };
     }
     return defaultSettings;
@@ -70,21 +80,25 @@ function getInitialSettings(): Settings {
 }
 
 export function useSettingsStore() {
-  const [settings, setSettingsState] = useState<Settings>(getInitialSettings);
+  const [settings, setSettingsState] = useState<Settings>(getInitialClientSettings);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     // Correctly initialize state on the client
-    setSettingsState(getInitialSettings());
+    setSettingsState(getInitialClientSettings());
     setIsInitialized(true);
   }, []);
   
   useEffect(() => {
     if (isInitialized) {
         try {
-            window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+            // Sync to both localStorage and a cookie
+            const settingsString = JSON.stringify(settings);
+            window.localStorage.setItem(SETTINGS_KEY, settingsString);
+            document.cookie = cookie.serialize(SETTINGS_KEY, settingsString, { path: '/', maxAge: 60 * 60 * 24 * 365 });
+
         } catch (error) {
-            console.error('Error writing settings to localStorage', error);
+            console.error('Error writing settings to storage', error);
         }
     }
   }, [settings, isInitialized]);
@@ -102,5 +116,3 @@ export function useSettingsStore() {
 
   return { settings, setSettings, theme: settings.theme, isInitialized };
 }
-
-    

@@ -12,6 +12,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { getWeatherTool } from '../tools/get-weather';
+import { getSettings } from '@/hooks/use-settings-store.tsx';
 
 type Placement = 'Indoor' | 'Outdoor' | 'Indoor/Outdoor';
 
@@ -65,7 +66,8 @@ const getPlacementFeedbackFlow = ai.defineFlow(
     outputSchema: GetPlacementFeedbackOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
+    const settings = getSettings();
+    const { output } = await prompt(input, { model: `googleai/${settings.model}` });
     return output!;
   }
 );

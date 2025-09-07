@@ -11,6 +11,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { getSettings } from '@/hooks/use-settings-store.tsx';
 
 const GetPlantNicknamesInputSchema = z.object({
   commonName: z.string().describe('The common name of the plant.'),
@@ -54,7 +55,8 @@ const getPlantNicknamesFlow = ai.defineFlow(
     outputSchema: GetPlantNicknamesOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
+    const settings = getSettings();
+    const { output } = await prompt(input, { model: `googleai/${settings.model}` });
     return output!;
   }
 );
