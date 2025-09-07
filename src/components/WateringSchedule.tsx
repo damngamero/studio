@@ -180,7 +180,7 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
         <div className="space-y-1">
             <p className="text-xs">The timer shows minimum wait time till watering.</p>
             {wateringTime && (
-                <div className="flex flex-col">
+                <div className="flex items-baseline justify-start gap-2">
                     <span className="text-xs text-muted-foreground">Recommended:</span>
                     <p className="font-semibold text-base">{wateringTime}</p>
                 </div>
