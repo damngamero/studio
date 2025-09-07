@@ -66,6 +66,7 @@ function GardenOverview() {
           customName: p.customName,
           commonName: p.commonName,
           isWateringOverdue: isAfter(new Date(), nextWateringDate),
+          placement: p.placement,
         };
       });
 

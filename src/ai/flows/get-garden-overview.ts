@@ -17,6 +17,7 @@ const PlantStatusSchema = z.object({
     customName: z.string(),
     commonName: z.string(),
     isWateringOverdue: z.boolean(),
+    placement: z.enum(['Indoor', 'Outdoor', 'Indoor/Outdoor']).optional(),
 });
 
 const GetGardenOverviewInputSchema = z.object({
@@ -48,17 +49,18 @@ const prompt = ai.definePrompt({
 
 1. First, use the getWeatherForLocation tool to get the weather for the user's location: {{{location}}}.
 2. Look at the list of the user's plants and see which ones are overdue for watering.
-3. Based on the weather and the watering status, create a friendly, encouraging, and actionable summary for the user. 
+3. **Crucially, consider the placement of each plant (Indoor vs. Outdoor).** Outdoor plants are affected by rain and sun, while indoor plants are not. Your advice MUST reflect this.
+4. Based on the weather, watering status, and placement, create a friendly, encouraging, and actionable summary for the user. 
 
-For example, if it's hot and plants need water, say something like: "It's a hot day! Your garden is thirsty. Let's start with the *Fiddle Leaf Fig*."
-If it's going to rain and plants need water, you could say: "Good news! Rain is on the way, so you can hold off on watering the *Monstera* for now."
+For example, if it's hot and an *outdoor* plant needs water, say something like: "It's a hot day! Your garden is thirsty. Your *Outdoor Ficus* might need a drink."
+If it's going to rain and an *outdoor* plant needs water, you could say: "Good news! Rain is on the way, so you can hold off on watering the *Monstera* for now."
 If all is well, say something like: "Everything looks great in your garden today! Enjoy the sunshine."
 
 Keep the summary to two or three sentences. Be warm and encouraging.
 
 User's Plants:
 {{#each plants}}
-- {{customName}} ({{commonName}}). Watering Overdue: {{isWateringOverdue}}
+- {{customName}} ({{commonName}}). Placement: {{#if placement}}{{placement}}{{else}}Unknown{{/if}}. Watering Overdue: {{isWateringOverdue}}
 {{/each}}
 `,
 });
