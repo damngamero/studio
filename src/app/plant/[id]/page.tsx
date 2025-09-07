@@ -258,7 +258,7 @@ export default function PlantProfilePage() {
         photoDataUri: healthCheckPhoto,
         notes: plant.notes 
       });
-      const updatedPlant = { ...plant, health: healthResult, photoUrl: healthCheckPhoto };
+      const updatedPlant: Plant = { ...plant, health: {isHealthy: healthResult.isHealthy, diagnosis: healthResult.diagnosis}, annotatedRegions: healthResult.regions, photoUrl: healthCheckPhoto };
       updatePlant(updatedPlant);
       setPlant(updatedPlant);
       toast({
@@ -370,28 +370,8 @@ export default function PlantProfilePage() {
           <div className="grid auto-rows-max items-start gap-6">
             <Card>
               <CardContent className="p-4">
-                <div className="relative aspect-video w-full rounded-md overflow-hidden shadow-md mb-6">
-                  <Image 
-                    src={plant.photoUrl} 
-                    alt={plant.customName} 
-                    fill
-                    className="object-contain w-full h-full" 
-                    data-ai-hint="plant" 
-                  />
-                   <Dialog>
-                      <DialogTrigger asChild>
-                        <Button size="sm" className="absolute bottom-2 right-2" disabled={isApiKeyMissing}>
-                           <Search className="mr-2" /> Pest & Disease Detective
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-3xl p-0">
-                          <DialogHeader className="p-4">
-                            <DialogTitle>Pest & Disease Detective</DialogTitle>
-                            <DialogDescription>Sage is analyzing your photo for any signs of trouble.</DialogDescription>
-                          </DialogHeader>
-                          <InteractivePhoto photoDataUri={plant.photoUrl} plantName={plant.customName} />
-                      </DialogContent>
-                    </Dialog>
+                 <div className="relative aspect-video w-full rounded-md overflow-hidden shadow-md mb-6">
+                  <InteractivePhoto photoDataUri={plant.photoUrl} regions={plant.annotatedRegions || []} plantName={plant.customName} />
                 </div>
                  {plant.notes && (
                     <div>
@@ -442,8 +422,8 @@ export default function PlantProfilePage() {
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          <DialogTitle>Daily Health Check</DialogTitle>
-                           <DialogDescription>Take a new photo of your plant for today's health assessment.</DialogDescription>
+                          <DialogTitle>Plant Health Check</DialogTitle>
+                           <DialogDescription>Take a new photo of your plant. Sage will analyze it for overall health and identify any problem areas.</DialogDescription>
                         </DialogHeader>
                         <div className="grid grid-cols-2 gap-4 my-4">
                            <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center overflow-hidden relative">
@@ -477,7 +457,7 @@ export default function PlantProfilePage() {
                               ) : (
                                 <Stethoscope className="mr-2 h-4 w-4" />
                               )}
-                              Run Health Check
+                              Analyze Photo
                             </Button>
                         </DialogFooter>
                       </DialogContent>

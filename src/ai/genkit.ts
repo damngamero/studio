@@ -18,7 +18,11 @@ export const ai = genkit({
         config.apiKey = settings.geminiApiKey;
     }
     
-    return {...config, model: settings.model};
+    // Use the model from settings, prefixing with 'googleai/'
+    if (settings.model) {
+      return {...config, model: `googleai/${settings.model}`};
+    }
+    
+    return config;
   },
 });
-
