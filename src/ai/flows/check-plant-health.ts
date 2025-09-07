@@ -54,7 +54,7 @@ The plant is currently named: **{{{currentCommonName}}}**.
 {{/if}}
 
 1.  **Identify the plant species.** Return its common and Latin names, along with a confidence score (0-1) for your identification.
-    **CRUCIAL RULE:** If the user has provided a `currentCommonName` and your new identification is just a broader category or a less common synonym (e.g., changing 'Corn Plant' to 'Dracaena', or 'Snake Plant' to 'Dracaena trifasciata'), you **MUST** return the original `currentCommonName` the user provided. Only change the name if you are confident it's a completely different species.
+    **CRUCIAL RULE:** If the user has provided a \`currentCommonName\` and your new identification is just a broader category or a less common synonym (e.g., changing 'Corn Plant' to 'Dracaena', or 'Snake Plant' to 'Dracaena trifasciata'), you **MUST** return the original \`currentCommonName\` the user provided. Only change the name if you are confident it's a completely different species.
 
 2.  **Assess the plant's health.** Based on your analysis, determine if the plant is healthy and provide a concise diagnosis. 
 3.  **Identify key regions of interest.** For each region, provide a label, a brief description of its condition, and a normalized bounding box. If you identify a problem, be specific. If the plant is generally healthy, your diagnosis should state that, and the regions should reflect healthy parts.`,
