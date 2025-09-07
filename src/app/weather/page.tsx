@@ -53,7 +53,7 @@ export default function WeatherPage() {
         const cached = localStorage.getItem('weather-data');
         if (cached) {
             const { data, timestamp } = JSON.parse(cached);
-            const isStale = new Date().getTime() - timestamp > 12 * 60 * 60 * 1000; // 12 hours
+            const isStale = new Date().getTime() - timestamp > 18 * 60 * 60 * 1000; // 18 hours
             if (!isStale) {
                 setWeatherData(data);
                 setIsLoading(false);
@@ -63,7 +63,7 @@ export default function WeatherPage() {
     }
 
     try {
-      const plantInfo = plants.map(p => ({ customName: p.customName, commonName: p.commonName }));
+      const plantInfo = plants.map(p => ({ customName: p.customName, commonName: p.commonName, placement: p.placement }));
       const result = await getWeatherAndPlantAdvice({ location: settings.location, plants: plantInfo });
       setWeatherData(result);
        // Cache the new data
@@ -78,54 +78,54 @@ export default function WeatherPage() {
 
   useEffect(() => {
     fetchData();
-    const intervalId = setInterval(() => fetchData(true), 12 * 60 * 60 * 1000);
+    const intervalId = setInterval(() => fetchData(true), 18 * 60 * 60 * 1000);
     return () => clearInterval(intervalId);
   }, [fetchData]);
 
   const renderContent = () => {
     if (isLoading) {
         return (
-          <div className="grid gap-8">
+           <div className="grid gap-8">
               <div>
-                  <Card>
+                <Card>
+                  <CardHeader>
+                    <div className="space-y-2">
+                       <Skeleton className="h-8 w-64" />
+                       <Skeleton className="h-4 w-48" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-20 w-full" />
+                  </CardContent>
+                </Card>
+              </div>
+              <div>
+                <div className="mb-4"><Skeleton className="h-8 w-48" /></div>
+                <div className="grid md:grid-cols-3 gap-4">
+                  {Array.from({length: 3}).map((_, i) => (
+                    <Card key={i}><CardContent className="p-4"><Skeleton className="h-16 w-full" /></CardContent></Card>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="mb-4"><Skeleton className="h-8 w-56" /></div>
+                <div className="space-y-4">
+                  {Array.from({length: 2}).map((_, i) => (
+                    <Card key={i}>
                       <CardHeader>
-                          <div className="space-y-2">
-                             <Skeleton className="h-8 w-64" />
-                             <Skeleton className="h-4 w-48" />
-                          </div>
+                        <Skeleton className="h-6 w-32" />
                       </CardHeader>
                       <CardContent>
-                            <Skeleton className="h-20 w-full" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-2/3" />
+                        </div>
                       </CardContent>
-                  </Card>
+                    </Card>
+                  ))}
+                </div>
               </div>
-              <div>
-                  <div className="mb-4"><Skeleton className="h-8 w-48" /></div>
-                  <div className="grid md:grid-cols-3 gap-4">
-                      {Array.from({length: 3}).map((_, i) => (
-                          <Card key={i}><CardContent className="p-4"><Skeleton className="h-16 w-full" /></CardContent></Card>
-                        ))}
-                  </div>
-              </div>
-                <div>
-                  <div className="mb-4"><Skeleton className="h-8 w-56" /></div>
-                    <div className="space-y-4">
-                        {Array.from({length: 2}).map((_, i) => (
-                            <Card key={i}>
-                              <CardHeader>
-                                  <Skeleton className="h-6 w-32" />
-                              </CardHeader>
-                              <CardContent>
-                                  <div className="space-y-2">
-                                    <Skeleton className="h-4 w-full" />
-                                    <Skeleton className="h-4 w-2/3" />
-                                  </div>
-                              </CardContent>
-                          </Card>
-                        ))}
-                  </div>
-              </div>
-          </div>
+           </div>
         )
     }
 
