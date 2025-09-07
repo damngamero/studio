@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Calendar, Droplets, Loader2, Info } from 'lucide-react';
-import { addDays, differenceInDays, differenceInHours, format, formatDistanceToNowStrict, isAfter } from 'date-fns';
+import { addDays, differenceInDays, differenceInHours, differenceInMinutes, format, formatDistanceToNowStrict, isAfter } from 'date-fns';
 import { useSettingsStore } from '@/hooks/use-settings-store';
 import { cn } from '@/lib/utils';
 import type { Plant } from '@/lib/types';
@@ -31,6 +31,7 @@ const Countdown = ({ targetDate }: { targetDate: Date }) => {
     
     const days = differenceInDays(targetDate, now);
     const hours = differenceInHours(targetDate, now) % 24;
+    const minutes = differenceInMinutes(targetDate, now) % 60;
     
     if (isAfter(now, targetDate)) {
         return <span className="text-destructive-foreground font-bold">Overdue!</span>;
@@ -42,6 +43,8 @@ const Countdown = ({ targetDate }: { targetDate: Date }) => {
            <span className="text-sm">d</span>
            <span className="text-2xl font-bold">{hours < 0 ? 0 : hours}</span>
            <span className="text-sm">h</span>
+           <span className="text-2xl font-bold">{minutes < 0 ? 0 : minutes}</span>
+           <span className="text-sm">m</span>
         </div>
     );
 };
@@ -148,8 +151,7 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice 
             <Calendar /> Watering Schedule
         </CardTitle>
         <CardDescription>
-            Next watering due on {format(nextWateringDate, "MMMM do")}
-            {wateringTime && ` in the ${wateringTime}`}.
+            Next watering due on {format(nextWateringDate, "MMMM do")}.
         </CardDescription>
       </CardHeader>
       {renderContent()}
