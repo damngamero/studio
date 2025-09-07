@@ -66,7 +66,7 @@ const getPlantCareTipsFlow = ai.defineFlow(
 Your advice should be general and not based on a specific weather forecast. Focus on the plant's species and the provided environment details.
 Use Markdown for formatting and include relevant emojis for each section.
 
-Create a `careTips` response with the following sections:
+Create a "careTips" response with the following sections:
 - 💧 **Watering**: General watering advice. The specific frequency, time, and amount will be returned separately.
 - ☀️ **Sunlight**: Ideal sunlight conditions.
 - 🌱 **Fertilizing**: When and how to fertilize.
