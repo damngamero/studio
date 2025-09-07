@@ -37,9 +37,6 @@ const prompt = ai.definePrompt({
   name: 'checkPlantHealthPrompt',
   input: { schema: CheckPlantHealthInputSchema },
   output: { schema: CheckPlantHealthOutputSchema },
-  config: {
-    model: 'googleai/gemini-2.5-flash',
-  },
   prompt: `You are an expert botanist specializing in diagnosing plant illnesses from photos and descriptions.
 
 Analyze the provided photo and notes to determine the health of the plant.
@@ -61,7 +58,7 @@ const checkPlantHealthFlow = ai.defineFlow(
     outputSchema: CheckPlantHealthOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
     return output!;
   }
 );

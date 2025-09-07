@@ -44,9 +44,6 @@ const prompt = ai.definePrompt({
     input: { schema: GetGardenOverviewInputSchema },
     output: { schema: GetGardenOverviewOutputSchema },
     tools: [getWeatherTool],
-    config: {
-        model: 'googleai/gemini-2.5-flash',
-    },
     prompt: `You are Sage, an AI gardening assistant. Your goal is to provide a quick, helpful "daily digest" for the user's garden.
 
 1. First, use the getWeatherForLocation tool to get the weather for the user's location: {{{location}}}.
@@ -77,7 +74,7 @@ const getGardenOverviewFlow = ai.defineFlow(
     if (!input.location || input.plants.length === 0) {
         return { overview: "Set your location and add a plant to get your daily garden overview from Sage!" };
     }
-    const { output } = await prompt(input);
+    const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
     return output!;
   }
 );

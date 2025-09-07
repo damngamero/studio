@@ -41,9 +41,6 @@ const prompt = ai.definePrompt({
   name: 'diagnosePlantWithRegionsPrompt',
   input: { schema: DiagnosePlantWithRegionsInputSchema },
   output: { schema: DiagnosePlantWithRegionsOutputSchema },
-  config: {
-    model: 'googleai/gemini-2.5-flash',
-  },
   prompt: `You are an expert botanist. Analyze the provided photo of a plant. 
   
 Your task is to identify key regions of interest on the plant, such as leaves, stems, flowers, or any visible signs of distress (e.g., yellowing leaves, spots, pests). 
@@ -64,7 +61,7 @@ const diagnosePlantWithRegionsFlow = ai.defineFlow(
     outputSchema: DiagnosePlantWithRegionsOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
     return output!;
   }
 );

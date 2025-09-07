@@ -38,9 +38,6 @@ const prompt = ai.definePrompt({
   name: 'chatAboutPlantPrompt',
   input: { schema: ChatAboutPlantInputSchema },
   output: { schema: ChatAboutPlantOutputSchema },
-  config: {
-    model: 'googleai/gemini-2.5-flash',
-  },
   prompt: `You are Sage, a helpful and friendly gardening assistant AI. A user wants to ask a question about their plant.
 
 Plant Name: {{{plantName}}}
@@ -65,7 +62,7 @@ const chatAboutPlantFlow = ai.defineFlow(
     outputSchema: ChatAboutPlantOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
     return output!;
   }
 );

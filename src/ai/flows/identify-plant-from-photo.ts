@@ -49,9 +49,6 @@ const prompt = ai.definePrompt({
   name: 'identifyPlantFromPhotoPrompt',
   input: {schema: IdentifyPlantFromPhotoInputSchema},
   output: {schema: IdentifyPlantFromPhotoOutputSchema},
-  config: {
-    model: 'googleai/gemini-2.5-flash',
-  },
   prompt: `You are an expert botanist specializing in plant identification.
 
 You will use this information to identify the plant species in the photo.
@@ -70,7 +67,7 @@ const identifyPlantFromPhotoFlow = ai.defineFlow(
     outputSchema: IdentifyPlantFromPhotoOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const {output} = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
     return output!;
   }
 );
