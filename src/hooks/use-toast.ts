@@ -9,8 +9,6 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 import { useSound } from "./use-sound"
-import { playAudio } from "@/lib/audio"
-import { useSettingsStore } from "./use-settings-store"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 10000

@@ -9,8 +9,6 @@ import { useToast } from './use-toast';
 import { usePlantStore } from './use-plant-store';
 import { useAchievementDialogStore } from './use-achievement-dialog-store';
 import { useSound } from './use-sound';
-import { playAudio } from '@/lib/audio';
-import { useSettingsStore } from './use-settings-store';
 
 const ACHIEVEMENT_STORE_KEY = 'verdantwise-achievements';
 
@@ -79,7 +77,7 @@ export function useAchievementStore() {
   const [isInitialized, setIsInitialized] = useState(false);
   const { setAchievement: setAchievementToDisplay } = useAchievementDialogStore();
   const { plants } = usePlantStore();
-  const { settings } = useSettingsStore();
+  const playSound = useSound();
 
 
    useEffect(() => {
@@ -111,9 +109,7 @@ export function useAchievementStore() {
         if (achievementToUnlock && !achievementToUnlock.unlocked) {
             const { unlocked, goal, check, ...displayAchievement } = achievementToUnlock;
             setAchievementToDisplay(displayAchievement);
-            if (settings.soundEffectsEnabled) {
-                playAudio('achievement');
-            }
+            playSound('achievement');
 
             return prevAchievements.map(a => 
                 a.id === achievementId ? { ...a, unlocked: true } : a
@@ -121,7 +117,7 @@ export function useAchievementStore() {
         }
         return prevAchievements;
     });
-  }, [setAchievementToDisplay, settings.soundEffectsEnabled]);
+  }, [setAchievementToDisplay, playSound]);
 
   const checkAndUnlock = useCallback((achievementIds: string[], value: any) => {
     setTimeout(() => {
