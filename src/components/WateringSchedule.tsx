@@ -63,7 +63,11 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
   const { lastWatered, wateringFrequency, wateringTime } = plant;
   
   const lastWateredDate = new Date(lastWatered);
-  const nextWateringDate = wateringFrequency ? addDays(lastWateredDate, wateringFrequency) : new Date();
+  const regularNextWateringDate = wateringFrequency ? addDays(lastWateredDate, wateringFrequency) : new Date();
+  
+  // Use AI's suggested time if available and valid
+  const nextWateringDate = advice?.newWateringTime ? new Date(advice.newWateringTime) : regularNextWateringDate;
+  
   const isOverdue = isAfter(new Date(), nextWateringDate);
 
   const handleWaterPlantClick = () => {
@@ -97,15 +101,6 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
         </div>
       );
     }
-
-    if (advice && advice.shouldWater === 'Wait') {
-       return (
-        <div className="p-4 text-center">
-          <div className="text-2xl font-bold mb-2 text-blue-800 dark:text-blue-300">Wait!</div>
-          <p className="text-sm text-blue-700 dark:text-blue-200">{advice.reason}</p>
-        </div>
-      );
-    }
     
     if (isOverdue && advice?.shouldWater !== 'Wait') {
        return (
@@ -128,7 +123,7 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
        )
     }
 
-    // Default view: countdown
+    // Default view: countdown, which now uses AI time if available
     return (
        <CardContent className="space-y-4 text-center">
         <div className="text-4xl font-bold">
@@ -173,10 +168,11 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
   }
 
   const getWateringDescription = () => {
+    if (advice?.shouldWater === 'Wait') {
+        return advice.reason;
+    }
+    
     if (isOverdue) {
-        if (advice?.shouldWater === 'Wait') {
-            return `Overdue, but Sage says to wait.`;
-        }
         return "Watering is overdue.";
     }
 

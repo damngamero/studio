@@ -26,6 +26,7 @@ export type GetWateringAdviceInput = z.infer<
 const GetWateringAdviceOutputSchema = z.object({
     shouldWater: z.enum(['Yes', 'No', 'Wait']).describe("The final recommendation: 'Yes' to water now, 'No' if it's not time, or 'Wait' if conditions suggest delaying."),
     reason: z.string().describe("A brief, user-friendly explanation for the recommendation."),
+    newWateringTime: z.string().optional().describe('If shouldWater is "Wait", this will be an ISO string of the new recommended watering time.'),
 });
 export type GetWateringAdviceOutput = z.infer<
   typeof GetWateringAdviceOutputSchema
@@ -69,7 +70,8 @@ const getWateringAdviceFlow = ai.defineFlow(
         Based *only* on this weather analysis, decide if the user should water their plant now, or wait. 
         - If the advice mentions heat, sun, or dry conditions, recommend 'Yes'.
         - If the advice mentions upcoming rain, high humidity, or suggests holding off, recommend 'Wait'.
-        - Provide a very short, clear reason for your decision based on the advice. For example, "Yes, it's going to be hot and sunny." or "Wait, rain is expected tomorrow."`
+        - Provide a very short, clear reason for your decision based on the advice. For example, "Yes, it's going to be hot and sunny." or "Wait, rain is expected tomorrow."
+        - **Crucially**, if you recommend 'Wait', you MUST calculate a new watering time based on the forecast (e.g., after the rain passes) and return it as a valid ISO 8601 string in the 'newWateringTime' field.`
     });
 
     try {
