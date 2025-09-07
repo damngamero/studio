@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from './ui/card';
 import { Button } from './ui/button';
-import { Calendar, Droplets, Loader2, Info, ThumbsDown, ThumbsUp, MoreVertical } from 'lucide-react';
+import { Calendar, Droplets, Loader2, Info, ThumbsDown, ThumbsUp, MoreVertical, ChevronRight } from 'lucide-react';
 import { addDays, format, formatDistanceToNow, isAfter } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Plant } from '@/lib/types';
@@ -14,6 +14,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu"
 
 
@@ -147,14 +151,30 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-                 <DropdownMenuItem onSelect={() => onFeedback("The soil is dry, so I'm watering it now even though the schedule says not to.", true)}>
-                    <ThumbsUp className="mr-2 h-4 w-4 text-green-500" />
-                    <span>It's dry, watering now</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => onFeedback("The soil is still wet, so I'm skipping this watering.", false)}>
-                    <ThumbsDown className="mr-2 h-4 w-4 text-red-500" />
-                    <span>It's wet, skipping</span>
-                </DropdownMenuItem>
+                 <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                        <ThumbsUp className="mr-2 h-4 w-4 text-green-500" />
+                        <span>It's dry, watering now</span>
+                    </DropdownMenuSubTrigger>
+                     <DropdownMenuPortal>
+                        <DropdownMenuSubContent>
+                            <DropdownMenuItem onSelect={() => onFeedback("The soil was slightly dry, so I'm watering now.", true)}>Slightly Dry</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => onFeedback("The soil was bone dry, so I'm watering now.", true)}>Bone Dry</DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                 </DropdownMenuSub>
+                 <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                        <ThumbsDown className="mr-2 h-4 w-4 text-red-500" />
+                         <span>It's wet, skipping</span>
+                    </DropdownMenuSubTrigger>
+                     <DropdownMenuPortal>
+                        <DropdownMenuSubContent>
+                            <DropdownMenuItem onSelect={() => onFeedback("The soil is still a little damp, so I'm skipping watering.", false)}>Slightly Damp</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => onFeedback("The soil is still soaking wet, so I'm skipping watering.", false)}>Soaking Wet</DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                </DropdownMenuSub>
             </DropdownMenuContent>
         </DropdownMenu>
       </CardContent>
@@ -203,3 +223,4 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
     </Card>
   );
 }
+
