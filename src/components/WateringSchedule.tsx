@@ -191,16 +191,16 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
 
   const getWateringDescription = (): React.ReactNode => {
     if (advice?.shouldWater === 'Wait') {
-        return advice.reason;
+        return <p className="text-sm text-muted-foreground">{advice.reason}</p>;
     }
     
     if (isOverdue) {
-        return "Watering is overdue.";
+        return <p className="text-sm text-muted-foreground">Watering is overdue.</p>;
     }
 
     return (
         <div className="space-y-1">
-            <p className="text-xs">The timer shows minimum wait time till watering.</p>
+            <p className="text-xs text-muted-foreground">The timer shows minimum wait time till watering.</p>
             {wateringTime && (
                 <div className="flex items-baseline justify-start gap-2">
                     <span className="text-xs text-muted-foreground">Recommended:</span>
@@ -217,9 +217,9 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
         <CardTitle className="text-xl flex items-center gap-2">
             <Calendar /> Watering Schedule
         </CardTitle>
-        <CardDescription>
+        <div className="text-sm text-muted-foreground">
           {getWateringDescription()}
-        </CardDescription>
+        </div>
       </CardHeader>
       {renderContent()}
     </Card>
