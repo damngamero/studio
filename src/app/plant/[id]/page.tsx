@@ -181,53 +181,56 @@ export default function PlantProfilePage() {
     }
   }, [plant, settings.location, updatePlant, toast]);
 
-  const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor') => {
+const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor') => {
     if (!plant || plant.placement === newPlacement || isSettingPlacement) return;
-    
+
     setIsSettingPlacement(newPlacement);
-    let currentPlant = { ...plant };
-    
+    let feedbackToastShown = false;
+
     try {
         let feedbackResult;
-        // If we haven't given feedback for this placement before, get it from the AI.
-        if (!currentPlant.placementFeedback || !currentPlant.placementFeedback[newPlacement]) {
+        let finalPlantState = { ...plant, placement: newPlacement };
+
+        // Only fetch feedback if it's the first time for this placement
+        if (!plant.placementFeedback?.[newPlacement]) {
             feedbackResult = await getPlacementFeedback({
-                plantSpecies: currentPlant.commonName,
-                recommendedPlacement: currentPlant.recommendedPlacement || 'Indoor/Outdoor', 
+                plantSpecies: plant.commonName,
+                recommendedPlacement: plant.recommendedPlacement || 'Indoor/Outdoor',
                 userChoice: newPlacement,
                 location: settings.location,
             });
             
-             toast({
+            toast({
                 variant: feedbackResult.isGoodChoice ? 'default' : 'destructive',
                 title: feedbackResult.isGoodChoice ? 'Good Choice!' : 'Heads Up!',
                 description: feedbackResult.feedback,
             });
+            feedbackToastShown = true;
+            
+            // Add the new feedback to the plant state
+            finalPlantState = {
+                ...finalPlantState,
+                placementFeedback: {
+                    ...(plant.placementFeedback || {}),
+                    [newPlacement]: feedbackResult.feedback
+                }
+            };
         }
         
-        // This runs regardless of whether we fetched new feedback.
-        const updatedPlant = { 
-            ...currentPlant, 
-            placement: newPlacement,
-            placementFeedback: {
-                ...(currentPlant.placementFeedback || {}),
-                ...(feedbackResult && {[newPlacement]: feedbackResult.feedback})
-            }
-        };
+        // Always update the plant's placement
+        updatePlant(finalPlantState);
+        setPlant(finalPlantState); // This is crucial to update the UI immediately
 
-        updatePlant(updatedPlant);
-        setPlant(updatedPlant);
-        currentPlant = updatedPlant; // Ensure currentPlant is the most up-to-date version
-        
-        // Regenerate tips in the background based on the new placement
-        await handleRegenerateTips();
+        // Regenerate tips in the background after the state is updated
+        // Use a small timeout to allow the UI to update first.
+        setTimeout(() => handleRegenerateTips(), 100);
 
     } catch (error) {
-        console.error("Failed to get placement feedback or regenerate tips", error);
+        console.error("Failed to set placement:", error);
         toast({
             variant: "destructive",
             title: "Update Failed",
-            description: "Could not get new tips for the updated placement.",
+            description: "Could not get new feedback or tips for the updated placement.",
         });
     } finally {
         setIsSettingPlacement(false);
@@ -666,7 +669,7 @@ export default function PlantProfilePage() {
                                             size="xs" 
                                             variant={plant.placement === 'Indoor' ? 'default' : 'outline'}
                                             onClick={() => handleSetPlacement('Indoor')}
-                                            disabled={isSettingPlacement === 'Indoor' || isApiKeyMissing}
+                                            disabled={isSettingPlacement !== false || isApiKeyMissing}
                                             className="rounded-full"
                                             >
                                             {isSettingPlacement === 'Indoor' ? <Loader2 className="h-3 w-3 animate-spin"/> : <Home className="h-3 w-3" />}
@@ -680,7 +683,7 @@ export default function PlantProfilePage() {
                                             size="xs" 
                                             variant={plant.placement === 'Outdoor' ? 'default' : 'outline'}
                                             onClick={() => handleSetPlacement('Outdoor')}
-                                            disabled={isSettingPlacement === 'Outdoor' || isApiKeyMissing}
+                                            disabled={isSettingPlacement !== false || isApiKeyMissing}
                                             className="rounded-full"
                                             >
                                              {isSettingPlacement === 'Outdoor' ? <Loader2 className="h-3 w-3 animate-spin"/> : <Sun className="h-3 w-3" />}
