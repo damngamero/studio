@@ -109,6 +109,10 @@ export default function PlantProfilePage() {
         description: "Sage has updated the watering advice for this plant.",
     })
   };
+
+   const handleFeedback = (message: string) => {
+    handleOpenChat(message);
+  };
   
   const fetchWeatherAdvice = useCallback(async (currentPlant: Plant, forceRefresh = false) => {
     if (!settings.location || isApiKeyMissing) {
@@ -660,6 +664,7 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
                 onWaterPlant={handleWaterPlant}
                 advice={wateringAdvice}
                 isLoadingAdvice={isLoadingWateringAdvice}
+                onFeedback={handleFeedback}
               />
             <Card>
               <CardHeader>

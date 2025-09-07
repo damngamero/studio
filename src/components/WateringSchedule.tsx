@@ -1,22 +1,28 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from './ui/card';
 import { Button } from './ui/button';
-import { Calendar, Droplets, Loader2, Info } from 'lucide-react';
-import { addDays, differenceInDays, differenceInHours, differenceInMinutes, format, formatDistanceToNow, formatDistanceToNowStrict, isAfter } from 'date-fns';
-import { useSettingsStore } from '@/hooks/use-settings-store';
+import { Calendar, Droplets, Loader2, Info, ThumbsDown, ThumbsUp, MoreVertical } from 'lucide-react';
+import { addDays, format, formatDistanceToNow, isAfter } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Plant } from '@/lib/types';
-import { getWateringAdvice } from '@/ai/flows/get-watering-advice';
 import type { GetWateringAdviceOutput } from '@/ai/flows/get-watering-advice';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
 
 interface WateringScheduleProps {
   plant: Plant;
   onWaterPlant: () => void;
   advice: GetWateringAdviceOutput | null;
   isLoadingAdvice: boolean;
+  onFeedback: (message: string) => void;
 }
 
 const Countdown = ({ targetDate }: { targetDate: Date }) => {
@@ -51,7 +57,7 @@ const Countdown = ({ targetDate }: { targetDate: Date }) => {
     );
 };
 
-export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice }: WateringScheduleProps) {
+export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice, onFeedback }: WateringScheduleProps) {
   const [isWateredToday, setIsWateredToday] = useState(false);
 
   const { lastWatered, wateringFrequency, wateringTime } = plant;
@@ -139,6 +145,23 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice 
           <Droplets className="mr-2" /> 
           It's not time yet
         </Button>
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">
+                    Something's wrong?
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+                 <DropdownMenuItem onSelect={() => onFeedback("The soil is dry, so I'm watering it now even though the schedule says not to.")}>
+                    <ThumbsUp className="mr-2 h-4 w-4 text-green-500" />
+                    <span>It's dry, watering now</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => onFeedback("The soil is still wet, so I'm skipping this watering.")}>
+                    <ThumbsDown className="mr-2 h-4 w-4 text-red-500" />
+                    <span>It's wet, skipping</span>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
       </CardContent>
     );
   };
