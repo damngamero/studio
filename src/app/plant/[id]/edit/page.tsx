@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
-import { CalendarIcon, Save } from "lucide-react";
+import { CalendarIcon, Save, Leaf } from "lucide-react";
 import { format } from "date-fns";
 
 import { usePlantStore } from "@/hooks/use-plant-store";
@@ -26,6 +26,8 @@ import { cn } from "@/lib/utils";
 
 const editFormSchema = z.object({
   customName: z.string().min(1, "Please give your plant a name."),
+  commonName: z.string().min(1, "Please provide the plant's common name."),
+  latinName: z.string().min(1, "Please provide the plant's Latin name."),
   notes: z.string().optional(),
   environmentNotes: z.string().optional(),
   lastWatered: z.date(),
@@ -44,6 +46,8 @@ export default function EditPlantPage() {
     resolver: zodResolver(editFormSchema),
     defaultValues: {
       customName: "",
+      commonName: "",
+      latinName: "",
       notes: "",
       environmentNotes: "",
       lastWatered: new Date(),
@@ -57,6 +61,8 @@ export default function EditPlantPage() {
       if (foundPlant) {
         form.reset({
           customName: foundPlant.customName,
+          commonName: foundPlant.commonName,
+          latinName: foundPlant.latinName,
           notes: foundPlant.notes || "",
           environmentNotes: foundPlant.environmentNotes || "",
           lastWatered: new Date(foundPlant.lastWatered),
@@ -126,6 +132,39 @@ export default function EditPlantPage() {
                   <FormLabel>Plant's Nickname</FormLabel>
                   <FormControl>
                     <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="commonName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Common Name</FormLabel>
+                   <FormControl>
+                     <div className="relative">
+                      <Leaf className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input {...field} className="pl-10" />
+                     </div>
+                  </FormControl>
+                  <FormDescription>The official species name used to get care tips.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="latinName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Latin Name</FormLabel>
+                  <FormControl>
+                     <div className="relative">
+                       <Leaf className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input {...field} className="pl-10" />
+                     </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

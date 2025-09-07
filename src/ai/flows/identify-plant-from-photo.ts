@@ -24,8 +24,8 @@ export type IdentifyPlantFromPhotoInput = z.infer<
 
 const IdentifyPlantFromPhotoOutputSchema = z.object({
   isPlant: z.boolean().describe('Whether or not the input is a plant.'),
-  commonName: z.string().describe('The common name of the identified plant.'),
-  latinName: z.string().describe('The Latin name of the identified plant.'),
+  commonName: z.string().describe('The common name of the identified plant. If not a plant, this will be empty.'),
+  latinName: z.string().describe('The Latin name of the identified plant. If not a plant, this will be empty.'),
   confidence: z
     .number()
     .describe('The confidence level of the plant identification (0-1).'),
@@ -51,7 +51,9 @@ const prompt = ai.definePrompt({
   output: {schema: IdentifyPlantFromPhotoOutputSchema},
   prompt: `You are an expert botanist specializing in plant identification.
 
-You will use this information to identify the plant species in the photo.
+Your first task is to determine if the provided image is a plant. If it is NOT a plant (e.g., it's a person, an object, an animal), you MUST set 'isPlant' to false and leave the other fields empty.
+
+If and only if the image is a plant, you will use this information to identify the plant species in the photo.
 
 Photo: {{media url=photoDataUri}}
 
