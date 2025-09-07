@@ -40,7 +40,7 @@ const Countdown = ({ targetDate }: { targetDate: Date }) => {
     const minutes = Math.floor((totalSeconds % 3600) / 60);
 
     return (
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-baseline justify-center gap-2">
            <span className="text-2xl font-bold">{String(days).padStart(2, '0')}</span>
            <span className="text-sm">d</span>
            <span className="text-2xl font-bold">{String(hours).padStart(2, '0')}</span>
