@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X, MapPin, AlertTriangle, Info, CloudSun, BookOpen, RefreshCw, Search, Home, Wind, Waves } from "lucide-react";
+import { Pencil, Trash2, Bot, Loader2, MessageSquare, Leaf, Droplets, Sun, Stethoscope, Camera, X, MapPin, AlertTriangle, Info, CloudSun, BookOpen, RefreshCw, Search, Home, Wind, Waves, ThumbsUp, ThumbsDown } from "lucide-react";
 import { addDays, format, formatDistanceToNowStrict, isAfter, subDays } from 'date-fns';
 
 
@@ -180,19 +180,30 @@ export default function PlantProfilePage() {
     }
   }, [plant, settings.location, updatePlant, toast]);
 
-  const handleSetPlacement = useCallback((placement: 'Indoor' | 'Outdoor') => {
-    if (!plant || plant.placement === placement) return;
+  const handleSetPlacement = useCallback((newPlacement: 'Indoor' | 'Outdoor') => {
+    if (!plant || plant.placement === newPlacement) return;
 
-    const updatedPlant = { ...plant, placement };
+    const updatedPlant = { ...plant, placement: newPlacement };
     updatePlant(updatedPlant);
     setPlant(updatedPlant);
 
-    toast({
-      title: 'Placement Updated',
-      description: `${plant.customName} is now set as an ${placement.toLowerCase()} plant. Regenerating tips...`,
-    });
-
-    // Automatically regenerate tips with the new context
+    const recommended = plant.recommendedPlacement;
+    
+    if (recommended === 'Indoor/Outdoor' || recommended === newPlacement) {
+        toast({
+            title: "Good choice!",
+            description: `This plant should do well ${newPlacement.toLowerCase()}s. Regenerating tips...`,
+            action: <div className="p-1.5 rounded-full bg-green-500"><ThumbsUp className="h-4 w-4 text-white" /></div>
+        });
+    } else {
+        toast({
+            variant: 'destructive',
+            title: "This might be tricky...",
+            description: `This plant is usually kept ${recommended?.toLowerCase()}s. Pay close attention to its needs. Regenerating tips...`,
+            action: <div className="p-1.5 rounded-full bg-yellow-400"><ThumbsDown className="h-4 w-4 text-white" /></div>
+        });
+    }
+    
     handleRegenerateTips();
 
   }, [plant, updatePlant, toast, handleRegenerateTips]);

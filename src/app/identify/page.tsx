@@ -261,6 +261,7 @@ export default function IdentifyPlantPage() {
         wateringAmount: careTipsResult.wateringAmount,
         careTips: careTipsResult.careTips,
         placement: placementResult.placement,
+        recommendedPlacement: placementResult.placement,
       });
       
       toast({

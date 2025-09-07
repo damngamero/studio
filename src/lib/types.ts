@@ -43,6 +43,7 @@ export interface Plant {
   annotatedRegions: RegionOfInterest[];
   journal?: JournalEntry[];
   placement?: 'Indoor' | 'Outdoor' | 'Indoor/Outdoor';
+  recommendedPlacement?: 'Indoor' | 'Outdoor' | 'Indoor/Outdoor';
 }
 
 // Weather Schemas
