@@ -30,6 +30,7 @@ interface Message {
 
 interface ChatProps {
   plant: Plant;
+  initialContext?: string;
 }
 
 const suggestions = [
@@ -39,7 +40,7 @@ const suggestions = [
     "Tell me a fun fact about this plant."
 ];
 
-export function Chat({ plant }: ChatProps) {
+export function Chat({ plant, initialContext }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -52,6 +53,14 @@ export function Chat({ plant }: ChatProps) {
       question: '',
     },
   });
+
+  useEffect(() => {
+    // Add initial context as the first message if provided
+    if (initialContext) {
+      setMessages([{ role: 'assistant', content: `Let's talk about these tips:\n\n*${initialContext}*` }]);
+    }
+  }, [initialContext]);
+
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -74,6 +83,7 @@ export function Chat({ plant }: ChatProps) {
       const result = await chatAboutPlant({
         plantName: plant.commonName,
         question: question,
+        context: initialContext, // Pass the initial context to the flow
         journal: journalEntries,
       });
       const assistantMessage: Message = { role: 'assistant', content: result.answer };

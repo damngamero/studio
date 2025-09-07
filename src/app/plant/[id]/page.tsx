@@ -79,6 +79,8 @@ export default function PlantProfilePage() {
   const [isLoadingWateringAdvice, setIsLoadingWateringAdvice] = useState(false);
   const [wateringAdvice, setWateringAdvice] = useState<GetWateringAdviceOutput | null>(null);
   const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
+  const [chatContext, setChatContext] = useState<string | undefined>(undefined);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const plantId = Array.isArray(params.id) ? params.id[0] : params.id;
   
@@ -240,6 +242,11 @@ export default function PlantProfilePage() {
         stopCameraStream();
       }
     }
+  };
+
+  const handleOpenChat = (context?: string) => {
+    setChatContext(context);
+    setIsChatOpen(true);
   };
 
   const handleCheckHealth = async () => {
@@ -409,19 +416,9 @@ export default function PlantProfilePage() {
                         </Badge>
                       </div>
                       <p className="whitespace-pre-wrap"><span className="font-semibold">Diagnosis:</span> {plant.health.diagnosis}</p>
-                       <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="link" size="sm" className="p-0 h-auto mt-1" disabled={isApiKeyMissing}>
-                               <MessageSquare className="mr-2 h-3.5 w-3.5"/> Discuss Diagnosis
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-[625px]">
-                            <DialogHeader>
-                              <DialogTitle>Chat about {plant.customName}</DialogTitle>
-                            </DialogHeader>
-                            {plant && <Chat plant={plant} />}
-                          </DialogContent>
-                        </Dialog>
+                       <Button variant="link" size="sm" className="p-0 h-auto mt-1" disabled={isApiKeyMissing} onClick={() => handleOpenChat(plant.health?.diagnosis)}>
+                          <MessageSquare className="mr-2 h-3.5 w-3.5"/> Discuss Diagnosis
+                       </Button>
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground">No health check performed yet.</p>
@@ -477,7 +474,7 @@ export default function PlantProfilePage() {
                 </div>
                 <Separator />
                  <div>
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-start justify-between mb-2">
                         <div>
                          <h4 className="font-medium text-sm">Sage's Dynamic Care Tips</h4>
                          {plant.wateringAmount && <p className="text-xs text-muted-foreground">Recommended water: {plant.wateringAmount}</p>}
@@ -496,7 +493,12 @@ export default function PlantProfilePage() {
                       <Accordion type="single" collapsible defaultValue="item-1">
                         <AccordionItem value="item-1">
                           <AccordionTrigger className="text-sm">View Care Tips</AccordionTrigger>
-                          <AccordionContent className="whitespace-pre-wrap text-sm">{plant.careTips}</AccordionContent>
+                          <AccordionContent>
+                            <div className="whitespace-pre-wrap text-sm">{plant.careTips}</div>
+                            <Button variant="link" size="sm" className="p-0 h-auto mt-2" disabled={isApiKeyMissing} onClick={() => handleOpenChat(plant.careTips)}>
+                                <MessageSquare className="mr-2 h-3.5 w-3.5"/> Discuss Tips
+                            </Button>
+                          </AccordionContent>
                         </AccordionItem>
                       </Accordion>
                     ) : (
@@ -549,19 +551,9 @@ export default function PlantProfilePage() {
                  <CardDescription>Ask a question about your <span className="italic">{plant.commonName}</span>.</CardDescription>
               </CardHeader>
               <CardContent>
-                 <Dialog>
-                    <DialogTrigger asChild>
-                      <Button className="w-full" disabled={isApiKeyMissing}>
-                        <MessageSquare className="mr-2" /> Chat Now
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[625px]">
-                      <DialogHeader>
-                        <DialogTitle>Chat about {plant.customName}</DialogTitle>
-                      </DialogHeader>
-                      {plant && <Chat plant={plant} />}
-                    </DialogContent>
-                  </Dialog>
+                 <Button className="w-full" disabled={isApiKeyMissing} onClick={() => handleOpenChat()}>
+                    <MessageSquare className="mr-2" /> Chat Now
+                 </Button>
               </CardContent>
             </Card>
             <PlantJournal plant={plant} />
@@ -619,6 +611,20 @@ export default function PlantProfilePage() {
             </AlertDialog>
           </div>
       </div>
+      <Dialog open={isChatOpen} onOpenChange={(open) => {
+        setIsChatOpen(open);
+        // Clear context when closing the dialog
+        if (!open) {
+          setChatContext(undefined);
+        }
+      }}>
+        <DialogContent className="sm:max-w-[625px]">
+          <DialogHeader>
+            <DialogTitle>Chat about {plant.customName}</DialogTitle>
+          </DialogHeader>
+          {plant && <Chat plant={plant} initialContext={chatContext} />}
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
