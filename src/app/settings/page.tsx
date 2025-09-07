@@ -15,7 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useSettingsStore, type Theme, type Settings } from "@/hooks/use-settings-store.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, MapPin, ChevronsUpDown, KeyRound, Volume2 } from "lucide-react";
+import { Check, MapPin, ChevronsUpDown, KeyRound } from "lucide-react";
 import { timezones } from "@/lib/timezones";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -27,7 +27,6 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 const preferencesFormSchema = z.object({
   theme: z.custom<Theme>(),
   wateringReminders: z.boolean().default(true),
-  soundEffectsEnabled: z.boolean().default(true),
   timezone: z.string().default('UTC'),
   location: z.string().optional(),
   geminiApiKey: z.string().optional(),
@@ -247,25 +246,6 @@ export default function SettingsPage() {
                             </AlertDescription>
                         </Alert>
                     )}
-
-                    <FormField
-                      control={form.control}
-                      name="soundEffectsEnabled"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                            <div className="space-y-0.5">
-                            <FormLabel className="flex items-center gap-2"><Volume2 className="w-4 h-4"/>Sound Effects</FormLabel>
-                            <FormDescription>Play sounds for UI interactions like clicks and notifications.</FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
                   </div>
 
                 </CardContent>

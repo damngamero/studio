@@ -14,7 +14,6 @@ export interface Settings {
   timezone: string;
   location: string;
   geminiApiKey?: string;
-  soundEffectsEnabled: boolean;
 }
 
 const defaultSettings: Settings = {
@@ -23,7 +22,6 @@ const defaultSettings: Settings = {
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   location: "",
   geminiApiKey: "",
-  soundEffectsEnabled: true,
 };
 
 // This function can be called from server components or server actions
