@@ -5,8 +5,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Bot, Loader2, Send, User } from 'lucide-react';
+import { Bot, Loader2, Send, User, Paperclip, X } from 'lucide-react';
 import { format } from 'date-fns';
+import Image from 'next/image';
 
 import type { Plant } from '@/lib/types';
 import { chatAboutPlant } from '@/ai/flows/chat-about-plant';
@@ -18,6 +19,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
 import { useAchievementStore } from '@/hooks/use-achievement-store';
+import { useToast } from '@/hooks/use-toast';
 
 const chatFormSchema = z.object({
   question: z.string().min(1, 'Please enter a question.'),
@@ -31,6 +33,7 @@ interface Message {
 interface ChatProps {
   plant: Plant;
   initialContext?: string;
+  onUpdate?: (updatedPlantData: Partial<Plant>) => void;
 }
 
 const suggestions = [
@@ -40,12 +43,15 @@ const suggestions = [
     "Tell me a fun fact about this plant."
 ];
 
-export function Chat({ plant, initialContext }: ChatProps) {
+export function Chat({ plant, initialContext, onUpdate }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [photoDataUri, setPhotoDataUri] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { checkAndUnlock } = useAchievementStore();
   const [chatCount, setChatCount] = useState(0);
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof chatFormSchema>>({
     resolver: zodResolver(chatFormSchema),
@@ -68,6 +74,25 @@ export function Chat({ plant, initialContext }: ChatProps) {
     }
   }, [messages]);
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast({
+            variant: "destructive",
+            title: "Invalid File Type",
+            description: "Please upload an image file.",
+        });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPhotoDataUri(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSendMessage = async (question: string) => {
     setIsLoading(true);
     const userMessage: Message = { role: 'user', content: question };
@@ -86,9 +111,15 @@ export function Chat({ plant, initialContext }: ChatProps) {
         context: initialContext, // Pass the initial context to the flow
         journal: journalEntries,
         placement: plant.placement,
+        photoDataUri: photoDataUri || undefined,
       });
+
       const assistantMessage: Message = { role: 'assistant', content: result.answer };
       setMessages((prev) => [...prev, assistantMessage]);
+
+      if (result.updatedWateringAmount && onUpdate) {
+        onUpdate({ wateringAmount: result.updatedWateringAmount });
+      }
 
       const newChatCount = chatCount + 1;
       setChatCount(newChatCount);
@@ -103,6 +134,10 @@ export function Chat({ plant, initialContext }: ChatProps) {
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      setPhotoDataUri(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -175,8 +210,25 @@ export function Chat({ plant, initialContext }: ChatProps) {
                 </Badge>
             ))}
         </div>
+        {photoDataUri && (
+             <div className="relative w-24 h-24 rounded-md overflow-hidden border">
+                <Image src={photoDataUri} alt="Attached to chat" fill className="object-cover" />
+                <Button 
+                    variant="destructive" 
+                    size="icon" 
+                    className="absolute top-1 right-1 h-6 w-6"
+                    onClick={() => setPhotoDataUri(null)}
+                >
+                    <X className="h-4 w-4" />
+                </Button>
+            </div>
+        )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-center gap-2">
+            <Input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+             <Button type="button" variant="outline" size="icon" onClick={() => fileInputRef.current?.click()}>
+                <Paperclip className="h-4 w-4" />
+            </Button>
             <FormField
               control={form.control}
               name="question"

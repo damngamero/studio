@@ -20,15 +20,17 @@ const JournalEntrySchema = z.object({
 
 const ChatAboutPlantInputSchema = z.object({
   plantName: z.string().describe('The name of the plant.'),
-  question: z.string().describe('The user\'s question about the plant.'),
+  question: z.string().describe("The user's question about the plant."),
   context: z.string().optional().describe('Additional context for the conversation, like the current care tips.'),
   journal: z.array(JournalEntrySchema).optional().describe('A list of journal entries for the plant, including date and notes.'),
   placement: z.enum(['Indoor', 'Outdoor', 'Indoor/Outdoor']).optional().describe('Where the plant is placed.'),
+  photoDataUri: z.string().optional().describe("An optional photo provided by the user, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
 });
 export type ChatAboutPlantInput = z.infer<typeof ChatAboutPlantInputSchema>;
 
 const ChatAboutPlantOutputSchema = z.object({
-  answer: z.string().describe('The AI\'s answer to the user\'s question.'),
+  answer: z.string().describe("The AI's answer to the user's question."),
+  updatedWateringAmount: z.string().optional().describe("If the user's question led to a new watering amount recommendation (e.g., they mentioned pot size), return the new amount here (e.g., '250-500ml'). Otherwise, leave empty."),
 });
 export type ChatAboutPlantOutput = z.infer<typeof ChatAboutPlantOutputSchema>;
 
@@ -49,6 +51,11 @@ Question: {{{question}}}
 The plant is placed: **{{{placement}}}**. Take this into account.
 {{/if}}
 
+{{#if photoDataUri}}
+The user has also provided this photo for context. Analyze it as part of your answer.
+Photo: {{media url=photoDataUri}}
+{{/if}}
+
 {{#if context}}
 The user has the following context. Your answer should be related to this context.
 
@@ -66,7 +73,9 @@ To help answer the question, here are the user's journal entries for this plant.
 {{/each}}
 {{/if}}
 
-Please provide a helpful and concise answer to the user's question. If you use information from the journal or the context, be sure to mention it.`,
+Please provide a helpful and concise answer to the user's question. If you use information from the journal or the context, be sure to mention it.
+
+**Crucially**, if your answer includes a new, specific watering amount (e.g., because the user mentioned their pot size or environment), you MUST populate the 'updatedWateringAmount' field in your response with the new recommended amount (e.g., "250-500ml"). Otherwise, leave it empty.`,
 });
 
 const chatAboutPlantFlow = ai.defineFlow(

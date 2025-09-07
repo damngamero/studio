@@ -98,6 +98,17 @@ export default function PlantProfilePage() {
       setPlant(foundPlant);
     }
   }, [plantId, getPlantById]);
+
+  const onChatInteraction = (updatedPlantData: Partial<Plant>) => {
+    if (!plant) return;
+    const updatedPlant = { ...plant, ...updatedPlantData };
+    updatePlant(updatedPlant);
+    setPlant(updatedPlant);
+    toast({
+        title: "Care Tip Updated!",
+        description: "Sage has updated the watering advice for this plant.",
+    })
+  };
   
   const fetchWeatherAdvice = useCallback(async (currentPlant: Plant, forceRefresh = false) => {
     if (!settings.location || isApiKeyMissing) {
@@ -755,7 +766,7 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
           <DialogHeader>
             <DialogTitle>Chat about {plant.customName}</DialogTitle>
           </DialogHeader>
-          {plant && <Chat plant={plant} initialContext={chatContext} />}
+          {plant && <Chat plant={plant} initialContext={chatContext} onUpdate={onChatInteraction} />}
         </DialogContent>
       </Dialog>
     </AppLayout>
