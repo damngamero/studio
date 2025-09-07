@@ -9,7 +9,7 @@
  * - GetGardenOverviewOutput - The return type for the function.
  */
 
-import { ai } from '@/ai/genkit';
+import { getAi } from '@/ai/genkit';
 import { z } from 'genkit';
 import { getWeatherTool } from '../tools/get-weather';
 
@@ -23,6 +23,7 @@ const PlantStatusSchema = z.object({
 const GetGardenOverviewInputSchema = z.object({
   location: z.string().describe("The user's location (e.g., 'San Francisco, CA')."),
   plants: z.array(PlantStatusSchema).describe('A list of the user\'s plants and their watering status.'),
+  apiKey: z.string().optional(),
 });
 export type GetGardenOverviewInput = z.infer<typeof GetGardenOverviewInputSchema>;
 
@@ -36,16 +37,19 @@ export type GetGardenOverviewOutput = z.infer<
 export async function getGardenOverview(
   input: GetGardenOverviewInput
 ): Promise<GetGardenOverviewOutput> {
-  return getGardenOverviewFlow(input);
-}
+  // Do not run if there's no location or no plants
+  if (!input.location || input.plants.length === 0) {
+      return { overview: "Set your location and add a plant to get your daily garden overview from Sage!" };
+  }
 
+  const ai = await getAi(input.apiKey);
 
-const prompt = ai.definePrompt({
-    name: 'getGardenOverviewPrompt',
-    input: { schema: GetGardenOverviewInputSchema },
-    output: { schema: GetGardenOverviewOutputSchema },
-    tools: [getWeatherTool],
-    prompt: `You are Sage, an AI gardening assistant. Your goal is to provide a quick, helpful "daily digest" for the user's garden.
+  const prompt = ai.definePrompt({
+      name: 'getGardenOverviewPrompt',
+      input: { schema: GetGardenOverviewInputSchema },
+      output: { schema: GetGardenOverviewOutputSchema },
+      tools: [getWeatherTool],
+      prompt: `You are Sage, an AI gardening assistant. Your goal is to provide a quick, helpful "daily digest" for the user's garden.
 
 1. First, use the getWeatherForLocation tool to get the weather for the user's location: {{{location}}}.
 2. Look at the list of the user's plants and see which ones are overdue for watering.
@@ -63,20 +67,8 @@ User's Plants:
 - {{customName}} ({{commonName}}). Placement: {{#if placement}}{{placement}}{{else}}Unknown{{/if}}. Watering Overdue: {{isWateringOverdue}}
 {{/each}}
 `,
-});
+  });
 
-const getGardenOverviewFlow = ai.defineFlow(
-  {
-    name: 'getGardenOverviewFlow',
-    inputSchema: GetGardenOverviewInputSchema,
-    outputSchema: GetGardenOverviewOutputSchema,
-  },
-  async (input) => {
-    // Do not run if there's no location or no plants
-    if (!input.location || input.plants.length === 0) {
-        return { overview: "Set your location and add a plant to get your daily garden overview from Sage!" };
-    }
-    const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
-    return output!;
-  }
-);
+  const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
+  return output!;
+}

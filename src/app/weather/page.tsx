@@ -64,7 +64,7 @@ export default function WeatherPage() {
 
     try {
       const plantInfo = plants.map(p => ({ customName: p.customName, commonName: p.commonName, placement: p.placement }));
-      const result = await getWeatherAndPlantAdvice({ location: settings.location, plants: plantInfo });
+      const result = await getWeatherAndPlantAdvice({ location: settings.location, plants: plantInfo, apiKey: settings.geminiApiKey });
       setWeatherData(result);
        // Cache the new data
       sessionStorage.setItem('weather-data', JSON.stringify({ data: result, timestamp: new Date().getTime() }));
@@ -74,7 +74,7 @@ export default function WeatherPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [settings.location, plants]);
+  }, [settings.location, plants, settings.geminiApiKey]);
 
   useEffect(() => {
     if (plantsInitialized && settingsInitialized) {
@@ -168,7 +168,7 @@ export default function WeatherPage() {
     return (
         <div className="grid gap-8">
             <div>
-                <Card>
+                <Card className="animate-in fade-in">
                     <CardHeader>
                         <CardTitle>Current Weather in {settings.location}</CardTitle>
                         <CardDescription>Here's what it looks like outside right now.</CardDescription>
@@ -192,7 +192,7 @@ export default function WeatherPage() {
                 <h2 className="text-2xl font-bold font-heading mb-4">3-Day Forecast</h2>
                 <div className="grid md:grid-cols-3 gap-4">
                     {weatherData.forecast.map(day => (
-                        <Card key={day.day}>
+                        <Card key={day.day} className="animate-in fade-in">
                             <CardContent className="p-4 flex items-center justify-between">
                                  <div>
                                     <p className="font-semibold">{day.day}</p>
@@ -211,7 +211,7 @@ export default function WeatherPage() {
                 <h2 className="text-2xl font-bold font-heading mb-4">Sage's Proactive Advice</h2>
                  <div className="space-y-4">
                      {weatherData.plantAdvice.map(advice => (
-                        <Card key={advice.customName}>
+                        <Card key={advice.customName} className="animate-in fade-in">
                            <CardHeader>
                                <CardTitle className="text-lg">{advice.customName}</CardTitle>
                            </CardHeader>

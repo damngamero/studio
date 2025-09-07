@@ -9,11 +9,12 @@
  * - GetPlantPlacementOutput - The return type for the function.
  */
 
-import { ai } from '@/ai/genkit';
+import { getAi } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const GetPlantPlacementInputSchema = z.object({
   plantSpecies: z.string().describe('The common name of the plant.'),
+  apiKey: z.string().optional(),
 });
 export type GetPlantPlacementInput = z.infer<
   typeof GetPlantPlacementInputSchema
@@ -29,24 +30,15 @@ export type GetPlantPlacementOutput = z.infer<
 export async function getPlantPlacement(
   input: GetPlantPlacementInput
 ): Promise<GetPlantPlacementOutput> {
-  return getPlantPlacementFlow(input);
+  const ai = await getAi(input.apiKey);
+
+  const prompt = ai.definePrompt({
+    name: 'getPlantPlacementPrompt',
+    input: { schema: GetPlantPlacementInputSchema },
+    output: { schema: GetPlantPlacementOutputSchema },
+    prompt: `Based on the plant species "{{plantSpecies}}", is it typically grown indoors, outdoors, or both?`,
+  });
+
+  const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
+  return output!;
 }
-
-const prompt = ai.definePrompt({
-  name: 'getPlantPlacementPrompt',
-  input: { schema: GetPlantPlacementInputSchema },
-  output: { schema: GetPlantPlacementOutputSchema },
-  prompt: `Based on the plant species "{{plantSpecies}}", is it typically grown indoors, outdoors, or both?`,
-});
-
-const getPlantPlacementFlow = ai.defineFlow(
-  {
-    name: 'getPlantPlacementFlow',
-    inputSchema: GetPlantPlacementInputSchema,
-    outputSchema: GetPlantPlacementOutputSchema,
-  },
-  async (input) => {
-    const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
-    return output!;
-  }
-);

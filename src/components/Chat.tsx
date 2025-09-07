@@ -22,6 +22,7 @@ import { useAchievementStore } from '@/hooks/use-achievement-store';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose, DialogTrigger } from './ui/dialog';
 import { Alert, AlertTitle, AlertDescription } from './ui/alert';
+import { useSettingsStore } from '@/hooks/use-settings-store';
 
 const chatFormSchema = z.object({
   question: z.string().min(1, 'Please enter a question.'),
@@ -57,6 +58,7 @@ export function Chat({ plant, initialContext, onUpdate }: ChatProps) {
   const { toast } = useToast();
   const [isCameraDialogOpen, setIsCameraDialogOpen] = useState(false);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const { settings } = useSettingsStore();
 
   const form = useForm<z.infer<typeof chatFormSchema>>({
     resolver: zodResolver(chatFormSchema),
@@ -166,6 +168,7 @@ export function Chat({ plant, initialContext, onUpdate }: ChatProps) {
         journal: journalEntries,
         placement: plant.placement,
         photoDataUri: photoDataUri || undefined,
+        apiKey: settings.geminiApiKey,
       });
 
       const assistantMessage: Message = { role: 'assistant', content: result.answer };

@@ -1,5 +1,4 @@
 
-
 'use server';
 
 /**
@@ -10,7 +9,7 @@
  * - GetPlantCareTipsOutput - The return type for the getPlantCareTips function.
  */
 
-import {ai} from '@/ai/genkit';
+import {getAi} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GetPlantCareTipsInputSchema = z.object({
@@ -31,6 +30,7 @@ const GetPlantCareTipsInputSchema = z.object({
     .describe('User-provided notes about the plant\'s environment (e.g., "near a sunny window", "in a cool, dry room").'),
   lastWatered: z.string().optional().describe('The ISO date string of when the plant was last watered.'),
    placement: z.enum(['Indoor', 'Outdoor', 'Indoor/Outdoor']).optional().describe('Where the plant is placed by the user.'),
+  apiKey: z.string().optional(),
 });
 export type GetPlantCareTipsInput = z.infer<typeof GetPlantCareTipsInputSchema>;
 
@@ -45,14 +45,13 @@ const GetPlantCareTipsOutputSchema = z.object({
 export type GetPlantCareTipsOutput = z.infer<typeof GetPlantCareTipsOutputSchema>;
 
 export async function getPlantCareTips(input: GetPlantCareTipsInput): Promise<GetPlantCareTipsOutput> {
-  return getPlantCareTipsFlow(input);
-}
+  const ai = await getAi(input.apiKey);
 
-const prompt = ai.definePrompt({
-  name: 'getPlantCareTipsPrompt',
-  input: {schema: GetPlantCareTipsInputSchema},
-  output: {schema: GetPlantCareTipsOutputSchema},
-  prompt: `You are an expert horticulturalist. Provide care tips for the following plant. 
+  const prompt = ai.definePrompt({
+    name: 'getPlantCareTipsPrompt',
+    input: {schema: GetPlantCareTipsInputSchema},
+    output: {schema: GetPlantCareTipsOutputSchema},
+    prompt: `You are an expert horticulturalist. Provide care tips for the following plant. 
   
 Your advice should be general and not based on a specific weather forecast. Focus on the plant's species and the provided environment details.
 Use Markdown for formatting and include relevant emojis for each section.
@@ -87,16 +86,8 @@ Environment Notes: {{{environmentNotes}}}
 Last Watered: {{{lastWatered}}}
 {{/if}}
 `,
-});
+  });
 
-const getPlantCareTipsFlow = ai.defineFlow(
-  {
-    name: 'getPlantCareTipsFlow',
-    inputSchema: GetPlantCareTipsInputSchema,
-    outputSchema: GetPlantCareTipsOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
-    return output!;
-  }
-);
+  const {output} = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
+  return output!;
+}

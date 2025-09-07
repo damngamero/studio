@@ -9,7 +9,7 @@
  * - ChatAboutPlantOutput - The return type for the chatAboutPlant function.
  */
 
-import { ai } from '@/ai/genkit';
+import { getAi } from '@/ai/genkit';
 import { z } from 'genkit';
 import type { JournalEntry } from '@/lib/types';
 
@@ -25,6 +25,7 @@ const ChatAboutPlantInputSchema = z.object({
   journal: z.array(JournalEntrySchema).optional().describe('A list of journal entries for the plant, including date and notes.'),
   placement: z.enum(['Indoor', 'Outdoor', 'Indoor/Outdoor']).optional().describe('Where the plant is placed.'),
   photoDataUri: z.string().optional().describe("An optional photo provided by the user, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
+  apiKey: z.string().optional(),
 });
 export type ChatAboutPlantInput = z.infer<typeof ChatAboutPlantInputSchema>;
 
@@ -35,14 +36,13 @@ const ChatAboutPlantOutputSchema = z.object({
 export type ChatAboutPlantOutput = z.infer<typeof ChatAboutPlantOutputSchema>;
 
 export async function chatAboutPlant(input: ChatAboutPlantInput): Promise<ChatAboutPlantOutput> {
-  return chatAboutPlantFlow(input);
-}
+  const ai = await getAi(input.apiKey);
 
-const prompt = ai.definePrompt({
-  name: 'chatAboutPlantPrompt',
-  input: { schema: ChatAboutPlantInputSchema },
-  output: { schema: ChatAboutPlantOutputSchema },
-  prompt: `You are Sage, a helpful and friendly gardening assistant AI. A user wants to ask a question about their plant.
+  const prompt = ai.definePrompt({
+    name: 'chatAboutPlantPrompt',
+    input: { schema: ChatAboutPlantInputSchema },
+    output: { schema: ChatAboutPlantOutputSchema },
+    prompt: `You are Sage, a helpful and friendly gardening assistant AI. A user wants to ask a question about their plant.
 
 Plant Name: {{{plantName}}}
 Question: {{{question}}}
@@ -76,16 +76,8 @@ To help answer the question, here are the user's journal entries for this plant.
 Please provide a helpful and concise answer to the user's question. If you use information from the journal or the context, be sure to mention it.
 
 **Crucially**, if your answer includes a new, specific watering amount (e.g., because the user mentioned their pot size, environment, or that the soil is too dry/wet), you MUST populate the 'updatedWateringAmount' field in your response with the new recommended amount (e.g., "250-500ml"). Otherwise, leave it empty.`,
-});
+  });
 
-const chatAboutPlantFlow = ai.defineFlow(
-  {
-    name: 'chatAboutPlantFlow',
-    inputSchema: ChatAboutPlantInputSchema,
-    outputSchema: ChatAboutPlantOutputSchema,
-  },
-  async (input) => {
-    const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
-    return output!;
-  }
-);
+  const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
+  return output!;
+}

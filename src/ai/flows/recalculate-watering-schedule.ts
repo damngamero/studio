@@ -9,7 +9,7 @@
  * - RecalculateWateringScheduleOutput - The return type for the function.
  */
 
-import { ai } from '@/ai/genkit';
+import { getAi } from '@/ai/genkit';
 import { z } from 'genkit';
 import { getWeatherTool } from '../tools/get-weather';
 
@@ -20,6 +20,7 @@ const RecalculateWateringScheduleInputSchema = z.object({
   timingDiscrepancy: z.string().describe('How much earlier or later the user watered the plant, or if they are skipping it (e.g., "1 day, 4 hours early", "2 days late", "skipping").'),
   location: z.string().describe("The user's location for weather context."),
   environmentNotes: z.string().optional().describe('Notes about the plant\'s specific environment.'),
+  apiKey: z.string().optional(),
 });
 export type RecalculateWateringScheduleInput = z.infer<typeof RecalculateWateringScheduleInputSchema>;
 
@@ -32,15 +33,14 @@ export type RecalculateWateringScheduleOutput = z.infer<typeof RecalculateWateri
 export async function recalculateWateringSchedule(
   input: RecalculateWateringScheduleInput
 ): Promise<RecalculateWateringScheduleOutput> {
-  return recalculateWateringScheduleFlow(input);
-}
+  const ai = await getAi(input.apiKey);
 
-const prompt = ai.definePrompt({
-  name: 'recalculateWateringSchedulePrompt',
-  input: { schema: RecalculateWateringScheduleInputSchema },
-  output: { schema: RecalculateWateringScheduleOutputSchema },
-  tools: [getWeatherTool],
-  prompt: `You are an expert horticulturalist AI. A user has indicated that the watering schedule for their plant might be incorrect. Your task is to analyze their feedback and the weather to recommend a new, more accurate watering frequency.
+  const prompt = ai.definePrompt({
+    name: 'recalculateWateringSchedulePrompt',
+    input: { schema: RecalculateWateringScheduleInputSchema },
+    output: { schema: RecalculateWateringScheduleOutputSchema },
+    tools: [getWeatherTool],
+    prompt: `You are an expert horticulturalist AI. A user has indicated that the watering schedule for their plant might be incorrect. Your task is to analyze their feedback and the weather to recommend a new, more accurate watering frequency.
 
 ## Plant & Schedule Details
 - **Plant:** {{{plantCommonName}}}
@@ -63,16 +63,8 @@ const prompt = ai.definePrompt({
 4.  **Provide Reasoning:** Give a short, clear explanation for your new recommendation or for keeping the schedule the same.
 
 Return the new watering frequency and your reasoning.`,
-});
+  });
 
-const recalculateWateringScheduleFlow = ai.defineFlow(
-  {
-    name: 'recalculateWateringScheduleFlow',
-    inputSchema: RecalculateWateringScheduleInputSchema,
-    outputSchema: RecalculateWateringScheduleOutputSchema,
-  },
-  async (input) => {
-    const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
-    return output!;
-  }
-);
+  const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
+  return output!;
+}

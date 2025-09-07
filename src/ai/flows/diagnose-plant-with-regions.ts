@@ -9,7 +9,7 @@
  * - DiagnosePlantWithRegionsOutput - The return type for the function.
  */
 
-import { ai } from '@/ai/genkit';
+import { getAi } from '@/ai/genkit';
 import { RegionOfInterestSchema } from '@/lib/types';
 import { z } from 'genkit';
 
@@ -19,6 +19,7 @@ const DiagnosePlantWithRegionsInputSchema = z.object({
     .describe(
       "A photo of a plant, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'"
     ),
+  apiKey: z.string().optional(),
 });
 export type DiagnosePlantWithRegionsInput = z.infer<
   typeof DiagnosePlantWithRegionsInputSchema
@@ -34,14 +35,13 @@ export type DiagnosePlantWithRegionsOutput = z.infer<
 export async function diagnosePlantWithRegions(
   input: DiagnosePlantWithRegionsInput
 ): Promise<DiagnosePlantWithRegionsOutput> {
-  return diagnosePlantWithRegionsFlow(input);
-}
+  const ai = await getAi(input.apiKey);
 
-const prompt = ai.definePrompt({
-  name: 'diagnosePlantWithRegionsPrompt',
-  input: { schema: DiagnosePlantWithRegionsInputSchema },
-  output: { schema: DiagnosePlantWithRegionsOutputSchema },
-  prompt: `You are an expert botanist. Analyze the provided photo of a plant. 
+  const prompt = ai.definePrompt({
+    name: 'diagnosePlantWithRegionsPrompt',
+    input: { schema: DiagnosePlantWithRegionsInputSchema },
+    output: { schema: DiagnosePlantWithRegionsOutputSchema },
+    prompt: `You are an expert botanist. Analyze the provided photo of a plant. 
   
 Your task is to identify key regions of interest on the plant, such as leaves, stems, flowers, or any visible signs of distress (e.g., yellowing leaves, spots, pests). 
   
@@ -52,16 +52,8 @@ If you identify a problem, be specific in the description (e.g., "Leaf with sign
 Photo: {{media url=photoDataUri}}
   
 Return an array of all identified regions.`,
-});
+  });
 
-const diagnosePlantWithRegionsFlow = ai.defineFlow(
-  {
-    name: 'diagnosePlantWithRegionsFlow',
-    inputSchema: DiagnosePlantWithRegionsInputSchema,
-    outputSchema: DiagnosePlantWithRegionsOutputSchema,
-  },
-  async (input) => {
-    const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
-    return output!;
-  }
-);
+  const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
+  return output!;
+}

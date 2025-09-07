@@ -74,6 +74,7 @@ function GardenOverview() {
       const result = await getGardenOverview({
         location: settings.location || "",
         plants: plantStatus,
+        apiKey: settings.geminiApiKey,
       });
       setOverview(result.overview);
       sessionStorage.setItem('garden-overview', JSON.stringify({ data: result.overview, timestamp: new Date().getTime() }));
@@ -84,7 +85,7 @@ function GardenOverview() {
     } finally {
       setIsLoading(false);
     }
-  }, [plants, settings.location]);
+  }, [plants, settings.location, settings.geminiApiKey]);
 
   useEffect(() => {
     if (isPlantsInitialized && isSettingsInitialized) {
@@ -162,7 +163,7 @@ function GardenOverview() {
                 <span>Asking Sage for your daily digest...</span>
             </div>
         ) : (
-            <div className="prose prose-sm max-w-none prose-p:my-1 prose-strong:text-foreground">
+            <div className="prose prose-sm max-w-none prose-p:my-1 prose-strong:text-foreground animate-in fade-in">
                 <ReactMarkdown>{overview || ""}</ReactMarkdown>
             </div>
         )}

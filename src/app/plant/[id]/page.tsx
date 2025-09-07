@@ -29,7 +29,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose, DialogFooter, DialogDescription as DialogDescriptionComponent } from "@/components/ui/dialog";
 import { Chat } from "@/components/Chat";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -135,7 +135,8 @@ export default function PlantProfilePage() {
       // Fetch weather and plant advice
       promises.push(getWeatherAndPlantAdvice({
         location: settings.location,
-        plants: [{ customName: currentPlant.customName, commonName: currentPlant.commonName, placement: currentPlant.placement }]
+        plants: [{ customName: currentPlant.customName, commonName: currentPlant.commonName, placement: currentPlant.placement }],
+        apiKey: settings.geminiApiKey,
       }));
       
       // Fetch watering advice only if it's overdue
@@ -146,6 +147,7 @@ export default function PlantProfilePage() {
           location: settings.location,
           isWateringOverdue: true,
           placement: currentPlant.placement,
+          apiKey: settings.geminiApiKey,
         }));
       } else {
         promises.push(Promise.resolve(null));
@@ -171,7 +173,7 @@ export default function PlantProfilePage() {
     } finally {
       setIsPageLoading(false);
     }
-  }, [settings.location, isApiKeyMissing, toast]);
+  }, [settings.location, isApiKeyMissing, toast, settings.geminiApiKey]);
 
   useEffect(() => {
     if (plant) {
@@ -220,6 +222,7 @@ export default function PlantProfilePage() {
             timingDiscrepancy: `${timeLate} late`,
             location: settings.location || '',
             environmentNotes: plant.environmentNotes,
+            apiKey: settings.geminiApiKey,
         }).then(result => {
             if (result.newWateringFrequency !== plant.wateringFrequency) {
                 const aiUpdatedPlant = {
@@ -272,6 +275,7 @@ export default function PlantProfilePage() {
                 timingDiscrepancy: `${timeEarly} early`,
                 location: settings.location || '',
                 environmentNotes: plant.environmentNotes,
+                apiKey: settings.geminiApiKey,
             });
 
             const updatedPlant = {
@@ -293,6 +297,7 @@ export default function PlantProfilePage() {
                 timingDiscrepancy: `skipping`,
                 location: settings.location || '',
                 environmentNotes: plant.environmentNotes,
+                apiKey: settings.geminiApiKey,
             });
 
             const updatedPlant = {
@@ -328,6 +333,7 @@ export default function PlantProfilePage() {
           estimatedAge: plantToUpdate.estimatedAge,
           location: settings.location,
           placement: plantToUpdate.placement,
+          apiKey: settings.geminiApiKey,
         });
 
       const updatedPlantData = { 
@@ -353,7 +359,7 @@ export default function PlantProfilePage() {
     } finally {
         setIsGeneratingTips(false);
     }
-  }, [settings.location, updatePlant, toast]);
+  }, [settings.location, updatePlant, toast, settings.geminiApiKey]);
 
 const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor') => {
     if (!plant || plant.placement === newPlacement || isSettingPlacement) return;
@@ -370,6 +376,7 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
                 recommendedPlacement: plant.recommendedPlacement || 'Indoor/Outdoor',
                 userChoice: newPlacement,
                 location: settings.location,
+                apiKey: settings.geminiApiKey,
             });
             
             toast({
@@ -400,7 +407,7 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
     } finally {
         setIsSettingPlacement(false);
     }
-}, [plant, updatePlant, toast, handleRegenerateTips, isSettingPlacement, settings.location]);
+}, [plant, updatePlant, toast, handleRegenerateTips, isSettingPlacement, settings.location, settings.geminiApiKey]);
 
   const stopCameraStream = useCallback(() => {
       if (videoRef.current && videoRef.current.srcObject) {
@@ -469,6 +476,7 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
         photoDataUri: healthCheckPhoto,
         notes: plant.notes,
         currentCommonName: plant.commonName,
+        apiKey: settings.geminiApiKey,
       });
 
       let updatedPlant: Plant = { 
@@ -614,7 +622,6 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
               <CardContent className="space-y-4">
                 {isApiKeyMissing && (
                    <Alert variant="destructive">
-                      <AlertTriangle className="h-4 w-4" />
                       <AlertTitle>API Key Required</AlertTitle>
                       <AlertDescription>
                         Set your Gemini API Key in settings to enable Sage's AI features.
@@ -627,7 +634,7 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
                 <div>
                   <h4 className="font-medium text-sm mb-2">AI Health Check</h4>
                    {plant.health ? (
-                    <div className="space-y-2 p-3 bg-muted/50 rounded-lg text-sm">
+                    <div className="space-y-2 p-3 bg-muted/50 rounded-lg text-sm animate-in fade-in">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold">Status:</span> 
                         <Badge variant={plant.health.isHealthy ? 'default' : 'destructive'}>
@@ -651,7 +658,7 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
                       <DialogContent>
                         <DialogHeader>
                           <DialogTitle>Plant Health Check</DialogTitle>
-                           <DialogDescription>Take a new photo of your plant. Sage will analyze it for overall health and identify any problem areas.</DialogDescription>
+                           <DialogDescriptionComponent>Take a new photo of your plant. Sage will analyze it for overall health and identify any problem areas.</DialogDescriptionComponent>
                         </DialogHeader>
                         <div className="grid grid-cols-2 gap-4 my-4">
                            <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center overflow-hidden relative">
@@ -713,7 +720,7 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
                       <Accordion type="single" collapsible defaultValue="item-1">
                         <AccordionItem value="item-1">
                           <AccordionTrigger className="text-sm">View Care Tips</AccordionTrigger>
-                          <AccordionContent>
+                          <AccordionContent className="animate-in fade-in">
                             <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap">
                                 <ReactMarkdown>{plant.careTips}</ReactMarkdown>
                             </div>
@@ -748,7 +755,7 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
                         </div>
                     ) : settings.location ? (
                          pageData.weatherAdvice ? (
-                           <div className="text-sm prose prose-sm max-w-none prose-p:my-1 prose-strong:text-foreground">
+                           <div className="text-sm prose prose-sm max-w-none prose-p:my-1 prose-strong:text-foreground animate-in fade-in">
                                 <ReactMarkdown>{pageData.weatherAdvice}</ReactMarkdown>
                            </div>
                          ) : (

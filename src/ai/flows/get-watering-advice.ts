@@ -9,7 +9,7 @@
  * - GetWateringAdviceOutput - The return type for the function.
  */
 
-import { ai } from '@/ai/genkit';
+import { getAi } from '@/ai/genkit';
 import { z } from 'genkit';
 import { getWeatherTool } from '../tools/get-weather';
 import { WeatherSchema, ForecastDaySchema } from '@/lib/types';
@@ -21,6 +21,7 @@ const GetWateringAdviceInputSchema = z.object({
   location: z.string(),
   isWateringOverdue: z.boolean(),
   placement: z.enum(['Indoor', 'Outdoor', 'Indoor/Outdoor']).optional(),
+  apiKey: z.string().optional(),
 });
 export type GetWateringAdviceInput = z.infer<
   typeof GetWateringAdviceInputSchema
@@ -35,19 +36,31 @@ export type GetWateringAdviceOutput = z.infer<
   typeof GetWateringAdviceOutputSchema
 >;
 
-export async function getWateringAdvice(
-  input: GetWateringAdviceInput
-): Promise<GetWateringAdviceOutput> {
-  return getWateringAdviceFlow(input);
-}
-
 const GetWateringAdviceFlowInputSchema = GetWateringAdviceInputSchema.extend({
     currentWeather: WeatherSchema,
     forecast: z.array(ForecastDaySchema),
 });
 
+export async function getWateringAdvice(
+  input: GetWateringAdviceInput
+): Promise<GetWateringAdviceOutput> {
+  // If it's not time to water yet, just return "No".
+  if (!input.isWateringOverdue) {
+      return { shouldWater: 'No', reason: "It's not time to water yet according to the schedule." };
+  }
 
-const prompt = ai.definePrompt({
+  const ai = await getAi(input.apiKey);
+  
+  // Get weather data first.
+  const weatherData = await getWeatherTool( { location: input.location });
+
+  // Now, ask the LLM to make a final decision based on the weather advice.
+  const flowInput = {
+      ...input,
+      ...weatherData,
+  };
+
+  const prompt = ai.definePrompt({
     name: 'wateringDecisionPrompt',
     input: { schema: GetWateringAdviceFlowInputSchema },
     output: { schema: GetWateringAdviceOutputSchema },
@@ -69,31 +82,8 @@ const prompt = ai.definePrompt({
     - If the forecast is mild and the plant is **Indoor**, 'Yes' is usually the safe answer since it's overdue.
     - Provide a very short, clear reason for your decision based on the weather. For example, "Yes, it's going to be hot and sunny." or "Wait, rain is expected tomorrow."
     - **Crucially**, if you recommend 'Wait', you MUST calculate a new watering time based on the forecast (e.g., after the rain passes) and return it as a valid ISO 8601 string in the 'newWateringTime' field.`
-});
-
-
-const getWateringAdviceFlow = ai.defineFlow(
-  {
-    name: 'getWateringAdviceFlow',
-    inputSchema: GetWateringAdviceInputSchema,
-    outputSchema: GetWateringAdviceOutputSchema,
-  },
-  async (input) => {
-    // If it's not time to water yet, just return "No".
-    if (!input.isWateringOverdue) {
-        return { shouldWater: 'No', reason: "It's not time to water yet according to the schedule." };
-    }
-    
-    // Get weather data first.
-    const weatherData = await getWeatherTool( { location: input.location });
-
-    // Now, ask the LLM to make a final decision based on the weather advice.
-    const flowInput = {
-        ...input,
-        ...weatherData,
-    };
-    
-    const { output } = await prompt(flowInput, { model: 'googleai/gemini-2.5-flash' });
-    return output!;
-  }
-);
+  });
+  
+  const { output } = await prompt(flowInput, { model: 'googleai/gemini-2.5-flash' });
+  return output!;
+}

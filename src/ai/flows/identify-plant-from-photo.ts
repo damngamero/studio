@@ -8,7 +8,7 @@
  * - IdentifyPlantFromPhotoOutput - The return type for the identifyPlantFromPhoto function.
  */
 
-import {ai} from '@/ai/genkit';
+import {getAi} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const IdentifyPlantFromPhotoInputSchema = z.object({
@@ -17,6 +17,7 @@ const IdentifyPlantFromPhotoInputSchema = z.object({
     .describe(
       "A photo of a plant, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'"
     ),
+  apiKey: z.string().optional(),
 });
 export type IdentifyPlantFromPhotoInput = z.infer<
   typeof IdentifyPlantFromPhotoInputSchema
@@ -42,14 +43,13 @@ export type IdentifyPlantFromPhotoOutput = z.infer<
 export async function identifyPlantFromPhoto(
   input: IdentifyPlantFromPhotoInput
 ): Promise<IdentifyPlantFromPhotoOutput> {
-  return identifyPlantFromPhotoFlow(input);
-}
+  const ai = await getAi(input.apiKey);
 
-const prompt = ai.definePrompt({
-  name: 'identifyPlantFromPhotoPrompt',
-  input: {schema: IdentifyPlantFromPhotoInputSchema},
-  output: {schema: IdentifyPlantFromPhotoOutputSchema},
-  prompt: `You are an expert botanist specializing in plant identification.
+  const prompt = ai.definePrompt({
+    name: 'identifyPlantFromPhotoPrompt',
+    input: {schema: IdentifyPlantFromPhotoInputSchema},
+    output: {schema: IdentifyPlantFromPhotoOutputSchema},
+    prompt: `You are an expert botanist specializing in plant identification.
 
 Your first task is to determine if the provided image is a plant. If it is NOT a plant (e.g., it's a person, an object, an animal), you MUST set 'isPlant' to false and leave the other fields empty.
 
@@ -60,16 +60,8 @@ Photo: {{media url=photoDataUri}}
 Return the common name, latin name, a confidence level of the plant identification, and an estimate of the plant's age.
 If the input is not a plant, return isPlant as false.
 `,
-});
+  });
 
-const identifyPlantFromPhotoFlow = ai.defineFlow(
-  {
-    name: 'identifyPlantFromPhotoFlow',
-    inputSchema: IdentifyPlantFromPhotoInputSchema,
-    outputSchema: IdentifyPlantFromPhotoOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
-    return output!;
-  }
-);
+  const {output} = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
+  return output!;
+}

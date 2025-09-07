@@ -153,7 +153,7 @@ export default function IdentifyPlantPage() {
     setError(null);
     setSuggestedNames([]);
     try {
-      const result = await identifyPlantFromPhoto({ photoDataUri });
+      const result = await identifyPlantFromPhoto({ photoDataUri, apiKey: settings.geminiApiKey });
       if (!result.isPlant) {
         setError("This doesn't look like a plant. Please try another photo.");
         setIdentification(null);
@@ -169,7 +169,7 @@ export default function IdentifyPlantPage() {
         
         // Fetch suggested names in parallel
         setIsLoadingNames(true);
-        getPlantNicknames({ commonName: result.commonName, latinName: result.latinName })
+        getPlantNicknames({ commonName: result.commonName, latinName: result.latinName, apiKey: settings.geminiApiKey })
             .then(nameResult => setSuggestedNames(nameResult.nicknames))
             .catch(e => console.error("Could not fetch nicknames", e))
             .finally(() => setIsLoadingNames(false));
@@ -249,8 +249,9 @@ export default function IdentifyPlantPage() {
           plantSpecies: values.commonName,
           estimatedAge: identification.estimatedAge,
           location: settings.location,
+          apiKey: settings.geminiApiKey,
         }),
-        getPlantPlacement({ plantSpecies: values.commonName })
+        getPlantPlacement({ plantSpecies: values.commonName, apiKey: settings.geminiApiKey })
       ]);
 
 
@@ -422,7 +423,7 @@ export default function IdentifyPlantPage() {
                   )}
 
                   {suggestedNames.length > 0 && (
-                    <div className="space-y-2">
+                    <div className="space-y-2 animate-in fade-in">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Lightbulb className="h-4 w-4" />
                             <span>Name ideas from Sage:</span>

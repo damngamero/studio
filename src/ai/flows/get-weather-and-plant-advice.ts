@@ -8,7 +8,7 @@
  * - GetWeatherAndPlantAdviceOutput - The return type for the function.
  */
 
-import { ai } from '@/ai/genkit';
+import { getAi } from '@/ai/genkit';
 import { z } from 'genkit';
 import { getWeatherTool } from '../tools/get-weather';
 import { WeatherSchema, ForecastDaySchema } from '@/lib/types';
@@ -22,6 +22,7 @@ const PlantInfoSchema = z.object({
 const GetWeatherAndPlantAdviceInputSchema = z.object({
   location: z.string().describe("The user's location (e.g., 'San Francisco, CA')."),
   plants: z.array(PlantInfoSchema).describe('A list of plants the user owns.'),
+  apiKey: z.string().optional(),
 });
 export type GetWeatherAndPlantAdviceInput = z.infer<typeof GetWeatherAndPlantAdviceInputSchema>;
 
@@ -40,15 +41,14 @@ export type GetWeatherAndPlantAdviceOutput = z.infer<typeof GetWeatherAndPlantAd
 export async function getWeatherAndPlantAdvice(
   input: GetWeatherAndPlantAdviceInput
 ): Promise<GetWeatherAndPlantAdviceOutput> {
-  return getWeatherAndPlantAdviceFlow(input);
-}
+  const ai = await getAi(input.apiKey);
 
-const prompt = ai.definePrompt({
-  name: 'getWeatherAndPlantAdvicePrompt',
-  input: { schema: GetWeatherAndPlantAdviceInputSchema },
-  output: { schema: GetWeatherAndPlantAdviceOutputSchema },
-  tools: [getWeatherTool],
-  prompt: `You are Sage, an expert horticulturalist AI. Your goal is to provide proactive, weather-based advice for plant care.
+  const prompt = ai.definePrompt({
+    name: 'getWeatherAndPlantAdvicePrompt',
+    input: { schema: GetWeatherAndPlantAdviceInputSchema },
+    output: { schema: GetWeatherAndPlantAdviceOutputSchema },
+    tools: [getWeatherTool],
+    prompt: `You are Sage, an expert horticulturalist AI. Your goal is to provide proactive, weather-based advice for plant care.
 
 1. First, use the getWeatherForLocation tool to get the weather for the user's location: {{{location}}}.
 2. Then, for each of the user's plants listed below, provide specific, actionable advice based on the 3-day forecast.
@@ -61,16 +61,8 @@ User's Plants:
 - {{customName}} ({{commonName}}). Placement: {{#if placement}}{{placement}}{{else}}Unknown{{/if}}
 {{/each}}
 `,
-});
+  });
 
-const getWeatherAndPlantAdviceFlow = ai.defineFlow(
-  {
-    name: 'getWeatherAndPlantAdviceFlow',
-    inputSchema: GetWeatherAndPlantAdviceInputSchema,
-    outputSchema: GetWeatherAndPlantAdviceOutputSchema,
-  },
-  async (input) => {
-    const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
-    return output!;
-  }
-);
+  const { output } = await prompt(input, { model: 'googleai/gemini-2.5-flash' });
+  return output!;
+}
