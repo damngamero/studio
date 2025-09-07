@@ -14,6 +14,7 @@ import { identifyPlantFromPhoto } from "@/ai/flows/identify-plant-from-photo";
 import type { IdentifyPlantFromPhotoOutput } from "@/ai/flows/identify-plant-from-photo";
 import { getPlantCareTips } from "@/ai/flows/get-plant-care-tips";
 import { getPlantNicknames } from "@/ai/flows/get-plant-nicknames";
+import { getPlantPlacement } from "@/ai/flows/get-plant-placement";
 import { usePlantStore } from "@/hooks/use-plant-store";
 import { useAchievementStore } from "@/hooks/use-achievement-store";
 import { useSettingsStore } from "@/hooks/use-settings-store";
@@ -240,11 +241,15 @@ export default function IdentifyPlantPage() {
     
     try {
       // Get initial care tips and watering frequency using the final (potentially user-edited) common name
-      const careTipsResult = await getPlantCareTips({ 
-        plantSpecies: values.commonName,
-        estimatedAge: identification.estimatedAge,
-        location: settings.location,
-      });
+      const [careTipsResult, placementResult] = await Promise.all([
+        getPlantCareTips({ 
+          plantSpecies: values.commonName,
+          estimatedAge: identification.estimatedAge,
+          location: settings.location,
+        }),
+        getPlantPlacement({ plantSpecies: values.commonName })
+      ]);
+
 
       const newPlant = addPlant({
         ...values,
@@ -255,6 +260,7 @@ export default function IdentifyPlantPage() {
         wateringTime: careTipsResult.wateringTime,
         wateringAmount: careTipsResult.wateringAmount,
         careTips: careTipsResult.careTips,
+        placement: placementResult.placement,
       });
       
       toast({

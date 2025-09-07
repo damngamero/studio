@@ -97,32 +97,6 @@ export default function PlantProfilePage() {
       setPlant(foundPlant);
     }
   }, [plantId, getPlantById]);
-
-  const fetchPlacement = useCallback(async (currentPlant: Plant) => {
-    if (isApiKeyMissing) return;
-
-    const tenDaysAgo = subDays(new Date(), 10);
-    const lastChecked = currentPlant.placementLastChecked ? new Date(currentPlant.placementLastChecked) : null;
-    
-    if (!currentPlant.placement || (lastChecked && lastChecked < tenDaysAgo)) {
-      setIsFetchingPlacement(true);
-      try {
-        const result = await getPlantPlacement({ plantSpecies: currentPlant.commonName });
-        const updatedPlant = {
-          ...currentPlant,
-          placement: result.placement,
-          placementLastChecked: new Date().toISOString(),
-        };
-        updatePlant(updatedPlant);
-        setPlant(updatedPlant);
-      } catch (error) {
-        console.error('Failed to get plant placement:', error);
-        // We don't show a toast here to avoid bothering the user for a background task.
-      } finally {
-        setIsFetchingPlacement(false);
-      }
-    }
-  }, [isApiKeyMissing, updatePlant]);
   
   const fetchWeatherAdvice = useCallback(async (currentPlant: Plant) => {
     if (!settings.location || isApiKeyMissing) {
@@ -189,9 +163,8 @@ export default function PlantProfilePage() {
   useEffect(() => {
     if (plant) {
         fetchWeatherAdvice(plant);
-        fetchPlacement(plant);
     }
-  }, [plant, fetchWeatherAdvice, fetchPlacement]);
+  }, [plant, fetchWeatherAdvice]);
 
   useEffect(() => {
     async function fetchWateringAdvice() {
