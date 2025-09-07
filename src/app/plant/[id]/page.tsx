@@ -659,7 +659,7 @@ const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor'
                 plant={plant}
                 onWaterPlant={handleWaterPlant}
                 advice={wateringAdvice}
-                isLoadingAdvice={isLoadingAdvice}
+                isLoadingAdvice={isLoadingWateringAdvice}
               />
             <Card>
               <CardHeader>
