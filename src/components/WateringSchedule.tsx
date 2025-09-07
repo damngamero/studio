@@ -167,7 +167,7 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
     return '';
   }
 
-  const getWateringDescription = () => {
+  const getWateringDescription = (): React.ReactNode => {
     if (advice?.shouldWater === 'Wait') {
         return advice.reason;
     }
@@ -176,12 +176,17 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
         return "Watering is overdue.";
     }
 
-    let description = "The timer shows minimum wait time till watering.";
-    if (wateringTime) {
-        description += `\nRecommended: ${wateringTime}.`;
-    }
-    
-    return description;
+    return (
+        <div>
+            <p>The timer shows minimum wait time till watering.</p>
+            {wateringTime && (
+                <div className="mt-1">
+                    <span className="text-xs text-muted-foreground">Recommended:</span>
+                    <p className="font-semibold text-base -mt-1">{wateringTime}</p>
+                </div>
+            )}
+        </div>
+    );
   }
 
   return (
@@ -190,7 +195,7 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
         <CardTitle className="text-xl flex items-center gap-2">
             <Calendar /> Watering Schedule
         </CardTitle>
-        <CardDescription className="whitespace-pre-line">
+        <CardDescription>
           {getWateringDescription()}
         </CardDescription>
       </CardHeader>
