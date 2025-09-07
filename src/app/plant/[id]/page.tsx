@@ -18,6 +18,7 @@ import { checkPlantHealth } from "@/ai/flows/check-plant-health";
 import { getWeatherAndPlantAdvice } from "@/ai/flows/get-weather-and-plant-advice";
 import { getWateringAdvice } from "@/ai/flows/get-watering-advice";
 import { getPlantPlacement } from "@/ai/flows/get-plant-placement";
+import { getPlacementFeedback } from "@/ai/flows/get-placement-feedback";
 import type { GetWateringAdviceOutput } from '@/ai/flows/get-watering-advice';
 import type { Plant } from "@/lib/types";
 import { AppLayout } from "@/components/AppLayout";
@@ -76,7 +77,7 @@ export default function PlantProfilePage() {
   const [weatherAdvice, setWeatherAdvice] = useState<string | null>(null);
   const [isFetchingWeather, setIsFetchingWeather] = useState(true);
   const [isGeneratingTips, setIsGeneratingTips] = useState(false);
-  const [isFetchingPlacement, setIsFetchingPlacement] = useState(false);
+  const [isSettingPlacement, setIsSettingPlacement] = useState(false);
   const [healthCheckCount, setHealthCheckCount] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -180,37 +181,45 @@ export default function PlantProfilePage() {
     }
   }, [plant, settings.location, updatePlant, toast]);
 
-  const handleSetPlacement = useCallback((newPlacement: 'Indoor' | 'Outdoor') => {
-    if (!plant || plant.placement === newPlacement) return;
-
+  const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor') => {
+    if (!plant || plant.placement === newPlacement || isSettingPlacement) return;
+    
+    setIsSettingPlacement(true);
+    
+    // First, update the state locally for a responsive UI
     const updatedPlant = { ...plant, placement: newPlacement };
     updatePlant(updatedPlant);
     setPlant(updatedPlant);
 
-    const recommended = plant.recommendedPlacement;
-    
-    // This is the corrected logic
-    if (!recommended || recommended === newPlacement || recommended === 'Indoor/Outdoor') {
-        toast({
-            title: "Good choice!",
-            description: `This plant should do well ${newPlacement.toLowerCase()}s. Regenerating tips...`,
-            action: <div className="p-1.5 rounded-full bg-green-500"><ThumbsUp className="h-4 w-4 text-white" /></div>
+    try {
+        // Get contextual feedback from AI
+        const feedbackResult = await getPlacementFeedback({
+            plantSpecies: plant.commonName,
+            recommendedPlacement: plant.recommendedPlacement || 'Indoor/Outdoor', // Default if not set
+            userChoice: newPlacement,
         });
-    } else {
-        toast({
-            variant: 'destructive',
-            title: "This might be tricky...",
-            description: `This plant is usually kept ${recommended.toLowerCase()}s. Pay close attention to its needs. Regenerating tips...`,
-            action: <div className="p-1.5 rounded-full bg-yellow-400"><ThumbsDown className="h-4 w-4 text-white" /></div>
-        });
-    }
-    
-    // Delay regeneration slightly to allow the toast to be seen
-    setTimeout(() => {
-        handleRegenerateTips();
-    }, 500);
 
-  }, [plant, updatePlant, toast, handleRegenerateTips]);
+        toast({
+            variant: feedbackResult.isGoodChoice ? 'default' : 'destructive',
+            title: feedbackResult.isGoodChoice ? 'Good Choice!' : 'Heads Up!',
+            description: feedbackResult.feedback,
+            action: <div className={`p-1.5 rounded-full ${feedbackResult.isGoodChoice ? 'bg-green-500' : 'bg-yellow-400'}`}><ThumbsUp className="h-4 w-4 text-white" /></div>
+        });
+        
+        // Regenerate tips in the background
+        await handleRegenerateTips();
+
+    } catch (error) {
+        console.error("Failed to get placement feedback or regenerate tips", error);
+        toast({
+            variant: "destructive",
+            title: "Update Failed",
+            description: "Could not get new tips for the updated placement.",
+        });
+    } finally {
+        setIsSettingPlacement(false);
+    }
+  }, [plant, updatePlant, toast, handleRegenerateTips, isSettingPlacement]);
 
 
   useEffect(() => {
@@ -644,9 +653,10 @@ export default function PlantProfilePage() {
                                             size="xs" 
                                             variant={plant.placement === 'Indoor' ? 'default' : 'outline'}
                                             onClick={() => handleSetPlacement('Indoor')}
+                                            disabled={isSettingPlacement || isApiKeyMissing}
                                             className="rounded-full"
                                             >
-                                            <Home className="h-3 w-3" />
+                                            {isSettingPlacement && plant.placement !== 'Indoor' ? <Loader2 className="h-3 w-3 animate-spin"/> : <Home className="h-3 w-3" />}
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent><p>Indoor</p></TooltipContent>
@@ -657,9 +667,10 @@ export default function PlantProfilePage() {
                                             size="xs" 
                                             variant={plant.placement === 'Outdoor' ? 'default' : 'outline'}
                                             onClick={() => handleSetPlacement('Outdoor')}
+                                            disabled={isSettingPlacement || isApiKeyMissing}
                                             className="rounded-full"
                                             >
-                                             <Sun className="h-3 w-3" />
+                                             {isSettingPlacement && plant.placement !== 'Outdoor' ? <Loader2 className="h-3 w-3 animate-spin"/> : <Sun className="h-3 w-3" />}
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent><p>Outdoor</p></TooltipContent>
@@ -722,4 +733,5 @@ export default function PlantProfilePage() {
     </AppLayout>
   );
 }
+
 
