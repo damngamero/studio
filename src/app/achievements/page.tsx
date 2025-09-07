@@ -10,6 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import type { Rarity } from "@/hooks/use-achievement-store";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const rarityStyles: Record<Rarity, { badge: string; border: string; bg: string; icon: string }> = {
     Common: {
@@ -47,7 +49,10 @@ const rarityStyles: Record<Rarity, { badge: string; border: string; bg: string; 
 export default function AchievementsPage() {
   const { achievements, isInitialized } = useAchievementStore();
   const [mounted, setMounted] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(true);
   useEffect(() => setMounted(true), []);
+
+  const filteredAchievements = showCompleted ? achievements : achievements.filter(a => !a.unlocked);
 
 
   const renderContent = () => {
@@ -66,10 +71,21 @@ export default function AchievementsPage() {
          </div>
       );
     }
+    
+    if (filteredAchievements.length === 0) {
+        return (
+            <div className="text-center py-20 border-2 border-dashed rounded-lg bg-card">
+                <h2 className="mt-4 text-xl font-semibold">No Achievements to Show</h2>
+                <p className="text-muted-foreground mt-2 mb-4">
+                    {showCompleted ? "You haven't unlocked any achievements yet. Go explore!" : "All achievements are unlocked! Or you've hidden them."}
+                </p>
+            </div>
+        )
+    }
 
     return (
        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {achievements.map((achievement) => (
+        {filteredAchievements.map((achievement) => (
           <Card 
             key={achievement.id}
             className={cn(
@@ -119,10 +135,18 @@ export default function AchievementsPage() {
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between mb-6 gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold font-heading">Achievements</h1>
           <p className="text-muted-foreground">Celebrate your plant care milestones!</p>
+        </div>
+        <div className="flex items-center space-x-2">
+            <Switch 
+                id="show-completed" 
+                checked={showCompleted}
+                onCheckedChange={setShowCompleted}
+            />
+            <Label htmlFor="show-completed" className="text-sm">Show Completed</Label>
         </div>
       </div>
       {renderContent()}
