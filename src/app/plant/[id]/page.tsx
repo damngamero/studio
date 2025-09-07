@@ -77,7 +77,7 @@ export default function PlantProfilePage() {
   const [weatherAdvice, setWeatherAdvice] = useState<string | null>(null);
   const [isFetchingWeather, setIsFetchingWeather] = useState(true);
   const [isGeneratingTips, setIsGeneratingTips] = useState(false);
-  const [isSettingPlacement, setIsSettingPlacement] = useState(false);
+  const [isSettingPlacement, setIsSettingPlacement] = useState<"Indoor" | "Outdoor" | false>(false);
   const [healthCheckCount, setHealthCheckCount] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -184,29 +184,39 @@ export default function PlantProfilePage() {
   const handleSetPlacement = useCallback(async (newPlacement: 'Indoor' | 'Outdoor') => {
     if (!plant || plant.placement === newPlacement || isSettingPlacement) return;
     
-    setIsSettingPlacement(true);
+    setIsSettingPlacement(newPlacement);
     
-    // First, update the state locally for a responsive UI
-    const updatedPlant = { ...plant, placement: newPlacement };
-    updatePlant(updatedPlant);
-    setPlant(updatedPlant);
-
+    let feedbackResult;
     try {
-        // Get contextual feedback from AI
-        const feedbackResult = await getPlacementFeedback({
-            plantSpecies: plant.commonName,
-            recommendedPlacement: plant.recommendedPlacement || 'Indoor/Outdoor', // Default if not set
-            userChoice: newPlacement,
-        });
-
-        toast({
-            variant: feedbackResult.isGoodChoice ? 'default' : 'destructive',
-            title: feedbackResult.isGoodChoice ? 'Good Choice!' : 'Heads Up!',
-            description: feedbackResult.feedback,
-            action: <div className={`p-1.5 rounded-full ${feedbackResult.isGoodChoice ? 'bg-green-500' : 'bg-yellow-400'}`}><ThumbsUp className="h-4 w-4 text-white" /></div>
-        });
+        // If we haven't given feedback for this placement before, get it from the AI.
+        if (!plant.placementFeedback || !plant.placementFeedback[newPlacement]) {
+            feedbackResult = await getPlacementFeedback({
+                plantSpecies: plant.commonName,
+                recommendedPlacement: plant.recommendedPlacement || 'Indoor/Outdoor', 
+                userChoice: newPlacement,
+            });
+            
+             toast({
+                variant: feedbackResult.isGoodChoice ? 'default' : 'destructive',
+                title: feedbackResult.isGoodChoice ? 'Good Choice!' : 'Heads Up!',
+                description: feedbackResult.feedback,
+            });
+        }
         
-        // Regenerate tips in the background
+        // This runs regardless of whether we fetched new feedback.
+        const updatedPlant = { 
+            ...plant, 
+            placement: newPlacement,
+            placementFeedback: {
+                ...(plant.placementFeedback || {}),
+                ...(feedbackResult && {[newPlacement]: feedbackResult.feedback})
+            }
+        };
+
+        updatePlant(updatedPlant);
+        setPlant(updatedPlant);
+        
+        // Regenerate tips in the background based on the new placement
         await handleRegenerateTips();
 
     } catch (error) {
@@ -216,6 +226,8 @@ export default function PlantProfilePage() {
             title: "Update Failed",
             description: "Could not get new tips for the updated placement.",
         });
+        // Revert local state if AI calls fail
+        setPlant(plant);
     } finally {
         setIsSettingPlacement(false);
     }
@@ -653,10 +665,10 @@ export default function PlantProfilePage() {
                                             size="xs" 
                                             variant={plant.placement === 'Indoor' ? 'default' : 'outline'}
                                             onClick={() => handleSetPlacement('Indoor')}
-                                            disabled={isSettingPlacement || isApiKeyMissing}
+                                            disabled={!!isSettingPlacement || isApiKeyMissing}
                                             className="rounded-full"
                                             >
-                                            {isSettingPlacement && plant.placement !== 'Indoor' ? <Loader2 className="h-3 w-3 animate-spin"/> : <Home className="h-3 w-3" />}
+                                            {isSettingPlacement === 'Indoor' ? <Loader2 className="h-3 w-3 animate-spin"/> : <Home className="h-3 w-3" />}
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent><p>Indoor</p></TooltipContent>
@@ -667,10 +679,10 @@ export default function PlantProfilePage() {
                                             size="xs" 
                                             variant={plant.placement === 'Outdoor' ? 'default' : 'outline'}
                                             onClick={() => handleSetPlacement('Outdoor')}
-                                            disabled={isSettingPlacement || isApiKeyMissing}
+                                            disabled={!!isSettingPlacement || isApiKeyMissing}
                                             className="rounded-full"
                                             >
-                                             {isSettingPlacement && plant.placement !== 'Outdoor' ? <Loader2 className="h-3 w-3 animate-spin"/> : <Sun className="h-3 w-3" />}
+                                             {isSettingPlacement === 'Outdoor' ? <Loader2 className="h-3 w-3 animate-spin"/> : <Sun className="h-3 w-3" />}
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent><p>Outdoor</p></TooltipContent>
@@ -733,5 +745,6 @@ export default function PlantProfilePage() {
     </AppLayout>
   );
 }
+
 
 
