@@ -1,14 +1,9 @@
 
-
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
-import { Loader2, Search } from 'lucide-react';
 import type { RegionOfInterest } from '@/lib/types';
-import { Button } from './ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { Badge } from './ui/badge';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -16,6 +11,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+
 
 interface InteractivePhotoProps {
   photoDataUri: string;
@@ -41,26 +45,38 @@ export function InteractivePhoto({
         />
         <TooltipProvider>
             {regions.map((region, index) => (
-            <Tooltip key={index}>
-                <TooltipTrigger asChild>
-                <div
-                    className={cn(
-                        "absolute border-2 rounded-sm cursor-pointer hover:bg-white/30 transition-colors",
-                        region.description.toLowerCase().includes('healthy') ? 'border-green-500' : 'border-destructive animate-pulse'
-                    )}
-                    style={{
-                    left: `${region.box.x1 * 100}%`,
-                    top: `${region.box.y1 * 100}%`,
-                    width: `${(region.box.x2 - region.box.x1) * 100}%`,
-                    height: `${(region.box.y2 - region.box.y1) * 100}%`,
-                    }}
-                />
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p className="font-bold">{region.label}</p>
-                    <p>{region.description}</p>
-                </TooltipContent>
-            </Tooltip>
+             <Dialog key={index}>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <DialogTrigger asChild>
+                            <div
+                                className={cn(
+                                    "absolute border-2 rounded-sm cursor-pointer hover:bg-white/30 transition-colors",
+                                    region.description.toLowerCase().includes('healthy') ? 'border-green-500' : 'border-destructive animate-pulse'
+                                )}
+                                style={{
+                                left: `${region.box.x1 * 100}%`,
+                                top: `${region.box.y1 * 100}%`,
+                                width: `${(region.box.x2 - region.box.x1) * 100}%`,
+                                height: `${(region.box.y2 - region.box.y1) * 100}%`,
+                                }}
+                            />
+                        </DialogTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent className="hidden md:block">
+                        <p className="font-bold">{region.label}</p>
+                        <p>{region.description}</p>
+                    </TooltipContent>
+                </Tooltip>
+                 <DialogContent>
+                    <DialogHeader>
+                    <DialogTitle>{region.label}</DialogTitle>
+                    <DialogDescription>
+                        {region.description}
+                    </DialogDescription>
+                    </DialogHeader>
+                </DialogContent>
+            </Dialog>
             ))}
         </TooltipProvider>
       </div>
