@@ -48,7 +48,7 @@ export async function getGardenOverview(
       name: 'getGardenOverviewPrompt',
       input: { schema: GetGardenOverviewInputSchema },
       output: { schema: GetGardenOverviewOutputSchema },
-      tools: [getWeatherTool],
+      tools: [getWeatherTool(ai)],
       prompt: `You are Sage, an AI gardening assistant. Your goal is to provide a quick, helpful "daily digest" for the user's garden.
 
 1. First, use the getWeatherForLocation tool to get the weather for the user's location: {{{location}}}.

@@ -39,7 +39,7 @@ export async function recalculateWateringSchedule(
     name: 'recalculateWateringSchedulePrompt',
     input: { schema: RecalculateWateringScheduleInputSchema },
     output: { schema: RecalculateWateringScheduleOutputSchema },
-    tools: [getWeatherTool],
+    tools: [getWeatherTool(ai)],
     prompt: `You are an expert horticulturalist AI. A user has indicated that the watering schedule for their plant might be incorrect. Your task is to analyze their feedback and the weather to recommend a new, more accurate watering frequency.
 
 ## Plant & Schedule Details

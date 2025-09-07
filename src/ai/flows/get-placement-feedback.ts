@@ -43,7 +43,7 @@ export async function getPlacementFeedback(
     name: 'getPlacementFeedbackPrompt',
     input: { schema: GetPlacementFeedbackInputSchema },
     output: { schema: GetPlacementFeedbackOutputSchema },
-    tools: [getWeatherTool],
+    tools: [getWeatherTool(ai)],
     prompt: `You are a helpful gardening assistant. A user has decided where to place their plant.
 Your initial recommendation for a "{{plantSpecies}}" was "{{recommendedPlacement}}".
 The user has decided to place it "{{userChoice}}".

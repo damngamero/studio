@@ -47,7 +47,7 @@ export async function getWeatherAndPlantAdvice(
     name: 'getWeatherAndPlantAdvicePrompt',
     input: { schema: GetWeatherAndPlantAdviceInputSchema },
     output: { schema: GetWeatherAndPlantAdviceOutputSchema },
-    tools: [getWeatherTool],
+    tools: [getWeatherTool(ai)],
     prompt: `You are Sage, an expert horticulturalist AI. Your goal is to provide proactive, weather-based advice for plant care.
 
 1. First, use the getWeatherForLocation tool to get the weather for the user's location: {{{location}}}.
