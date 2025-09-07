@@ -42,8 +42,23 @@ function GardenOverview() {
   const [overview, setOverview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchOverview = useCallback(async () => {
+  const fetchOverview = useCallback(async (forceRefresh = false) => {
     setIsLoading(true);
+    
+    // Client-side cache check
+    if (!forceRefresh) {
+        const cached = localStorage.getItem('garden-overview');
+        if (cached) {
+            const { data, timestamp } = JSON.parse(cached);
+            const isStale = new Date().getTime() - timestamp > 12 * 60 * 60 * 1000; // 12 hours
+            if (!isStale) {
+                setOverview(data);
+                setIsLoading(false);
+                return;
+            }
+        }
+    }
+
     try {
       const plantStatus = plants.map(p => {
         const nextWateringDate = addDays(new Date(p.lastWatered), p.wateringFrequency || 7);
@@ -59,6 +74,9 @@ function GardenOverview() {
         plants: plantStatus,
       });
       setOverview(result.overview);
+      // Cache the new data
+      localStorage.setItem('garden-overview', JSON.stringify({ data: result.overview, timestamp: new Date().getTime() }));
+
     } catch (error) {
       console.error("Failed to get garden overview:", error);
       setOverview("Could not load Sage's daily digest at this time.");
@@ -70,8 +88,7 @@ function GardenOverview() {
   useEffect(() => {
     if (plants.length > 0 && settings.location) {
       fetchOverview();
-      // Auto-refresh every 12 hours
-      const intervalId = setInterval(fetchOverview, 12 * 60 * 60 * 1000); 
+      const intervalId = setInterval(() => fetchOverview(true), 12 * 60 * 60 * 1000); 
       return () => clearInterval(intervalId);
     } else {
         setIsLoading(false);
@@ -113,7 +130,7 @@ function GardenOverview() {
                     <CardDescription>Your AI-powered garden overview for today.</CardDescription>
                 </div>
             </div>
-             <Button variant="ghost" size="icon" onClick={fetchOverview} disabled={isLoading} aria-label="Refresh Daily Digest">
+             <Button variant="ghost" size="icon" onClick={() => fetchOverview(true)} disabled={isLoading} aria-label="Refresh Daily Digest">
                 <RefreshCw className={cn("h-4 w-4 text-muted-foreground", isLoading && "animate-spin")} />
             </Button>
         </div>

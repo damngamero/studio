@@ -40,17 +40,34 @@ export default function WeatherPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (forceRefresh = false) => {
     if (!settings.location || plants.length === 0) {
       setIsLoading(false);
       return;
     }
     setIsLoading(true);
     setError(null);
+
+    // Client-side cache check
+    if (!forceRefresh) {
+        const cached = localStorage.getItem('weather-data');
+        if (cached) {
+            const { data, timestamp } = JSON.parse(cached);
+            const isStale = new Date().getTime() - timestamp > 12 * 60 * 60 * 1000; // 12 hours
+            if (!isStale) {
+                setWeatherData(data);
+                setIsLoading(false);
+                return;
+            }
+        }
+    }
+
     try {
       const plantInfo = plants.map(p => ({ customName: p.customName, commonName: p.commonName }));
       const result = await getWeatherAndPlantAdvice({ location: settings.location, plants: plantInfo });
       setWeatherData(result);
+       // Cache the new data
+      localStorage.setItem('weather-data', JSON.stringify({ data: result, timestamp: new Date().getTime() }));
     } catch (e) {
       console.error("Failed to get weather advice:", e);
       setError("Could not fetch weather advice from Sage. Please try again later.");
@@ -61,8 +78,7 @@ export default function WeatherPage() {
 
   useEffect(() => {
     fetchData();
-    // Auto-refresh every 12 hours
-    const intervalId = setInterval(fetchData, 12 * 60 * 60 * 1000);
+    const intervalId = setInterval(() => fetchData(true), 12 * 60 * 60 * 1000);
     return () => clearInterval(intervalId);
   }, [fetchData]);
 
@@ -215,7 +231,7 @@ export default function WeatherPage() {
           <h1 className="text-3xl font-bold font-heading">Weather Center</h1>
           <p className="text-muted-foreground">Proactive advice from Sage based on your local forecast.</p>
         </div>
-        <Button variant="outline" onClick={fetchData} disabled={isLoading}>
+        <Button variant="outline" onClick={() => fetchData(true)} disabled={isLoading}>
             <RefreshCw className={cn("mr-2 h-4 w-4", isLoading && "animate-spin")} />
             Refresh
         </Button>
