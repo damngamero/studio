@@ -74,6 +74,7 @@ export function useSettingsStore() {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
+    // Correctly initialize state on the client
     setSettingsState(getInitialSettings());
     setIsInitialized(true);
   }, []);
@@ -101,3 +102,5 @@ export function useSettingsStore() {
 
   return { settings, setSettings, theme: settings.theme, isInitialized };
 }
+
+    

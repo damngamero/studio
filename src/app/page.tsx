@@ -37,8 +37,8 @@ function LeafIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 
 function GardenOverview() {
-  const { plants } = usePlantStore();
-  const { settings } = useSettingsStore();
+  const { plants, isInitialized: isPlantsInitialized } = usePlantStore();
+  const { settings, isInitialized: isSettingsInitialized } = useSettingsStore();
   const [overview, setOverview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -86,15 +86,37 @@ function GardenOverview() {
   }, [plants, settings.location]);
 
   useEffect(() => {
-    if (plants.length > 0 && settings.location) {
-      fetchOverview();
-      const intervalId = setInterval(() => fetchOverview(true), 12 * 60 * 60 * 1000); 
-      return () => clearInterval(intervalId);
-    } else {
-        setIsLoading(false);
-        setOverview(null);
+    if (isPlantsInitialized && isSettingsInitialized) {
+        if (plants.length > 0 && settings.location) {
+          fetchOverview();
+          const intervalId = setInterval(() => fetchOverview(true), 12 * 60 * 60 * 1000); 
+          return () => clearInterval(intervalId);
+        } else {
+            setIsLoading(false);
+            setOverview(null);
+        }
     }
-  }, [plants.length, settings.location, fetchOverview]);
+  }, [isPlantsInitialized, isSettingsInitialized, plants.length, settings.location, fetchOverview]);
+  
+  if (!isPlantsInitialized || !isSettingsInitialized) {
+    return (
+        <Card className="mb-6">
+            <CardHeader>
+                 <div className="flex items-start gap-4">
+                    <Bot className="h-6 w-6 text-primary mt-1" />
+                    <div>
+                        <Skeleton className="h-5 w-48 mb-2" />
+                        <Skeleton className="h-4 w-64" />
+                    </div>
+                </div>
+                 <div className="mt-4 pl-10">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-2/3 mt-2" />
+                 </div>
+            </CardHeader>
+        </Card>
+    )
+  }
 
   if (plants.length === 0) {
       return null;
@@ -232,3 +254,5 @@ export default function MyPlantsPage() {
     </AppLayout>
   );
 }
+
+    
