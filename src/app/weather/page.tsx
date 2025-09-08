@@ -41,12 +41,13 @@ export default function WeatherPage() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async (forceRefresh = false) => {
+    setIsLoading(true);
+    setError(null);
+    
     if (!settings.location || plants.length === 0) {
       setIsLoading(false);
       return;
     }
-    setIsLoading(true);
-    setError(null);
 
     // Client-side cache to avoid re-fetching on navigation
     if (!forceRefresh) {
