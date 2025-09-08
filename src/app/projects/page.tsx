@@ -11,14 +11,16 @@ const projects = [
     description: 'An intelligent recipe application that helps you discover and create delicious meals.',
     link: 'https://recipesavvy.vercel.app/',
     imageUrl: 'https://images.unsplash.com/photo-1515516969-d4008cc6241a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMXx8cGFzdGF8ZW58MHx8fHwxNzU3MzI4NTk1fDA&ixlib=rb-4.1.0&q=80&w=1080',
-    aiHint: 'food recipe'
+    aiHint: 'food recipe',
+    isCurrent: false,
   },
   {
     name: 'VerdantWise',
     description: 'The very app you are using! An AI-powered smart gardening assistant.',
-    link: 'https://verdantwise.vercel.app/',
+    link: '/',
     imageUrl: 'https://i.ibb.co/m1cGLxv/unnamed.png',
-    aiHint: 'plant app'
+    aiHint: 'plant app',
+    isCurrent: true,
   },
 ];
 
@@ -54,11 +56,17 @@ export default function ProjectsPage() {
                 <p className="text-muted-foreground mb-4 h-12">
                   {project.description}
                 </p>
-                <Button asChild>
-                  <Link href={project.link} target="_blank" rel="noopener noreferrer">
-                    Visit Project
-                  </Link>
-                </Button>
+                {project.isCurrent ? (
+                   <Button variant="secondary" asChild>
+                     <Link href={project.link}>You're using it :)</Link>
+                   </Button>
+                ) : (
+                    <Button asChild>
+                      <Link href={project.link} target="_blank" rel="noopener noreferrer">
+                        Visit Project
+                      </Link>
+                    </Button>
+                )}
               </CardContent>
             </Card>
           ))}
