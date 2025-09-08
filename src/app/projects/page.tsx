@@ -10,7 +10,7 @@ const projects = [
     name: 'Recipe Savvy',
     description: 'An intelligent recipe application that helps you discover and create delicious meals.',
     link: 'https://recipesavvy.vercel.app/',
-    imageUrl: 'https://picsum.photos/seed/recipesavvy/600/400',
+    imageUrl: 'https://images.unsplash.com/photo-1515516969-d4008cc6241a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMXx8cGFzdGF8ZW58MHx8fHwxNzU3MzI4NTk1fDA&ixlib=rb-4.1.0&q=80&w=1080',
     aiHint: 'food recipe'
   },
   {
