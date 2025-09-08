@@ -48,7 +48,7 @@ export default function WeatherPage() {
     setIsLoading(true);
     setError(null);
 
-    // Client-side cache to avoid re-fetching on navigation, but initial load is server-side.
+    // Client-side cache to avoid re-fetching on navigation
     if (!forceRefresh) {
         const cached = sessionStorage.getItem('weather-data');
         if (cached) {
