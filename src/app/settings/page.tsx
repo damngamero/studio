@@ -15,7 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useSettingsStore, type Theme, type Settings } from "@/hooks/use-settings-store.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, MapPin, ChevronsUpDown, KeyRound } from "lucide-react";
+import { Check, MapPin, ChevronsUpDown, KeyRound, Info } from "lucide-react";
 import { timezones } from "@/lib/timezones";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -67,8 +67,7 @@ export default function SettingsPage() {
   
   return (
     <AppLayout>
-      <div className="mx-auto w-full max-w-6xl">
-        <h1 className="text-3xl font-semibold mb-6">Settings</h1>
+      <div className="mx-auto w-full max-w-6xl grid gap-6 md:grid-cols-[1fr_280px]">
         <div className="grid gap-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -256,6 +255,24 @@ export default function SettingsPage() {
               </Button>
             </form>
           </Form>
+        </div>
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>About VerdantWise</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                        VerdantWise is an AI-powered smart gardening assistant designed to help you identify, care for, and nurture your plants.
+                    </p>
+                    <Button asChild variant="outline" className="w-full">
+                        <Link href="/about">
+                            <Info className="mr-2 h-4 w-4" />
+                            Learn More
+                        </Link>
+                    </Button>
+                </CardContent>
+            </Card>
         </div>
       </div>
     </AppLayout>

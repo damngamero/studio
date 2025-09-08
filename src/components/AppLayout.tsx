@@ -7,6 +7,7 @@ import { useSettingsStore } from "@/hooks/use-settings-store";
 import { addDays, isAfter } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "./Header";
+import { Footer } from "./Footer";
 
 
 function useWateringReminder() {
@@ -71,6 +72,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         {children}
       </main>
+      <Footer />
     </div>
   );
 }
