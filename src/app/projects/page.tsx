@@ -17,7 +17,7 @@ const projects = [
     name: 'VerdantWise',
     description: 'The very app you are using! An AI-powered smart gardening assistant.',
     link: 'https://verdantwise.vercel.app/',
-    imageUrl: 'https://images.unsplash.com/photo-1757328191329-74fa60009c09?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    imageUrl: 'https://i.ibb.co/m1cGLxv/unnamed.png',
     aiHint: 'plant app'
   },
 ];
