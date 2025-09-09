@@ -73,6 +73,7 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
   const nextWateringDate = advice?.newWateringTime ? new Date(advice.newWateringTime) : regularNextWateringDate;
   
   const isOverdue = isAfter(new Date(), nextWateringDate);
+  const canWater = isOverdue && advice?.shouldWater !== 'Wait';
 
   const handleWaterPlantClick = () => {
     onWaterPlant();
@@ -105,45 +106,36 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
         </div>
       );
     }
-    
-    if (isOverdue && advice?.shouldWater !== 'Wait') {
-       return (
-         <CardContent className="space-y-4 text-center">
-            {advice?.reason && (
-              <div className="text-sm p-2 bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 rounded-md flex items-center gap-2 justify-center">
-                <Info className="h-4 w-4"/>
-                <p>{advice.reason}</p>
-              </div>
-            )}
-            <Button 
-                onClick={handleWaterPlantClick} 
-                className="w-full"
-                disabled={isWateredToday}
-            >
-              <Droplets className="mr-2" /> 
-              {isWateredToday ? 'Watered!' : 'Mark as Watered'}
-            </Button>
-         </CardContent>
-       )
-    }
 
-    // Default view: countdown, which now uses AI time if available
     return (
        <CardContent className="space-y-4 text-center">
-        <div className="text-4xl font-bold">
-            <Countdown targetDate={nextWateringDate} />
-        </div>
-        <p className="text-xs text-muted-foreground">
-            Last watered {formatDistanceToNow(lastWateredDate)} ago
-        </p>
+        {canWater && advice?.reason && (
+            <div className="text-sm p-2 bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 rounded-md flex items-center gap-2 justify-center">
+                <Info className="h-4 w-4"/>
+                <p>{advice.reason}</p>
+            </div>
+        )}
+
+        {!canWater && !isLoadingAdvice && (
+          <>
+            <div className="text-4xl font-bold">
+                <Countdown targetDate={nextWateringDate} />
+            </div>
+            <p className="text-xs text-muted-foreground">
+                Last watered {formatDistanceToNow(lastWateredDate)} ago
+            </p>
+          </>
+        )}
+
         <Button 
             onClick={handleWaterPlantClick} 
             className="w-full"
-            disabled={true}
+            disabled={!canWater || isWateredToday}
         >
           <Droplets className="mr-2" /> 
-          It's not time yet
+          {isWateredToday ? 'Watered!' : canWater ? 'Mark as Watered' : "It's not time yet"}
         </Button>
+
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">
@@ -184,7 +176,7 @@ export function WateringSchedule({ plant, onWaterPlant, advice, isLoadingAdvice,
   };
   
   const getCardClass = () => {
-    if (isOverdue && advice?.shouldWater !== 'Wait' && !isWateredToday) return 'bg-green-100/50 dark:bg-green-900/50 border-green-500/50';
+    if (canWater && !isWateredToday) return 'bg-green-100/50 dark:bg-green-900/50 border-green-500/50';
     if (advice?.shouldWater === 'Wait') return 'bg-blue-100/50 dark:bg-blue-900/50 border-blue-500/50';
     return '';
   }
