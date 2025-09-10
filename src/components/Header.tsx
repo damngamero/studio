@@ -4,7 +4,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Leaf, ScanLine, Settings, Menu, CloudSun, Trophy, Info } from "lucide-react";
+import { Leaf, Settings, Menu, CloudSun, Trophy } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -20,10 +20,8 @@ function Logo() {
 
 const navItems = [
   { href: "/", label: "My Plants", icon: Leaf },
-  { href: "/identify", label: "Identify Plant", icon: ScanLine },
   { href: "/weather", label: "Weather", icon: CloudSun },
   { href: "/achievements", label: "Achievements", icon: Trophy },
-  { href: "/about", label: "About", icon: Info },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

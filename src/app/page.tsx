@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 import { getSettings } from "@/hooks/use-settings-store.tsx";
+import { WateringOverview } from "@/components/WateringOverview";
 
 function LeafIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -195,31 +196,34 @@ export default function MyPlantsPage() {
     
     if (plants.length > 0) {
       return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {plants.map((plant) => (
-            <Link href={`/plant/${plant.id}`} key={plant.id} className="group">
-              <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-border/80">
-                <CardHeader className="p-0">
-                  <div className="relative aspect-[4/3] w-full">
-                    <Image
-                      src={plant.photoUrl}
-                      alt={plant.customName}
-                      width={400}
-                      height={300}
-                      className="object-cover"
-                      data-ai-hint="plant"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
-                    />
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4 bg-card">
-                  <CardTitle className="text-lg font-semibold font-heading">{plant.customName}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{plant.displayNameFormat === 'latin' ? plant.latinName : plant.commonName}</p>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+        <>
+          <WateringOverview plants={plants} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {plants.map((plant) => (
+              <Link href={`/plant/${plant.id}`} key={plant.id} className="group">
+                <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-border/80">
+                  <CardHeader className="p-0">
+                    <div className="relative aspect-[4/3] w-full">
+                      <Image
+                        src={plant.photoUrl}
+                        alt={plant.customName}
+                        width={400}
+                        height={300}
+                        className="object-cover"
+                        data-ai-hint="plant"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                      />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-4 bg-card">
+                    <CardTitle className="text-lg font-semibold font-heading">{plant.customName}</CardTitle>
+                    <p className="text-sm text-muted-foreground">{plant.displayNameFormat === 'latin' ? plant.latinName : plant.commonName}</p>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </>
       )
     }
 
